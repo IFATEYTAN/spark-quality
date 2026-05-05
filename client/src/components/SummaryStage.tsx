@@ -88,10 +88,10 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
           </div>
         </div>
 
-        {/* LEFT: Editorial brand statement + floating testimonial */}
-        <div className="hidden lg:col-span-5 lg:block relative h-full">
+        {/* LEFT: Editorial brand statement + testimonial below */}
+        <div className="hidden lg:col-span-5 lg:flex lg:flex-col h-full p-8 gap-5 overflow-hidden">
           {/* Brand statement card - typographic, no logo */}
-          <div className="absolute inset-8 overflow-hidden rounded-md shadow-2xl shadow-navy/30">
+          <div className="relative flex-1 min-h-0 overflow-hidden rounded-md shadow-2xl shadow-navy/30">
             <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-navy-deep to-[#152844]" />
             <div className="absolute inset-3 border border-gold/30 rounded-md pointer-events-none" />
             <div className="absolute inset-0 opacity-30" style={{
@@ -110,7 +110,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
             <div className="absolute bottom-6 left-6 h-10 w-10 border-b-2 border-l-2 border-gold/40 pointer-events-none" />
 
             {/* Typographic brand statement */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center px-12 text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-10 py-8 text-center">
               {/* Top eyebrow with ornament */}
               <div className="flex items-center gap-3 mb-7 animate-fade-in" style={{ animationDelay: "0.3s" }}>
                 <div className="h-px w-8 bg-gold/60" />
@@ -121,25 +121,25 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               </div>
 
               {/* Main statement - dramatic typography */}
-              <h2 className="font-display font-black text-white text-5xl lg:text-7xl leading-[0.95] tracking-tighter animate-fade-up" style={{ animationDelay: "0.4s" }}>
+              <h2 className="font-display font-black text-white text-4xl lg:text-6xl leading-[0.95] tracking-tighter animate-fade-up" style={{ animationDelay: "0.4s" }}>
                 <span className="text-gold">הקסם</span>
                 <br />של ה-AI.
               </h2>
 
               {/* Decorative × separator */}
-              <div className="my-6 flex items-center gap-4 animate-fade-in" style={{ animationDelay: "0.6s" }}>
+              <div className="my-4 flex items-center gap-4 animate-fade-in" style={{ animationDelay: "0.6s" }}>
                 <div className="h-px w-12 bg-gradient-to-r from-transparent to-gold" />
                 <span className="font-display text-3xl font-thin text-gold/70">×</span>
                 <div className="h-px w-12 bg-gradient-to-l from-transparent to-gold" />
               </div>
 
-              <h2 className="font-display font-black text-white text-5xl lg:text-7xl leading-[0.95] tracking-tighter animate-fade-up" style={{ animationDelay: "0.7s" }}>
+              <h2 className="font-display font-black text-white text-4xl lg:text-6xl leading-[0.95] tracking-tighter animate-fade-up" style={{ animationDelay: "0.7s" }}>
                 <span className="text-gold">העוצמה</span>
                 <br />שלכם.
               </h2>
 
               {/* Bottom signature line */}
-              <div className="mt-10 flex flex-col items-center gap-3 animate-fade-up" style={{ animationDelay: "0.9s" }}>
+              <div className="mt-6 flex flex-col items-center gap-2 animate-fade-up" style={{ animationDelay: "0.9s" }}>
                 <div className="h-px w-40 bg-gradient-to-r from-transparent via-gold to-transparent" />
                 <p className="font-display-light text-gold-soft text-base tracking-[0.15em] italic">
                   Sprinkle AI &amp; Automation Magic
@@ -151,19 +151,17 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
             </div>
           </div>
 
-          {/* Floating testimonial card - bottom, overlapping the brand card */}
-          <div className="absolute bottom-16 right-0 left-16 animate-fade-up z-10" style={{ animationDelay: "0.7s" }}>
-            <div className="bg-white rounded-md p-7 shadow-2xl shadow-navy/40 border border-gold/30">
-              <div className="flex gap-4">
-                <div className="text-7xl font-display text-gold leading-none -mt-2 flex-shrink-0">“</div>
-                <div className="pt-2">
-                  <p className="font-display text-xl leading-snug text-navy-deep tracking-tight">
-                    זה לא רק כלי נוסף.<br />
-                    זו <span className="text-gold font-black">מהפכה שקטה</span><br />
-                    בדרך שאני עובדת.
+          {/* Testimonial card - sits below the brand card, no overlap */}
+          <div className="flex-shrink-0 animate-fade-up z-10" style={{ animationDelay: "0.9s" }}>
+            <div className="bg-white rounded-md p-5 shadow-2xl shadow-navy/40 border border-gold/30">
+              <div className="flex gap-3 items-start">
+                <div className="text-5xl font-display text-gold leading-none flex-shrink-0">“</div>
+                <div className="pt-1 flex-1">
+                  <p className="font-display text-base lg:text-lg leading-snug text-navy-deep tracking-tight">
+                    זה לא רק כלי נוסף. זו <span className="text-gold font-black">מהפכה שקטה</span> בדרך שאני עובדת.
                   </p>
-                  <div className="mt-4 pt-4 border-t border-border/40 flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gold to-gold-soft flex items-center justify-center text-navy-deep font-display font-black">
+                  <div className="mt-3 pt-3 border-t border-border/40 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-gold to-gold-soft flex items-center justify-center text-navy-deep font-display font-black text-sm">
                       רא
                     </div>
                     <div>
