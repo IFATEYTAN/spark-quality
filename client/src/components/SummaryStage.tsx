@@ -103,23 +103,51 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               }}
             />
 
+            {/* Decorative corner ornaments - editorial flair */}
+            <div className="absolute top-6 right-6 h-10 w-10 border-t-2 border-r-2 border-gold/40 pointer-events-none" />
+            <div className="absolute top-6 left-6 h-10 w-10 border-t-2 border-l-2 border-gold/40 pointer-events-none" />
+            <div className="absolute bottom-6 right-6 h-10 w-10 border-b-2 border-r-2 border-gold/40 pointer-events-none" />
+            <div className="absolute bottom-6 left-6 h-10 w-10 border-b-2 border-l-2 border-gold/40 pointer-events-none" />
+
             {/* Typographic brand statement */}
             <div className="absolute inset-0 flex flex-col items-center justify-center px-12 text-center">
-              <span className="label-tag text-gold-soft tracking-[0.3em] text-xs mb-8">
-                THE FUTURE OF INSURANCE
-              </span>
-              <h2 className="font-display font-black text-white text-5xl lg:text-6xl leading-[1] tracking-tighter">
+              {/* Top eyebrow with ornament */}
+              <div className="flex items-center gap-3 mb-7 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+                <div className="h-px w-8 bg-gold/60" />
+                <span className="label-tag text-gold-soft tracking-[0.4em] text-[10px]">
+                  THE FUTURE OF INSURANCE
+                </span>
+                <div className="h-px w-8 bg-gold/60" />
+              </div>
+
+              {/* Main statement - dramatic typography */}
+              <h2 className="font-display font-black text-white text-5xl lg:text-7xl leading-[0.95] tracking-tighter animate-fade-up" style={{ animationDelay: "0.4s" }}>
                 <span className="text-gold">הקסם</span>
                 <br />של ה-AI.
-                <br />
+              </h2>
+
+              {/* Decorative × separator */}
+              <div className="my-6 flex items-center gap-4 animate-fade-in" style={{ animationDelay: "0.6s" }}>
+                <div className="h-px w-12 bg-gradient-to-r from-transparent to-gold" />
+                <span className="font-display text-3xl font-thin text-gold/70">×</span>
+                <div className="h-px w-12 bg-gradient-to-l from-transparent to-gold" />
+              </div>
+
+              <h2 className="font-display font-black text-white text-5xl lg:text-7xl leading-[0.95] tracking-tighter animate-fade-up" style={{ animationDelay: "0.7s" }}>
                 <span className="text-gold">העוצמה</span>
                 <br />שלכם.
               </h2>
-              <div className="mt-8 h-px w-32 bg-gradient-to-r from-transparent via-gold to-transparent" />
-              <p className="mt-6 font-display-light text-gold-soft text-lg tracking-wide">
-                Sprinkle AI &amp; Automation
-                <br />Magic Into Your Business
-              </p>
+
+              {/* Bottom signature line */}
+              <div className="mt-10 flex flex-col items-center gap-3 animate-fade-up" style={{ animationDelay: "0.9s" }}>
+                <div className="h-px w-40 bg-gradient-to-r from-transparent via-gold to-transparent" />
+                <p className="font-display-light text-gold-soft text-base tracking-[0.15em] italic">
+                  Sprinkle AI &amp; Automation Magic
+                </p>
+                <p className="label-tag text-[10px] text-white/40 tracking-[0.3em]">
+                  QUALITY × SPARK AI
+                </p>
+              </div>
             </div>
           </div>
 
