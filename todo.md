@@ -1,21 +1,21 @@
 # שילוב הלוגו הרשמי של SPARK AI
 
-- [ ] העלאת קובץ הלוגו ללא רקע ל-webdev-static-assets
-- [ ] העלאת קובץ הלוגו עם הרקע הסגול לשימוש במסך הסיכום
-- [ ] עדכון Header עם הלוגו החדש (גרסת ללא רקע)
-- [ ] שילוב הלוגו במסך הסיכום (SummaryStage) במקום אייקון Sparkles
-- [ ] בדיקה ויזואלית של כל המסכים
-- [ ] שמירת checkpoint סופי
+- [x] העלאת קובץ הלוגו ללא רקע ל-webdev-static-assets
+- [x] העלאת קובץ הלוגו עם הרקע הסגול לשימוש במסך הסיכום
+- [x] עדכון Header עם הלוגו החדש (גרסת ללא רקע)
+- [x] שילוב הלוגו במסך הסיכום (SummaryStage) במקום אייקון Sparkles
+- [x] בדיקה ויזואלית של כל המסכים
+- [x] שמירת checkpoint סופי
 
 
 # Todo (חדש) - אימות נתוני הדמו ובניית מדריך מחדש
 
-- [ ] איתור קובץ הדוח האמיתי בתיקיית uploads
-- [ ] כתיבת סקריפט Python לקריאת הקובץ והפקת מטריקות (לקוחות, AUM, פרמיה, דגלים)
-- [ ] השוואת התוצאות לערכים שמופיעים בדמו (demoData / parseReport)
-- [ ] תיקון parseReport.ts אם יש פערים
-- [ ] בניית מדריך HTML מחדש ללא אזכורי קוואליטי + המרה ל-PDF
-- [ ] שמירת checkpoint ודיווח סופי
+- [x] איתור קובץ הדוח האמיתי בתיקיית uploads
+- [x] כתיבת סקריפט Python לקריאת הקובץ והפקת מטריקות (לקוחות, AUM, פרמיה, דגלים)
+- [x] השוואת התוצאות לערכים שמופיעים בדמו (demoData / parseReport)
+- [x] תיקון parseReport.ts אם יש פערים
+- [x] בניית מדריך HTML מחדש ללא אזכורי קוואליטי + המרה ל-PDF
+- [x] שמירת checkpoint ודיווח סופי
 
 
 # בניית SaaS Multi-Tenant — V1 MVP
@@ -54,4 +54,30 @@
 
 ## בדיקות וצ'קפוינט
 - [x] vitest test לבידוד נתונים (3 טסטים — כולם עוברים)
+- [x] שמירת checkpoint
+
+
+# תיקון עיצוב — החלת שפת הדמו על כל מסכי ה-SaaS
+
+- [ ] מיפוי טוקני העיצוב מהדמו (Navy 950, Gold, Heebo, RTL)
+- [ ] עדכון client/src/index.css עם הטוקנים האחידים
+- [ ] עדכון Landing (Home.tsx) — רקע Navy + Gold + Heebo
+- [ ] עדכון Onboarding — רקע Navy + Gold + Heebo
+- [ ] עדכון Dashboard — רקע Navy + Gold + Heebo
+- [ ] עדכון UploadReport — רקע Navy + Gold + Heebo
+- [ ] עדכון Clients — רקע Navy + Gold + Heebo
+- [ ] עדכון Team — רקע Navy + Gold + Heebo
+- [ ] בדיקה ויזואלית של כל המסכים
+- [ ] שמירת checkpoint
+
+
+# החלפת פלטת המותג מ-Navy לסגול עמוק (Deep Plum) + Gold
+
+- [x] העלאת לוגות חדשים ל-webdev-static-assets
+- [x] עדכון demoData.LOGO עם הקבצים החדשים
+- [x] עדכון index.css — החלפת navy לסגול עמוק (Deep Plum) דרך CSS aliases
+- [x] תיקון bg-blue-600 ב-NotFound.tsx (כפתור הבית)
+- [x] תיקון bg-blue-500/20 ב-Team.tsx (תג admin)
+- [x] בדיקה ויזואלית של כל המסכים (Demo + SaaS)
+- [x] vitest — 4 בדיקות עוברות
 - [x] שמירת checkpoint

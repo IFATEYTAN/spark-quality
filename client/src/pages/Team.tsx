@@ -244,7 +244,7 @@ export default function Team() {
                       member.workspaceRole === "owner"
                         ? "bg-gold/20 text-gold"
                         : member.workspaceRole === "admin"
-                        ? "bg-blue-500/20 text-blue-300"
+                        ? "bg-[var(--plum-soft)]/30 text-white"
                         : "bg-white/10 text-white/70"
                     }`}
                   >

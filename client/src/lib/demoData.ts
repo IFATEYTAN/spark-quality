@@ -2,8 +2,9 @@
 // נתוני דמו - מבוססים על דוח "מוצרים בניהול" האמיתי, מותאמים להדרכה
 
 export const LOGO = {
-  clear: "/manus-storage/spark_logo_clear_542b8607.png",
-  purple: "/manus-storage/spark_logo_clear_542b8607.png",
+  clear: "/manus-storage/spark_logo_no_bg_e55a77ae.png",
+  purple: "/manus-storage/spark_logo_purple_bg_fc762c5e.png",
+  small: "/manus-storage/spark_logo_small_cc4c7a3f.png",
   quality: "/manus-storage/quality_logo_157d21ea.png",
 };
 
