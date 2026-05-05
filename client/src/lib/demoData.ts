@@ -1,6 +1,11 @@
 // Editorial Fintech | SPARK AI × קוואליטי
 // נתוני דמו - מבוססים על דוח "מוצרים בניהול" האמיתי, מותאמים להדרכה
 
+export const LOGO = {
+  clear: "/manus-storage/spark_logo_clear_e216dedc.png",
+  purple: "/manus-storage/spark_logo_purple_41de65b0.png",
+};
+
 export const ASSETS = {
   hero: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_hero_v2-GhGtJfaqU3oTBzjHbRCT73.webp",
   brain: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_hero_v2-GhGtJfaqU3oTBzjHbRCT73.webp",

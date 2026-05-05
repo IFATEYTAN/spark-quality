@@ -1,6 +1,6 @@
 // Editorial Fintech | מסך סיכום סופי - תמונה + טקסט מסודרים, Wow finale
-import { ArrowLeft, RotateCcw, CheckCircle2, Calendar } from "lucide-react";
-import { ASSETS } from "@/lib/demoData";
+import { ArrowLeft, RotateCcw, Calendar } from "lucide-react";
+import { LOGO } from "@/lib/demoData";
 
 interface SummaryStageProps {
   onReset: () => void;
@@ -89,24 +89,45 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
           </div>
         </div>
 
-        {/* LEFT: photo of agent + floating quote card */}
+        {/* LEFT: SPARK AI signature logo card + floating quote */}
         <div className="hidden lg:col-span-5 lg:block relative h-full min-h-[calc(100vh-4rem)]">
-          {/* Image with elegant frame */}
-          <div className="absolute inset-8 overflow-hidden rounded-md shadow-2xl shadow-navy/20">
-            <img
-              src={ASSETS.summary}
-              alt="סוכנת ביטוח עם דשבורד"
-              className="h-full w-full object-cover"
+          {/* Branded logo card with elegant frame */}
+          <div className="absolute inset-8 overflow-hidden rounded-md shadow-2xl shadow-navy/30">
+            {/* Deep navy/purple gradient background to match the original logo aesthetic */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1a0f3d] via-navy-deep to-[#2a1854]" />
+            {/* Subtle gold border frame */}
+            <div className="absolute inset-3 border border-gold/30 rounded-md pointer-events-none" />
+            {/* Animated gold particles */}
+            <div className="absolute inset-0 opacity-30" style={{
+              backgroundImage: "radial-gradient(circle at 20% 30%, rgba(201, 169, 97, 0.4) 0%, transparent 8%), radial-gradient(circle at 80% 70%, rgba(201, 169, 97, 0.3) 0%, transparent 6%), radial-gradient(circle at 50% 50%, rgba(201, 169, 97, 0.2) 0%, transparent 10%)"
+            }} />
+            {/* Grain texture */}
+            <div className="absolute inset-0 opacity-[0.08] mix-blend-overlay pointer-events-none"
+              style={{
+                backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")"
+              }}
             />
-            {/* subtle gradient for legibility of overlaid card */}
-            <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/60 via-transparent to-transparent" />
+
+            {/* Logo centered */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-12">
+              <img
+                src={LOGO.clear}
+                alt="SPARK AI"
+                className="w-full max-w-md object-contain animate-fade-up drop-shadow-2xl"
+                style={{ filter: "drop-shadow(0 8px 32px rgba(201, 169, 97, 0.3))" }}
+              />
+              <div className="mt-6 h-px w-32 bg-gradient-to-r from-transparent via-gold to-transparent" />
+              <p className="mt-6 font-display text-lg text-gold-soft text-center tracking-wide" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic" }}>
+                Sprinkle AI &amp; Automation<br />Magic Into Your Business
+              </p>
+            </div>
           </div>
 
-          {/* Floating testimonial card - bottom-left, OUTSIDE the photo on small movement */}
-          <div className="absolute bottom-16 right-0 left-16 animate-fade-up" style={{ animationDelay: "0.7s" }}>
-            <div className="bg-white rounded-md p-7 shadow-2xl shadow-navy/20 border border-gold/20">
+          {/* Floating testimonial card - bottom, overlapping the brand card */}
+          <div className="absolute bottom-16 right-0 left-16 animate-fade-up z-10" style={{ animationDelay: "0.7s" }}>
+            <div className="bg-white rounded-md p-7 shadow-2xl shadow-navy/40 border border-gold/30">
               <div className="flex gap-4">
-                <div className="text-7xl font-display text-gold leading-none -mt-2 flex-shrink-0">"</div>
+                <div className="text-7xl font-display text-gold leading-none -mt-2 flex-shrink-0">“</div>
                 <div className="pt-2">
                   <p className="font-display text-xl leading-snug text-navy-deep tracking-tight">
                     זה לא רק כלי נוסף.<br />
@@ -119,7 +140,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                     </div>
                     <div>
                       <div className="text-sm font-bold text-navy-deep">נועה כהן</div>
-                      <div className="text-xs text-muted-foreground">סמנכ״לית טכנולוגיות, קואליטי</div>
+                      <div className="text-xs text-muted-foreground">סמנכ“לית טכנולוגיות, קואליטי</div>
                     </div>
                   </div>
                 </div>
