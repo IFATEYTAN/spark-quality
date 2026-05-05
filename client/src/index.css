@@ -272,3 +272,19 @@
     background: oklch(0.74 0.10 80);
   }
 }
+
+
+/* Splash hero subtle Ken Burns zoom */
+@keyframes splash-zoom {
+  0% {
+    transform: scale(1.05);
+    filter: brightness(0.85);
+  }
+  100% {
+    transform: scale(1.12);
+    filter: brightness(1);
+  }
+}
+.animate-splash-zoom {
+  animation: splash-zoom 5s ease-out forwards;
+}
