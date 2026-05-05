@@ -42,7 +42,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
   }, [onComplete]);
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-navy-deep">
+    <div className="relative h-[calc(100vh-7rem)] w-full overflow-hidden bg-navy-deep">
       {/* Background image with strong overlay */}
       <div className="absolute inset-0">
         <img src={ASSETS.brain} alt="" className="h-full w-full object-cover scale-110 animate-[fade-in_2s]" />
@@ -60,9 +60,9 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
         }}
       />
 
-      <div className="relative grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-12">
+      <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12">
         {/* RIGHT (RTL primary): progress steps */}
-        <div className="lg:col-span-7 flex items-center px-6 py-12 lg:px-16 lg:py-20">
+        <div className="lg:col-span-7 flex items-center px-6 py-6 lg:px-12 lg:py-8">
           <div className="w-full max-w-2xl animate-fade-in">
             <div className="mb-8 flex items-center gap-3">
               <div className="h-px w-16 bg-gold" />
@@ -70,7 +70,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
             </div>
 
-            <h1 className="font-display text-6xl font-black leading-[0.95] text-white lg:text-7xl tracking-tighter text-shadow-lg">
+            <h1 className="font-display text-5xl font-black leading-[0.95] text-white lg:text-[4rem] tracking-tighter text-shadow-lg">
               מנתח את התיק<br />
               <span className="bg-gradient-to-l from-gold to-gold-soft bg-clip-text text-transparent">
                 שלכם.
@@ -81,7 +81,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
             </p>
 
             {/* Progress bar */}
-            <div className="mt-12">
+            <div className="mt-8">
               <div className="mb-3 flex items-baseline justify-between">
                 <span className="label-tag text-white/80 text-shadow-sm">התקדמות הניתוח</span>
                 <span className="display-number text-3xl font-black text-white mono-num text-shadow-sm">
@@ -98,7 +98,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
             </div>
 
             {/* Steps list */}
-            <div className="mt-10 space-y-1.5">
+            <div className="mt-6 space-y-1.5">
               {ANALYSIS_STEPS.map((step, idx) => {
                 const isDone = idx < currentStep;
                 const isActive = idx === currentStep;
@@ -148,8 +148,8 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
         </div>
 
         {/* LEFT: live counters - giant numbers */}
-        <div className="hidden lg:col-span-5 lg:flex items-center justify-center pr-12">
-          <div className="space-y-10 text-right w-full backdrop-blur-sm bg-navy-deep/30 rounded-lg p-8 border border-white/10">
+        <div className="hidden lg:col-span-5 lg:flex items-center justify-center pr-8">
+          <div className="space-y-6 text-right w-full backdrop-blur-sm bg-navy-deep/30 rounded-lg p-6 border border-white/10">
             <div className="animate-fade-up">
               <div className="label-tag text-[10px] text-gold mb-2 text-shadow-sm">לקוחות שזוהו</div>
               <div className="display-number text-7xl font-black text-white mono-num text-shadow-md">

@@ -35,7 +35,7 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] animate-fade-in pb-20">
+    <div className="h-[calc(100vh-7rem)] w-full overflow-y-auto animate-fade-in">
       {/* Page header */}
       <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
         <div className="container py-8">

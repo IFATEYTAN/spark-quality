@@ -8,34 +8,34 @@ interface SummaryStageProps {
 
 export function SummaryStage({ onReset }: SummaryStageProps) {
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] animate-fade-in overflow-hidden">
+    <div className="relative h-[calc(100vh-7rem)] w-full animate-fade-in overflow-hidden">
       {/* Subtle background */}
       <div className="absolute inset-0 bg-gradient-to-bl from-cream via-ivory to-white" />
       <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
       <div className="absolute -bottom-32 -right-32 h-96 w-96 rounded-full bg-navy/10 blur-3xl" />
 
-      <div className="relative grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-12 items-center">
+      <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12 items-center">
         {/* RIGHT (RTL primary): content */}
-        <div className="lg:col-span-7 px-6 py-12 lg:px-16 lg:py-16">
+        <div className="lg:col-span-7 px-6 py-6 lg:px-12 lg:py-8">
           <div className="max-w-2xl">
             <div className="mb-6 flex items-center gap-3 animate-fade-up">
               <div className="h-px w-16 bg-gold" />
               <span className="label-tag text-gold">סיכום הדמו · קואליטי × SPARK AI</span>
             </div>
 
-            <h1 className="font-display text-6xl font-black leading-[0.95] text-navy-deep lg:text-8xl tracking-tighter animate-fade-up" style={{ animationDelay: "0.1s" }}>
+            <h1 className="font-display text-5xl font-black leading-[0.95] text-navy-deep lg:text-7xl tracking-tighter animate-fade-up" style={{ animationDelay: "0.1s" }}>
               זה כל<br />
               הסיפור<span className="text-gold">.</span>
             </h1>
 
-            <p className="mt-8 text-xl leading-relaxed text-muted-foreground font-light max-w-xl animate-fade-up" style={{ animationDelay: "0.2s" }}>
+            <p className="mt-5 text-base leading-relaxed text-muted-foreground font-light max-w-xl animate-fade-up" style={{ animationDelay: "0.2s" }}>
               ראינו איך תוך פחות מדקה, פלטפורמת SPARK AI הופכת דוח אקסל "מת" לרשימת
               פעולות עסקיות חיה, עם פוטנציאל הכנסה של{" "}
               <span className="font-semibold text-navy-deep">2.84 מיליון ₪</span>.
             </p>
 
             {/* Key metrics - inline horizontal */}
-            <div className="mt-12 grid grid-cols-2 lg:grid-cols-4 gap-6 border-y border-border/60 py-8 animate-fade-up" style={{ animationDelay: "0.3s" }}>
+            <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 border-y border-border/60 py-4 animate-fade-up" style={{ animationDelay: "0.3s" }}>
               {[
                 { label: "זמן ניתוח", value: "47", unit: "שניות", sub: "במקום 3 שבועות" },
                 { label: "דגלים זוהו", value: "1,071", unit: "", sub: "ב-1,247 לקוחות" },
@@ -44,7 +44,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               ].map((m, i) => (
                 <div key={i}>
                   <div className="label-tag text-[10px] text-gold mb-2">{m.label}</div>
-                  <div className="display-number text-4xl font-black text-navy-deep">
+                  <div className="display-number text-3xl font-black text-navy-deep">
                     {m.value}{m.unit && <span className="text-xl text-gold mr-1">{m.unit}</span>}
                   </div>
                   <div className="text-xs text-muted-foreground mt-1.5">{m.sub}</div>
@@ -53,9 +53,9 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
             </div>
 
             {/* Next steps */}
-            <div className="mt-10 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-              <h3 className="font-display text-2xl font-bold text-navy-deep mb-5 tracking-tight">השלבים הבאים שלכם</h3>
-              <div className="space-y-3">
+            <div className="mt-5 animate-fade-up" style={{ animationDelay: "0.4s" }}>
+              <h3 className="font-display text-xl font-bold text-navy-deep mb-3 tracking-tight">השלבים הבאים שלכם</h3>
+              <div className="space-y-2">
                 {[
                   { num: "01", text: "פיילוט עם 5-10 סוכנים נבחרים מקואליטי" },
                   { num: "02", text: "התמקדות ב-2 תהליכים: ניתוח דוחות + סיכומי פגישות" },
@@ -72,15 +72,15 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
             </div>
 
             {/* CTA */}
-            <div className="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 animate-fade-up" style={{ animationDelay: "0.5s" }}>
+            <div className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-fade-up" style={{ animationDelay: "0.5s" }}>
               <button
                 onClick={onReset}
-                className="group flex items-center justify-center gap-2 rounded-md bg-navy-deep px-8 py-4 text-sm font-bold text-cream transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
+                className="group flex items-center justify-center gap-2 rounded-md bg-navy-deep px-6 py-3 text-sm font-bold text-cream transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
               >
                 <RotateCcw className="h-4 w-4 transition-transform group-hover:-rotate-180 duration-500" />
                 הפעל את הדמו מההתחלה
               </button>
-              <button className="group flex items-center justify-center gap-2 rounded-md border-2 border-navy-deep bg-transparent px-8 py-4 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream">
+              <button className="group flex items-center justify-center gap-2 rounded-md border-2 border-navy-deep bg-transparent px-6 py-3 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream">
                 <Calendar className="h-4 w-4" />
                 קבעו פגישת אפיון
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
@@ -90,7 +90,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
         </div>
 
         {/* LEFT: SPARK AI signature logo card + floating quote */}
-        <div className="hidden lg:col-span-5 lg:block relative h-full min-h-[calc(100vh-4rem)]">
+        <div className="hidden lg:col-span-5 lg:block relative h-full">
           {/* Branded logo card with elegant frame */}
           <div className="absolute inset-8 overflow-hidden rounded-md shadow-2xl shadow-navy/30">
             {/* Deep navy/purple gradient background to match the original logo aesthetic */}

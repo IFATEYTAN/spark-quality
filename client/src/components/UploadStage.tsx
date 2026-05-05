@@ -11,7 +11,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   return (
-    <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden bg-navy-deep">
+    <div className="relative h-[calc(100vh-7rem)] w-full overflow-hidden bg-navy-deep">
       {/* Background image - cinematic, abstract */}
       <div className="absolute inset-0">
         <img
@@ -32,18 +32,18 @@ export function UploadStage({ onUpload }: UploadStageProps) {
       </div>
 
       {/* Content layout */}
-      <div className="relative grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-12 gap-0">
+      <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12 gap-0">
         {/* RIGHT side (main, RTL primary): all content */}
-        <div className="lg:col-span-7 flex items-center px-6 py-12 lg:px-16 lg:py-16">
+        <div className="lg:col-span-7 flex items-center px-6 py-6 lg:px-12 lg:py-8">
           <div className="max-w-2xl animate-fade-up">
             {/* Eyebrow */}
-            <div className="mb-8 flex items-center gap-3">
+            <div className="mb-5 flex items-center gap-3">
               <div className="h-px w-16 bg-gold" />
               <span className="label-tag text-gold text-shadow-sm">כשהקסם של ה-AI פוגש את העוצמה שלכם</span>
             </div>
 
             {/* Hero headline - bold modern typography, high contrast */}
-            <h1 className="font-display text-6xl font-black leading-[0.95] text-white lg:text-[5.5rem] tracking-tighter text-shadow-lg">
+            <h1 className="font-display text-5xl font-black leading-[0.95] text-white lg:text-[4.5rem] tracking-tighter text-shadow-lg">
               מכרה הזהב<br />
               שיושב לכם<br />
               <span className="relative inline-block">
@@ -55,14 +55,14 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             </h1>
 
             {/* Subhead */}
-            <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/95 font-light text-shadow-md">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/95 font-light text-shadow-md">
               העלו את דוח <span className="font-semibold text-white">"מוצרים בניהול"</span> מתוך שורנס.
               בתוך פחות מדקה, ה-AI יזהה לקוחות בריסק זמני, הזדמנויות אאפסל,
               ולקוחות שדורשים שימור — ויפיק רשימת פעולות מיידית.
             </p>
 
             {/* Features - inline minimal */}
-            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 border-y border-white/25 py-5">
+            <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 border-y border-white/25 py-3">
               {[
                 { icon: Zap, label: "ניתוח", value: "30 שניות" },
                 { icon: Shield, label: "פרטיות", value: "מאובטח 100%" },
@@ -84,7 +84,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); onUpload(); }}
               onClick={onUpload}
-              className={`mt-10 group relative w-full overflow-hidden rounded-md border-2 p-7 text-right transition-all duration-300 backdrop-blur-md ${
+              className={`mt-6 group relative w-full overflow-hidden rounded-md border-2 p-5 text-right transition-all duration-300 backdrop-blur-md ${
                 isDragging
                   ? "border-gold bg-gold/20 scale-[1.02]"
                   : "border-white/20 bg-white/5 hover:border-gold hover:bg-white/10"
@@ -122,7 +122,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             </button>
 
             {/* Trust badge */}
-            <div className="mt-6 flex items-center gap-3 text-xs text-white/75 text-shadow-sm">
+            <div className="mt-4 flex items-center gap-3 text-xs text-white/75 text-shadow-sm">
               <Shield className="h-3.5 w-3.5 text-gold" strokeWidth={1.5} />
               הנתונים נשארים בארגון שלכם · עומדים בתקני אבטחת מידע · הצפנה End-to-End
             </div>
@@ -130,9 +130,9 @@ export function UploadStage({ onUpload }: UploadStageProps) {
         </div>
 
         {/* LEFT side: floating stat cards over the data visualization */}
-        <div className="hidden lg:col-span-5 lg:flex items-end justify-center pb-16 px-12 relative">
+        <div className="hidden lg:col-span-5 lg:flex flex-col justify-between py-8 px-10 relative">
           {/* Editorial caption top */}
-          <div className="absolute top-12 left-12 right-12 animate-fade-up" style={{ animationDelay: "0.5s" }}>
+          <div className="animate-fade-up" style={{ animationDelay: "0.5s" }}>
             <div className="border-r-2 border-gold pr-5 text-right backdrop-blur-sm bg-navy-deep/30 rounded-md p-4">
               <p className="font-display-light text-xl leading-relaxed text-white text-shadow-md">
                 "ה-AI לא מחליף את הסוכן.<br />
@@ -145,7 +145,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
           </div>
 
           {/* Floating glass cards stacked */}
-          <div className="space-y-3 w-full max-w-sm">
+          <div className="space-y-3 w-full max-w-sm self-end">
             <div className="glass-card animate-fade-up rounded-md p-5 bg-navy-deep/50 backdrop-blur-xl border border-white/30 shadow-2xl" style={{ animationDelay: "0.7s" }}>
               <div className="flex items-center justify-between">
                 <div>
