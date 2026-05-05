@@ -46,8 +46,8 @@
   --color-gold-soft: var(--gold-soft);
   --color-cream: var(--cream);
   --color-ivory: var(--ivory);
-  --font-display: 'Frank Ruhl Libre', serif;
-  --font-sans: 'Heebo', system-ui, sans-serif;
+  --font-display: 'Rubik', sans-serif;
+  --font-sans: 'Assistant', system-ui, sans-serif;
 }
 
 :root {
@@ -106,8 +106,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Heebo', system-ui, sans-serif;
-    font-feature-settings: "ss01", "ss02";
+    font-family: 'Assistant', system-ui, sans-serif;
+    font-weight: 400;
+    font-feature-settings: "ss01", "ss02", "cv11";
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: oklch(0.985 0.005 80);
@@ -117,8 +118,14 @@
     background-attachment: fixed;
   }
   h1, h2, h3, h4, .font-display {
-    font-family: 'Frank Ruhl Libre', serif;
-    font-feature-settings: "ss01";
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .font-display-light {
+    font-family: 'Rubik', sans-serif;
+    font-weight: 300;
     letter-spacing: -0.02em;
   }
   button:not(:disabled),
@@ -174,19 +181,25 @@
 
   /* Number display style */
   .display-number {
-    font-family: 'Frank Ruhl Libre', serif;
+    font-family: 'Rubik', sans-serif;
     font-weight: 900;
-    letter-spacing: -0.04em;
-    line-height: 0.9;
+    letter-spacing: -0.05em;
+    line-height: 0.85;
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
   .label-tag {
-    font-family: 'Heebo', sans-serif;
+    font-family: 'Rubik', sans-serif;
     font-weight: 600;
     font-size: 0.7rem;
-    letter-spacing: 0.15em;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
+  }
+
+  .mono-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
   /* Subtle grain texture overlay */

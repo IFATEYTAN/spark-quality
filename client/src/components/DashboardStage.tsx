@@ -1,8 +1,11 @@
 // Editorial Fintech | דשבורד תוצאות
+import { useState } from "react";
 import { AlertTriangle, TrendingUp, Calendar, Mail, Gift, Sparkles, ArrowLeft, Download, Mail as MailIcon, MessageSquare } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip, RadialBarChart, RadialBar, PolarAngleAxis } from "recharts";
-import { CUSTOMERS, STATS, INSURER_BREAKDOWN, AGE_GROUPS_NO_PENSION, formatCurrency, formatNumber } from "@/lib/demoData";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from "recharts";
+import { CUSTOMERS, STATS, INSURER_BREAKDOWN, AGE_GROUPS_NO_PENSION, formatCurrency } from "@/lib/demoData";
+import type { Customer } from "@/lib/demoData";
 import { AnimatedNumber } from "./AnimatedNumber";
+import { AIComposerModal } from "./AIComposerModal";
 
 interface DashboardStageProps {
   onAction: () => void;
@@ -19,6 +22,17 @@ const TRIGGER_CARDS = [
 
 export function DashboardStage({ onAction }: DashboardStageProps) {
   const insurerData = INSURER_BREAKDOWN.map(d => ({ name: d.name, customers: d.customers }));
+  const [composerCustomer, setComposerCustomer] = useState<Customer | null>(null);
+  const [composerChannel, setComposerChannel] = useState<"email" | "whatsapp" | null>(null);
+
+  const openComposer = (customer: Customer, channel: "email" | "whatsapp") => {
+    setComposerCustomer(customer);
+    setComposerChannel(channel);
+  };
+  const closeComposer = () => {
+    setComposerCustomer(null);
+    setComposerChannel(null);
+  };
 
   return (
     <div className="min-h-[calc(100vh-4rem)] animate-fade-in pb-20">
@@ -284,14 +298,26 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
                         {c.recommendation}
                       </td>
                       <td className="p-4">
-                        <div className="flex gap-1">
+                        <div className="flex gap-1.5">
                           {c.email ? (
-                            <button className="rounded-sm p-1.5 text-muted-foreground hover:bg-gold/10 hover:text-gold transition-colors" title="שלח מייל">
-                              <MailIcon className="h-3.5 w-3.5" />
+                            <button
+                              onClick={() => openComposer(c, "email")}
+                              className="group flex items-center gap-1.5 rounded-md border border-border bg-white px-2.5 py-1.5 text-[11px] font-bold text-navy-deep transition-all hover:border-gold hover:bg-gold/10 hover:text-gold hover:shadow-md"
+                              title="נסח מייל ב-AI"
+                            >
+                              <Sparkles className="h-3 w-3 text-gold" />
+                              <MailIcon className="h-3 w-3" />
                             </button>
-                          ) : null}
-                          <button className="rounded-sm p-1.5 text-muted-foreground hover:bg-emerald-50 hover:text-emerald-700 transition-colors" title="WhatsApp">
-                            <MessageSquare className="h-3.5 w-3.5" />
+                          ) : (
+                            <span className="rounded-md bg-muted px-2 py-1.5 text-[10px] text-muted-foreground/60" title="אין מייל">—</span>
+                          )}
+                          <button
+                            onClick={() => openComposer(c, "whatsapp")}
+                            className="group flex items-center gap-1.5 rounded-md border border-border bg-white px-2.5 py-1.5 text-[11px] font-bold text-navy-deep transition-all hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-md"
+                            title="נסח הודעת WhatsApp ב-AI"
+                          >
+                            <Sparkles className="h-3 w-3 text-emerald-600" />
+                            <MessageSquare className="h-3 w-3" />
                           </button>
                         </div>
                       </td>
@@ -303,6 +329,13 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
           </div>
         </div>
       </div>
+
+      {/* AI Composer Modal */}
+      <AIComposerModal
+        customer={composerCustomer}
+        channel={composerChannel}
+        onClose={closeComposer}
+      />
     </div>
   );
 }

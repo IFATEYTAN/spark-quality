@@ -2,8 +2,9 @@
 // נתוני דמו - מבוססים על דוח "מוצרים בניהול" האמיתי, מותאמים להדרכה
 
 export const ASSETS = {
-  hero: "/manus-storage/hero_insurance_712c3c02.jpg",
-  brain: "/manus-storage/ai_brain_20b764fb.jpg",
+  hero: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_hero_v2-GhGtJfaqU3oTBzjHbRCT73.webp",
+  brain: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_hero_v2-GhGtJfaqU3oTBzjHbRCT73.webp",
+  summary: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_summary_v2-Kf7bPwjNXxfHimS7o3PJHf.webp",
 };
 
 export type Stage = "upload" | "analyzing" | "dashboard" | "actions" | "summary";
