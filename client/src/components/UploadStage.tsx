@@ -19,10 +19,10 @@ export function UploadStage({ onUpload }: UploadStageProps) {
           alt=""
           className="h-full w-full object-cover"
         />
-        {/* Overlay gradients - dark on right (where text sits in RTL), light on left */}
-        <div className="absolute inset-0 bg-gradient-to-l from-navy-deep/30 via-navy-deep/85 to-navy-deep" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/30 to-transparent opacity-70" />
-        <div className="absolute inset-0 bg-navy-deep/30" />
+        {/* Overlay gradients - dark on RIGHT (where text sits in RTL), TRANSPARENT on LEFT (where image should show) */}
+        <div className="absolute inset-0 bg-gradient-to-l from-navy-deep via-navy-deep/85 to-navy-deep/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep/80 via-navy-deep/20 to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-navy-deep/15" />
         {/* Animated grain */}
         <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none"
           style={{
@@ -32,9 +32,9 @@ export function UploadStage({ onUpload }: UploadStageProps) {
       </div>
 
       {/* Content layout */}
-      <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12 gap-0">
+      <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12 gap-0 overflow-y-auto lg:overflow-hidden">
         {/* RIGHT side (main, RTL primary): all content */}
-        <div className="lg:col-span-7 flex items-center px-6 py-6 lg:px-12 lg:py-8">
+        <div className="lg:col-span-7 flex items-center px-6 py-4 lg:px-12 lg:py-6">
           <div className="max-w-2xl animate-fade-up">
             {/* Eyebrow */}
             <div className="mb-5 flex items-center gap-3">
@@ -43,10 +43,9 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             </div>
 
             {/* Hero headline - bold modern typography, high contrast */}
-            <h1 className="font-display text-5xl font-black leading-[0.95] text-white lg:text-[4.5rem] tracking-tighter text-shadow-lg">
+            <h1 className="font-display text-4xl font-black leading-[0.98] text-white lg:text-[3.75rem] tracking-tighter text-shadow-lg">
               מכרה הזהב<br />
-              שיושב לכם<br />
-              <span className="relative inline-block">
+              שיושב לכם <span className="relative inline-block">
                 {/* Solid bright gold for max contrast on dark navy */}
                 <span className="relative z-10 text-[#F4D87C]" style={{ textShadow: "0 4px 24px rgba(244, 216, 124, 0.5), 0 2px 6px rgba(0,0,0,0.6)" }}>
                   במגירה.
@@ -55,14 +54,14 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             </h1>
 
             {/* Subhead */}
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/95 font-light text-shadow-md">
+            <p className="mt-4 max-w-xl text-sm lg:text-base leading-relaxed text-white/95 font-light text-shadow-md">
               העלו את דוח <span className="font-semibold text-white">"מוצרים בניהול"</span> מתוך שורנס.
               בתוך פחות מדקה, ה-AI יזהה לקוחות בריסק זמני, הזדמנויות אאפסל,
               ולקוחות שדורשים שימור — ויפיק רשימת פעולות מיידית.
             </p>
 
             {/* Features - inline minimal */}
-            <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3 border-y border-white/25 py-3">
+            <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 border-y border-white/25 py-2.5">
               {[
                 { icon: Zap, label: "ניתוח", value: "30 שניות" },
                 { icon: Shield, label: "פרטיות", value: "מאובטח 100%" },
@@ -84,7 +83,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
               onDragLeave={() => setIsDragging(false)}
               onDrop={(e) => { e.preventDefault(); setIsDragging(false); onUpload(); }}
               onClick={onUpload}
-              className={`mt-6 group relative w-full overflow-hidden rounded-md border-2 p-5 text-right transition-all duration-300 backdrop-blur-md ${
+              className={`mt-4 group relative w-full overflow-hidden rounded-md border-2 p-4 text-right transition-all duration-300 backdrop-blur-md ${
                 isDragging
                   ? "border-gold bg-gold/20 scale-[1.02]"
                   : "border-white/20 bg-white/5 hover:border-gold hover:bg-white/10"
@@ -93,15 +92,15 @@ export function UploadStage({ onUpload }: UploadStageProps) {
               {/* Animated shimmer */}
               <div className="absolute inset-0 -translate-x-full animate-[shimmer_3s_infinite] bg-gradient-to-l from-transparent via-gold/10 to-transparent" />
 
-              <div className="relative flex items-center gap-5">
-                <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-gold to-gold-soft text-navy-deep transition-transform group-hover:scale-110 group-hover:rotate-3 shadow-2xl shadow-gold/30">
-                  <FileSpreadsheet className="h-8 w-8" strokeWidth={2} />
+              <div className="relative flex items-center gap-4">
+                <div className="flex h-12 w-12 lg:h-14 lg:w-14 flex-shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-gold to-gold-soft text-navy-deep transition-transform group-hover:scale-110 group-hover:rotate-3 shadow-2xl shadow-gold/30">
+                  <FileSpreadsheet className="h-6 w-6 lg:h-7 lg:w-7" strokeWidth={2} />
                 </div>
                 <div className="flex-1 text-right">
-                  <div className="font-display text-2xl font-bold text-white tracking-tight text-shadow-sm">
+                  <div className="font-display text-xl lg:text-2xl font-bold text-white tracking-tight text-shadow-sm">
                     גררו לכאן את דוח Excel
                   </div>
-                  <div className="mt-1 text-sm text-white/85">
+                  <div className="mt-0.5 text-xs lg:text-sm text-white/85">
                     או לחצו לבחירת קובץ · תומך .xlsx, .xls (עד 50MB)
                   </div>
                 </div>
@@ -109,7 +108,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
               </div>
 
               {/* Demo file shortcut */}
-              <div className="relative mt-5 flex items-center justify-between border-t border-white/20 pt-4">
+              <div className="relative mt-3 flex items-center justify-between border-t border-white/20 pt-3">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-3.5 w-3.5 text-gold animate-pulse" />
                   <span className="label-tag text-[10px] text-gold text-shadow-sm">דמו אוטומטי</span>
@@ -122,7 +121,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             </button>
 
             {/* Trust badge */}
-            <div className="mt-4 flex items-center gap-3 text-xs text-white/75 text-shadow-sm">
+            <div className="mt-3 flex items-center gap-3 text-[11px] lg:text-xs text-white/75 text-shadow-sm">
               <Shield className="h-3.5 w-3.5 text-gold" strokeWidth={1.5} />
               הנתונים נשארים בארגון שלכם · עומדים בתקני אבטחת מידע · הצפנה End-to-End
             </div>
