@@ -8,7 +8,7 @@ export const LOGO = {
 };
 
 export const ASSETS = {
-  hero: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_hero_v2-GhGtJfaqU3oTBzjHbRCT73.webp",
+  hero: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_hero_clean-ND9uBaHdtTbuBzrJA2YgFK.webp",
   brain: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_hero_v2-GhGtJfaqU3oTBzjHbRCT73.webp",
   summary: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_summary_v2-Kf7bPwjNXxfHimS7o3PJHf.webp",
 };
