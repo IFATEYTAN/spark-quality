@@ -195,16 +195,16 @@ export function ActionsStage({ onComplete }: ActionsStageProps) {
                     <Sparkles className="h-4 w-4" strokeWidth={2} />
                   </div>
                 </div>
-                <div className="rounded-sm overflow-hidden bg-navy-deep text-cream p-8">
-                  <div className="label-tag text-gold-soft mb-3">סיכום אוטומציה</div>
-                  <div className="font-display text-3xl font-bold leading-tight">
+                <div className="rounded-sm overflow-hidden bg-navy-deep text-cream p-8 shadow-2xl">
+                  <div className="label-tag text-gold-soft mb-3 text-shadow-sm">סיכום אוטומציה</div>
+                  <div className="font-display text-3xl font-bold leading-tight text-shadow-md">
                     בתוך 47 שניות,<br />
                     המערכת ביצעה <span className="text-gold">589 פעולות</span><br />
                     שהיו דורשות <span className="text-gold">3 שבועות</span> ידנית.
                   </div>
                   <div className="mt-6 flex items-center gap-3">
                     <Send className="h-4 w-4 text-gold" />
-                    <span className="text-sm text-cream/80">כל הפעולות מתועדות, ניתנות לביטול, ומשולבות במערכות הקיימות שלכם.</span>
+                    <span className="text-sm text-cream/90 text-shadow-sm">כל הפעולות מתועדות, ניתנות לביטול, ומשולבות במערכות הקיימות שלכם.</span>
                   </div>
                 </div>
               </div>

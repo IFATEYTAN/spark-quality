@@ -20,8 +20,9 @@ export function UploadStage({ onUpload }: UploadStageProps) {
           className="h-full w-full object-cover"
         />
         {/* Overlay gradients - dark on right (where text sits in RTL), light on left */}
-        <div className="absolute inset-0 bg-gradient-to-l from-transparent via-navy-deep/60 to-navy-deep" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-transparent to-transparent opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-l from-navy-deep/30 via-navy-deep/85 to-navy-deep" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/30 to-transparent opacity-70" />
+        <div className="absolute inset-0 bg-navy-deep/30" />
         {/* Animated grain */}
         <div className="absolute inset-0 opacity-[0.15] mix-blend-overlay pointer-events-none"
           style={{
@@ -38,11 +39,11 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             {/* Eyebrow */}
             <div className="mb-8 flex items-center gap-3">
               <div className="h-px w-16 bg-gold" />
-              <span className="label-tag text-gold">פלטפורמת AI לסוכני ביטוח · גרסה 1.0</span>
+              <span className="label-tag text-gold text-shadow-sm">פלטפורמת AI לסוכני ביטוח · גרסה 1.0</span>
             </div>
 
             {/* Hero headline - bold modern typography */}
-            <h1 className="font-display text-6xl font-black leading-[0.95] text-white lg:text-[5.5rem] tracking-tighter">
+            <h1 className="font-display text-6xl font-black leading-[0.95] text-white lg:text-[5.5rem] tracking-tighter text-shadow-lg">
               מכרה הזהב<br />
               שיושב לכם<br />
               <span className="relative inline-block">
@@ -53,14 +54,14 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             </h1>
 
             {/* Subhead */}
-            <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/70 font-light">
+            <p className="mt-8 max-w-xl text-xl leading-relaxed text-white/95 font-light text-shadow-md">
               העלו את דוח <span className="font-semibold text-white">"מוצרים בניהול"</span> מתוך שורנס.
               בתוך פחות מדקה, ה-AI יזהה לקוחות בריסק זמני, הזדמנויות אאפסל,
               ולקוחות שדורשים שימור — ויפיק רשימת פעולות מיידית.
             </p>
 
             {/* Features - inline minimal */}
-            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 border-y border-white/10 py-5">
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 border-y border-white/25 py-5">
               {[
                 { icon: Zap, label: "ניתוח", value: "30 שניות" },
                 { icon: Shield, label: "פרטיות", value: "מאובטח 100%" },
@@ -69,8 +70,8 @@ export function UploadStage({ onUpload }: UploadStageProps) {
                 <div key={i} className="flex items-center gap-3">
                   <f.icon className="h-4 w-4 text-gold" strokeWidth={1.5} />
                   <div>
-                    <span className="label-tag text-[10px] text-white/40 ml-2">{f.label}</span>
-                    <span className="font-display font-bold text-white">{f.value}</span>
+                    <span className="label-tag text-[10px] text-white/70 ml-2 text-shadow-sm">{f.label}</span>
+                    <span className="font-display font-bold text-white text-shadow-sm">{f.value}</span>
                   </div>
                 </div>
               ))}
@@ -96,10 +97,10 @@ export function UploadStage({ onUpload }: UploadStageProps) {
                   <FileSpreadsheet className="h-8 w-8" strokeWidth={2} />
                 </div>
                 <div className="flex-1 text-right">
-                  <div className="font-display text-2xl font-bold text-white tracking-tight">
+                  <div className="font-display text-2xl font-bold text-white tracking-tight text-shadow-sm">
                     גררו לכאן את דוח Excel
                   </div>
-                  <div className="mt-1 text-sm text-white/60">
+                  <div className="mt-1 text-sm text-white/85">
                     או לחצו לבחירת קובץ · תומך .xlsx, .xls (עד 50MB)
                   </div>
                 </div>
@@ -107,12 +108,12 @@ export function UploadStage({ onUpload }: UploadStageProps) {
               </div>
 
               {/* Demo file shortcut */}
-              <div className="relative mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+              <div className="relative mt-5 flex items-center justify-between border-t border-white/20 pt-4">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-3.5 w-3.5 text-gold animate-pulse" />
-                  <span className="label-tag text-[10px] text-gold">דמו אוטומטי</span>
+                  <span className="label-tag text-[10px] text-gold text-shadow-sm">דמו אוטומטי</span>
                 </div>
-                <div className="flex items-center gap-2 text-sm font-semibold text-white transition-colors group-hover:text-gold">
+                <div className="flex items-center gap-2 text-sm font-semibold text-white transition-colors group-hover:text-gold text-shadow-sm">
                   השתמש בדוח לדוגמה: דוח_מוצרים_בניהול.xlsx
                   <ArrowLeft className="h-3.5 w-3.5" />
                 </div>
@@ -120,7 +121,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             </button>
 
             {/* Trust badge */}
-            <div className="mt-6 flex items-center gap-3 text-xs text-white/50">
+            <div className="mt-6 flex items-center gap-3 text-xs text-white/75 text-shadow-sm">
               <Shield className="h-3.5 w-3.5 text-gold" strokeWidth={1.5} />
               הנתונים נשארים בארגון שלכם · עומדים בתקני אבטחת מידע · הצפנה End-to-End
             </div>
@@ -131,12 +132,12 @@ export function UploadStage({ onUpload }: UploadStageProps) {
         <div className="hidden lg:col-span-5 lg:flex items-end justify-center pb-16 px-12 relative">
           {/* Editorial caption top */}
           <div className="absolute top-12 left-12 right-12 animate-fade-up" style={{ animationDelay: "0.5s" }}>
-            <div className="border-r-2 border-gold pr-5 text-right">
-              <p className="font-display-light text-xl leading-relaxed text-white/95">
+            <div className="border-r-2 border-gold pr-5 text-right backdrop-blur-sm bg-navy-deep/30 rounded-md p-4">
+              <p className="font-display-light text-xl leading-relaxed text-white text-shadow-md">
                 "ה-AI לא מחליף את הסוכן.<br />
                 הוא נותן לו <span className="font-bold text-gold">כוח על</span>."
               </p>
-              <p className="mt-3 label-tag text-[10px] text-gold-soft">
+              <p className="mt-3 label-tag text-[10px] text-gold-soft text-shadow-sm">
                 — נועה כהן, סמנכ״לית טכנולוגיות, קואליטי
               </p>
             </div>
@@ -144,24 +145,24 @@ export function UploadStage({ onUpload }: UploadStageProps) {
 
           {/* Floating glass cards stacked */}
           <div className="space-y-3 w-full max-w-sm">
-            <div className="glass-card animate-fade-up rounded-md p-5 bg-white/10 backdrop-blur-xl border-white/20" style={{ animationDelay: "0.7s" }}>
+            <div className="glass-card animate-fade-up rounded-md p-5 bg-navy-deep/50 backdrop-blur-xl border border-white/30 shadow-2xl" style={{ animationDelay: "0.7s" }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="label-tag text-[10px] text-white/50">פיילוט פעיל</div>
-                  <div className="font-display text-2xl font-bold text-white tracking-tight">בית הסוכן קואליטי</div>
+                  <div className="label-tag text-[10px] text-white/80 text-shadow-sm">פיילוט פעיל</div>
+                  <div className="font-display text-2xl font-bold text-white tracking-tight text-shadow-sm">בית הסוכן קואליטי</div>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                  <span className="text-xs text-emerald-400 font-semibold">LIVE</span>
+                  <span className="text-xs text-emerald-300 font-semibold text-shadow-sm">LIVE</span>
                 </div>
               </div>
             </div>
 
-            <div className="glass-card animate-fade-up rounded-md p-5 bg-white/10 backdrop-blur-xl border-white/20" style={{ animationDelay: "0.9s" }}>
-              <div className="label-tag text-[10px] text-white/50">דוחות מנותחים החודש</div>
+            <div className="glass-card animate-fade-up rounded-md p-5 bg-navy-deep/50 backdrop-blur-xl border border-white/30 shadow-2xl" style={{ animationDelay: "0.9s" }}>
+              <div className="label-tag text-[10px] text-white/80 text-shadow-sm">דוחות מנותחים החודש</div>
               <div className="mt-2 flex items-baseline gap-3">
-                <span className="display-number text-4xl font-black text-white">2,184</span>
-                <span className="text-xs text-emerald-400 font-bold">↑ 24%</span>
+                <span className="display-number text-4xl font-black text-white text-shadow-sm">2,184</span>
+                <span className="text-xs text-emerald-300 font-bold text-shadow-sm">↑ 24%</span>
               </div>
               {/* Mini sparkline */}
               <svg className="mt-3 w-full h-8" viewBox="0 0 200 32" preserveAspectRatio="none">
@@ -185,12 +186,12 @@ export function UploadStage({ onUpload }: UploadStageProps) {
               </svg>
             </div>
 
-            <div className="glass-card animate-fade-up rounded-md p-5 bg-gradient-to-br from-gold/30 to-gold/10 backdrop-blur-xl border-gold/30" style={{ animationDelay: "1.1s" }}>
-              <div className="label-tag text-[10px] text-gold-soft">פוטנציאל הכנסה זוהה</div>
-              <div className="mt-2 display-number text-4xl font-black text-white">
+            <div className="glass-card animate-fade-up rounded-md p-5 bg-gradient-to-br from-gold/40 to-gold/20 backdrop-blur-xl border border-gold/50 shadow-2xl shadow-gold/20" style={{ animationDelay: "1.1s" }}>
+              <div className="label-tag text-[10px] text-gold-soft text-shadow-sm">פוטנציאל הכנסה זוהה</div>
+              <div className="mt-2 display-number text-4xl font-black text-white text-shadow-md">
                 ₪2.84M
               </div>
-              <div className="text-xs text-white/70 mt-1">בתיק לקוחות ממוצע</div>
+              <div className="text-xs text-white/90 mt-1 text-shadow-sm">בתיק לקוחות ממוצע</div>
             </div>
           </div>
         </div>

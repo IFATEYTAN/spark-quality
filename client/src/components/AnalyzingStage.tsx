@@ -46,8 +46,9 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
       {/* Background image with strong overlay */}
       <div className="absolute inset-0">
         <img src={ASSETS.brain} alt="" className="h-full w-full object-cover scale-110 animate-[fade-in_2s]" />
-        <div className="absolute inset-0 bg-gradient-to-l from-navy-deep/40 via-navy-deep/80 to-navy-deep" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-gradient-to-l from-navy-deep/60 via-navy-deep/90 to-navy-deep" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy-deep via-navy-deep/40 to-transparent opacity-80" />
+        <div className="absolute inset-0 bg-navy-deep/40" />
       </div>
 
       {/* Grid pattern overlay */}
@@ -65,29 +66,29 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
           <div className="w-full max-w-2xl animate-fade-in">
             <div className="mb-8 flex items-center gap-3">
               <div className="h-px w-16 bg-gold" />
-              <span className="label-tag text-gold">מנוע SPARK AI · פעיל</span>
+              <span className="label-tag text-gold text-shadow-sm">מנוע SPARK AI · פעיל</span>
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
             </div>
 
-            <h1 className="font-display text-6xl font-black leading-[0.95] text-white lg:text-7xl tracking-tighter">
+            <h1 className="font-display text-6xl font-black leading-[0.95] text-white lg:text-7xl tracking-tighter text-shadow-lg">
               מנתח את התיק<br />
               <span className="bg-gradient-to-l from-gold to-gold-soft bg-clip-text text-transparent">
                 שלכם.
               </span>
             </h1>
-            <p className="mt-6 text-lg text-white/60 max-w-xl font-light">
+            <p className="mt-6 text-lg text-white/90 max-w-xl font-light text-shadow-md">
               המערכת קוראת את כל הגיליונות, מצליבה נתונים, ומזהה הזדמנויות עסקיות בזמן אמת.
             </p>
 
             {/* Progress bar */}
             <div className="mt-12">
               <div className="mb-3 flex items-baseline justify-between">
-                <span className="label-tag text-white/50">התקדמות הניתוח</span>
-                <span className="display-number text-3xl font-black text-white mono-num">
-                  {Math.round(progress)}<span className="text-base text-white/40 font-normal">%</span>
+                <span className="label-tag text-white/80 text-shadow-sm">התקדמות הניתוח</span>
+                <span className="display-number text-3xl font-black text-white mono-num text-shadow-sm">
+                  {Math.round(progress)}<span className="text-base text-white/60 font-normal">%</span>
                 </span>
               </div>
-              <div className="relative h-1.5 overflow-hidden bg-white/10 rounded-full">
+              <div className="relative h-1.5 overflow-hidden bg-white/20 rounded-full">
                 <div
                   className="absolute inset-y-0 right-0 bg-gradient-to-l from-gold via-gold-soft to-gold transition-all duration-200 ease-out rounded-full"
                   style={{ width: `${progress}%` }}
@@ -107,10 +108,10 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
                     key={idx}
                     className={`flex items-center gap-4 rounded-md border-r-2 px-4 py-3 transition-all duration-300 ${
                       isActive
-                        ? "border-gold bg-gold/10 backdrop-blur-sm"
+                        ? "border-gold bg-gold/15 backdrop-blur-sm shadow-lg shadow-gold/10"
                         : isDone
-                          ? "border-emerald-400/50 bg-transparent"
-                          : "border-transparent opacity-30"
+                          ? "border-emerald-400/60 bg-emerald-500/5"
+                          : "border-white/10 opacity-50"
                     }`}
                   >
                     <div className="flex h-7 w-7 items-center justify-center rounded-full">
@@ -129,15 +130,15 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
                       )}
                     </div>
                     <div className="flex-1">
-                      <div className={`font-display text-base font-bold ${isActive ? "text-white" : isDone ? "text-white/70" : "text-white/40"}`}>
+                      <div className={`font-display text-base font-bold text-shadow-sm ${isActive ? "text-white" : isDone ? "text-white/90" : "text-white/70"}`}>
                         {step.label}
                       </div>
                     </div>
                     {isActive && (
-                      <span className="label-tag text-[10px] text-gold animate-pulse">פעיל</span>
+                      <span className="label-tag text-[10px] text-gold animate-pulse text-shadow-sm">פעיל</span>
                     )}
                     {isDone && (
-                      <span className="label-tag text-[10px] text-emerald-400">הושלם</span>
+                      <span className="label-tag text-[10px] text-emerald-300 text-shadow-sm">הושלם</span>
                     )}
                   </div>
                 );
@@ -148,23 +149,23 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
 
         {/* LEFT: live counters - giant numbers */}
         <div className="hidden lg:col-span-5 lg:flex items-center justify-center pr-12">
-          <div className="space-y-10 text-right w-full">
+          <div className="space-y-10 text-right w-full backdrop-blur-sm bg-navy-deep/30 rounded-lg p-8 border border-white/10">
             <div className="animate-fade-up">
-              <div className="label-tag text-[10px] text-gold-soft mb-2">לקוחות שזוהו</div>
-              <div className="display-number text-7xl font-black text-white mono-num">
+              <div className="label-tag text-[10px] text-gold mb-2 text-shadow-sm">לקוחות שזוהו</div>
+              <div className="display-number text-7xl font-black text-white mono-num text-shadow-md">
                 {Math.round(1247 * (progress / 100)).toLocaleString("he-IL")}
               </div>
             </div>
             <div className="gold-divider w-32" />
             <div className="animate-fade-up" style={{ animationDelay: "0.2s" }}>
-              <div className="label-tag text-[10px] text-gold-soft mb-2">מוצרים מנותחים</div>
-              <div className="display-number text-6xl font-black text-white/90 mono-num">
+              <div className="label-tag text-[10px] text-gold mb-2 text-shadow-sm">מוצרים מנותחים</div>
+              <div className="display-number text-6xl font-black text-white mono-num text-shadow-md">
                 {Math.round(2891 * (progress / 100)).toLocaleString("he-IL")}
               </div>
             </div>
             <div className="gold-divider w-32" />
             <div className="animate-fade-up" style={{ animationDelay: "0.4s" }}>
-              <div className="label-tag text-[10px] text-gold-soft mb-2">דגלים שזוהו</div>
+              <div className="label-tag text-[10px] text-gold mb-2 text-shadow-sm">דגלים שזוהו</div>
               <div className="display-number text-5xl font-black mono-num bg-gradient-to-l from-gold to-gold-soft bg-clip-text text-transparent">
                 {Math.round(1071 * (progress / 100)).toLocaleString("he-IL")}
               </div>
