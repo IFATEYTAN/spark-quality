@@ -216,26 +216,36 @@ export const appRouter = router({
     }),
 
     /**
-     * Save a parsed report to the database.
-     * Used after parsing happens client-side (current MVP) or server-side.
+     * Save a parsed report (with extracted clients) to the database.
+     * Client-side parses the file, sends summary + client rows.
      */
     save: workspaceProcedure
       .input(
         z.object({
           fileName: z.string(),
-          fileKey: z.string(),
+          fileKey: z.string().optional(),
           fileSize: z.number().optional(),
           summary: z.any().optional(),
           clientCount: z.number().optional(),
           totalAum: z.number().optional(),
+          clients: z
+            .array(
+              z.object({
+                idNumber: z.string(),
+                fullName: z.string().nullable().optional(),
+                email: z.string().nullable().optional(),
+                phone: z.string().nullable().optional(),
+              })
+            )
+            .optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
-        const id = await db.createReport({
+        const reportId = await db.createReport({
           workspaceId: ctx.user.workspaceId,
           uploadedByUserId: ctx.user.id,
           fileName: input.fileName,
-          fileKey: input.fileKey,
+          fileKey: input.fileKey ?? "",
           fileSize: input.fileSize,
           source: "shorens",
           status: "done",
@@ -244,7 +254,18 @@ export const appRouter = router({
           totalAum: input.totalAum?.toString(),
           processedAt: new Date(),
         });
-        return { id };
+
+        let importedCount = 0;
+        if (input.clients && input.clients.length > 0) {
+          importedCount = await db.bulkUpsertClients({
+            workspaceId: ctx.user.workspaceId,
+            ownerUserId: ctx.user.id,
+            reportId,
+            rows: input.clients,
+          });
+        }
+
+        return { id: reportId, importedCount };
       }),
   }),
 });

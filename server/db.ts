@@ -1,4 +1,4 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   clients,
@@ -255,4 +255,58 @@ export async function listWorkspaceInvitations(workspaceId: number) {
     .from(invitations)
     .where(eq(invitations.workspaceId, workspaceId))
     .orderBy(desc(invitations.createdAt));
+}
+
+
+// ============================================================
+// BULK CLIENT IMPORT (used after report parsing)
+// ============================================================
+/**
+ * Upsert multiple clients from a parsed report.
+ * Returns the count of inserted/updated rows.
+ * Uses idNumber + workspaceId as the unique key for de-duplication.
+ */
+export async function bulkUpsertClients(opts: {
+  workspaceId: number;
+  ownerUserId: number;
+  reportId: number;
+  rows: Array<{
+    idNumber: string;
+    fullName?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    notes?: string | null;
+  }>;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (opts.rows.length === 0) return 0;
+
+  // Insert with ON DUPLICATE KEY UPDATE (idNumber+workspaceId is unique)
+  const values = opts.rows.map(row => ({
+    workspaceId: opts.workspaceId,
+    ownerUserId: opts.ownerUserId,
+    idNumber: row.idNumber,
+    fullName: row.fullName ?? null,
+    email: row.email ?? null,
+    phone: row.phone ?? null,
+    notes: row.notes ?? null,
+    sourceReportId: opts.reportId,
+  }));
+
+  // Insert in batches of 500 to avoid query size limits
+  const BATCH = 500;
+  let total = 0;
+  for (let i = 0; i < values.length; i += BATCH) {
+    const batch = values.slice(i, i + BATCH);
+    await db.insert(clients).values(batch).onDuplicateKeyUpdate({
+      set: {
+        fullName: sql`COALESCE(VALUES(\`fullName\`), \`fullName\`)`,
+        email: sql`COALESCE(VALUES(\`email\`), \`email\`)`,
+        phone: sql`COALESCE(VALUES(\`phone\`), \`phone\`)`,
+      },
+    });
+    total += batch.length;
+  }
+  return total;
 }
