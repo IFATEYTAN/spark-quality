@@ -2,7 +2,8 @@
 import { useRef, useState } from "react";
 import { Upload, FileSpreadsheet, ArrowLeft, Sparkles, FileCheck2, AlertCircle } from "lucide-react";
 import { ASSETS } from "@/lib/demoData";
-import { parseShorensReport, type ParsedReport } from "@/lib/parseReport";
+import type { ParsedReport } from "@/lib/parseReport";
+import { parseShorensReport } from "@/lib/parseReport";
 import { toast } from "sonner";
 
 interface UploadStageProps {

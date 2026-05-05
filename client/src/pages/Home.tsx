@@ -34,6 +34,7 @@ const STAGE_ORDER: Stage[] = [
 ];
 
 export default function Home() {
+  // Demo flow - no auth required
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);

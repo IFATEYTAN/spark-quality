@@ -1,0 +1,290 @@
+import {
+  bigint,
+  boolean,
+  decimal,
+  index,
+  int,
+  json,
+  mysqlEnum,
+  mysqlTable,
+  text,
+  timestamp,
+  unique,
+  varchar,
+} from "drizzle-orm/mysql-core";
+
+/**
+ * SPARK AI - Multi-Tenant SaaS Schema
+ * 
+ * Architecture:
+ * - workspaces: Each agency or solo agent gets a workspace (tenant)
+ * - users: Belong to one workspace, with role inside it (admin/agent)
+ * - clients: Insurance clients, scoped to workspace + assigned to specific agent
+ * - policies: Multiple policies per client (one-to-many)
+ * - reports: Uploaded Excel reports (Shorens, etc.)
+ * - actionItems: Auto-generated tasks (retention, expired discount, etc.)
+ * - invitations: Pending invites for new users to join a workspace
+ * 
+ * Data Isolation Rule (CRITICAL):
+ * Every business query MUST filter by workspaceId. Agents see only their
+ * own clients (where ownerUserId = ctx.user.id), Admins see all clients
+ * within their workspace.
+ */
+
+// ============================================================
+// WORKSPACES (Tenants) - בית סוכן או סוכן עצמאי
+// ============================================================
+export const workspaces = mysqlTable("workspaces", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Display name, e.g. "קוואליטי" or "ביטוח דניאל" */
+  name: varchar("name", { length: 200 }).notNull(),
+  /** Subscription plan: trial | basic | premium | enterprise */
+  plan: mysqlEnum("plan", ["trial", "basic", "premium", "enterprise"]).default("trial").notNull(),
+  /** Trial ends at this date (null after upgrade) */
+  trialEndsAt: timestamp("trialEndsAt"),
+  /** Active subscription end date (null if no active sub) */
+  subscriptionEndsAt: timestamp("subscriptionEndsAt"),
+  /** Soft delete */
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Workspace = typeof workspaces.$inferSelect;
+export type InsertWorkspace = typeof workspaces.$inferInsert;
+
+// ============================================================
+// USERS - סוכנים (כל משתמש שייך ל-workspace אחד)
+// ============================================================
+export const users = mysqlTable(
+  "users",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** Manus OAuth identifier (openId) returned from the OAuth callback */
+    openId: varchar("openId", { length: 64 }).notNull().unique(),
+    /** Workspace this user belongs to. NULL only for users mid-onboarding */
+    workspaceId: int("workspaceId").references(() => workspaces.id),
+    name: text("name"),
+    email: varchar("email", { length: 320 }),
+    phone: varchar("phone", { length: 32 }),
+    loginMethod: varchar("loginMethod", { length: 64 }),
+    /**
+     * Global role (only used for system-level admins).
+     * Most users will be "user" here; their *workspace* role is in workspaceRole.
+     */
+    role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+    /**
+     * Role inside the workspace:
+     * - owner: created the workspace, full control + billing
+     * - admin: like nova at קוואליטי - sees all clients, manages team
+     * - agent: regular agent, sees only their own clients
+     */
+    workspaceRole: mysqlEnum("workspaceRole", ["owner", "admin", "agent"]).default("agent").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+    lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("users_workspace_idx").on(table.workspaceId),
+  })
+);
+
+export type User = typeof users.$inferSelect;
+export type InsertUser = typeof users.$inferInsert;
+
+// ============================================================
+// INVITATIONS - הזמנת סוכן חדש לבית הסוכן
+// ============================================================
+export const invitations = mysqlTable(
+  "invitations",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** Email of the invited person */
+    email: varchar("email", { length: 320 }).notNull(),
+    /** Role they'll have when they accept */
+    workspaceRole: mysqlEnum("workspaceRole", ["admin", "agent"]).default("agent").notNull(),
+    /** Random token for the invite link */
+    token: varchar("token", { length: 64 }).notNull().unique(),
+    /** User who created the invite */
+    invitedByUserId: int("invitedByUserId").references(() => users.id).notNull(),
+    /** Status: pending | accepted | expired | revoked */
+    status: mysqlEnum("status", ["pending", "accepted", "expired", "revoked"]).default("pending").notNull(),
+    expiresAt: timestamp("expiresAt").notNull(),
+    acceptedAt: timestamp("acceptedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("invitations_workspace_idx").on(table.workspaceId),
+    emailIdx: index("invitations_email_idx").on(table.email),
+  })
+);
+
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = typeof invitations.$inferInsert;
+
+// ============================================================
+// CLIENTS - לקוחות הקצה של הסוכנים
+// ============================================================
+export const clients = mysqlTable(
+  "clients",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** Tenant scoping - critical for data isolation */
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** The agent who owns this client (for sub-tenant filtering) */
+    ownerUserId: int("ownerUserId").references(() => users.id).notNull(),
+    /** Israeli ID number (תעודת זהות) - external unique identifier per tenant */
+    idNumber: varchar("idNumber", { length: 32 }).notNull(),
+    /** Full name (might be empty for some Shorens entries) */
+    fullName: varchar("fullName", { length: 200 }),
+    email: varchar("email", { length: 320 }),
+    phone: varchar("phone", { length: 32 }),
+    /** Date of birth */
+    birthDate: timestamp("birthDate"),
+    /** Notes free text */
+    notes: text("notes"),
+    /** VIP / strategic client flag */
+    isVip: boolean("isVip").default(false).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("clients_workspace_idx").on(table.workspaceId),
+    ownerIdx: index("clients_owner_idx").on(table.ownerUserId),
+    idNumberIdx: index("clients_idnumber_idx").on(table.idNumber),
+    /** A client (by ID number) is unique per workspace */
+    uniqueIdPerWorkspace: unique("uq_client_id_per_workspace").on(table.workspaceId, table.idNumber),
+  })
+);
+
+export type Client = typeof clients.$inferSelect;
+export type InsertClient = typeof clients.$inferInsert;
+
+// ============================================================
+// POLICIES - פוליסות (לכל לקוח יכולות להיות מספר פוליסות)
+// ============================================================
+export const policies = mysqlTable(
+  "policies",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** Tenant scoping (denormalized for fast queries) */
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** Foreign key to client */
+    clientId: int("clientId").references(() => clients.id).notNull(),
+    /** Policy/product type: pension, savings, risk, health, elementary, etc. */
+    productType: varchar("productType", { length: 100 }),
+    /** Insurance company: מגדל, הראל, מנורה, פניקס, כלל, etc. */
+    company: varchar("company", { length: 100 }),
+    /** Policy number / unique identifier from the insurance company */
+    policyNumber: varchar("policyNumber", { length: 100 }),
+    /** Annual premium in ILS */
+    annualPremium: decimal("annualPremium", { precision: 12, scale: 2 }),
+    /** Monthly premium in ILS */
+    monthlyPremium: decimal("monthlyPremium", { precision: 12, scale: 2 }),
+    /** Accumulated balance / AUM in ILS */
+    balance: decimal("balance", { precision: 14, scale: 2 }),
+    /** Policy start date */
+    startDate: timestamp("startDate"),
+    /** Policy end date (for risk policies, discount expiration, etc.) */
+    endDate: timestamp("endDate"),
+    /** Status: active | inactive | cancelled | expired */
+    status: mysqlEnum("status", ["active", "inactive", "cancelled", "expired"]).default("active").notNull(),
+    /** Free-form metadata from the source report */
+    metadata: json("metadata"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("policies_workspace_idx").on(table.workspaceId),
+    clientIdx: index("policies_client_idx").on(table.clientId),
+  })
+);
+
+export type Policy = typeof policies.$inferSelect;
+export type InsertPolicy = typeof policies.$inferInsert;
+
+// ============================================================
+// REPORTS - דוחות שהועלו (היסטוריה של כל ייבוא)
+// ============================================================
+export const reports = mysqlTable(
+  "reports",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** User who uploaded the report */
+    uploadedByUserId: int("uploadedByUserId").references(() => users.id).notNull(),
+    /** Original filename */
+    fileName: varchar("fileName", { length: 500 }).notNull(),
+    /** S3 storage key */
+    fileKey: varchar("fileKey", { length: 500 }).notNull(),
+    /** File size in bytes */
+    fileSize: bigint("fileSize", { mode: "number" }),
+    /** Report source: shorens | manual | api */
+    source: mysqlEnum("source", ["shorens", "manual", "api"]).default("shorens").notNull(),
+    /** Processing status: pending | processing | done | failed */
+    status: mysqlEnum("status", ["pending", "processing", "done", "failed"]).default("pending").notNull(),
+    /** Summary metrics computed at parse time (JSON) */
+    summary: json("summary"),
+    /** Number of clients found */
+    clientCount: int("clientCount"),
+    /** Total AUM in this report */
+    totalAum: decimal("totalAum", { precision: 16, scale: 2 }),
+    /** Error message if status=failed */
+    errorMessage: text("errorMessage"),
+    uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
+    processedAt: timestamp("processedAt"),
+  },
+  table => ({
+    workspaceIdx: index("reports_workspace_idx").on(table.workspaceId),
+    uploaderIdx: index("reports_uploader_idx").on(table.uploadedByUserId),
+  })
+);
+
+export type Report = typeof reports.$inferSelect;
+export type InsertReport = typeof reports.$inferInsert;
+
+// ============================================================
+// ACTION ITEMS - משימות שימור ופעולה אוטומטיות
+// ============================================================
+export const actionItems = mysqlTable(
+  "action_items",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** The client this action relates to */
+    clientId: int("clientId").references(() => clients.id).notNull(),
+    /** Assigned agent (usually the client's owner) */
+    assignedToUserId: int("assignedToUserId").references(() => users.id),
+    /**
+     * Type of action:
+     * - missing_email | missing_pension | missing_phone
+     * - discount_expiring | risk_expiring | policy_renewal
+     * - cross_sell_opportunity | retention_risk | birthday
+     */
+    type: varchar("type", { length: 50 }).notNull(),
+    /** Priority: low | medium | high | urgent */
+    priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+    /** Status: open | in_progress | done | dismissed */
+    status: mysqlEnum("status", ["open", "in_progress", "done", "dismissed"]).default("open").notNull(),
+    /** Action title (Hebrew) */
+    title: varchar("title", { length: 300 }).notNull(),
+    /** Detailed description */
+    description: text("description"),
+    /** Suggested due date (e.g. discount expires in 30 days) */
+    dueDate: timestamp("dueDate"),
+    /** When user marked as done */
+    completedAt: timestamp("completedAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("actions_workspace_idx").on(table.workspaceId),
+    clientIdx: index("actions_client_idx").on(table.clientId),
+    assigneeIdx: index("actions_assignee_idx").on(table.assignedToUserId),
+    statusIdx: index("actions_status_idx").on(table.status),
+  })
+);
+
+export type ActionItem = typeof actionItems.$inferSelect;
+export type InsertActionItem = typeof actionItems.$inferInsert;
