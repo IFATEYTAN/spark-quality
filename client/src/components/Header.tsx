@@ -14,13 +14,13 @@ export function Header({ stage, onReset }: HeaderProps) {
           {/* RIGHT side (RTL primary) - SPARK AI logo */}
           <button
             onClick={onReset}
-            className="group flex items-center"
+            className="group flex items-center relative overflow-hidden h-24 w-64"
             aria-label="חזרה למסך הראשי"
           >
             <img
               src={LOGO.clear}
               alt="SPARK AI"
-              className="h-24 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] max-w-none object-cover transition-transform duration-300 group-hover:scale-105"
               style={{ filter: "drop-shadow(0 2px 8px rgba(201, 169, 97, 0.15))" }}
             />
           </button>
