@@ -239,22 +239,41 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
 
-  // Try every sheet, take all customers, dedupe by id, prefer first non-empty
+  // Process sheets selectively to avoid double-counting financials.
+  // Savings (מוצרי חיסון) provides accumulation. Insurance (מוצרי ביטוח) provides premium.
+  // Skip summary/aggregate sheets (דוח מסכם) which would inflate counts.
   const allCustomers = new Map<string, Customer>();
   let totalRows = 0;
+  const SAVINGS_SHEET_HINTS = ["חיסון", "פנסיה וגמל", "פינסים"];
+  const INSURANCE_SHEET_HINTS = ["ביטוח"];
+  const SKIP_HINTS = ["מסכם", "מסלול", "כיסוי"]; // skip aggregates and coverage detail sheet
+  
   for (const sheetName of wb.SheetNames) {
+    if (SKIP_HINTS.some(h => sheetName.includes(h))) continue;
     const sheet = wb.Sheets[sheetName];
+    const isSavings = SAVINGS_SHEET_HINTS.some(h => sheetName.includes(h)) || sheetName.includes("חיסון");
+    const isInsurance = INSURANCE_SHEET_HINTS.some(h => sheetName.includes(h));
     const customers = buildCustomersFromSheet(sheet);
     totalRows += customers.length;
     for (const c of customers) {
       if (!allCustomers.has(c.id)) {
-        allCustomers.set(c.id, c);
+        // Initialize - if this is insurance sheet, zero out accumulation (insurance has no AUM)
+        const init = { ...c };
+        if (isInsurance) init.accumulation = 0;
+        if (isSavings) init.premium = 0; // savings premium is yearly contribution, not monthly insurance
+        allCustomers.set(c.id, init);
       } else {
-        // merge financial data across sheets
+        // Merge: accumulation comes only from savings sheet, premium from insurance
         const ex = allCustomers.get(c.id)!;
-        ex.accumulation += c.accumulation;
-        ex.premium += c.premium;
+        if (isSavings && ex.accumulation === 0) ex.accumulation = c.accumulation;
+        if (isInsurance) ex.premium += c.premium;
         if (!ex.email && c.email) ex.email = c.email;
+        if (ex.priority !== "גבוהה" && c.priority === "גבוהה") {
+          ex.priority = c.priority;
+          ex.status = c.status;
+          ex.flag = c.flag;
+          ex.recommendation = c.recommendation;
+        }
       }
     }
   }

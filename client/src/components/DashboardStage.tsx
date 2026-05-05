@@ -45,7 +45,7 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
   };
 
   return (
-    <div className="h-[calc(100vh-7rem)] w-full overflow-y-auto animate-fade-in bg-background">
+    <div data-pdf-target className="h-[calc(100vh-7rem)] w-full overflow-y-auto animate-fade-in bg-background">
       {/* Page header */}
       <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
         <div className="container py-8">
@@ -66,16 +66,15 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
             </div>
             <div className="flex items-center gap-3">
               <button
-                onClick={() => {
+                onClick={async () => {
                   const t = toast.loading("מכין דוח PDF…");
-                  setTimeout(() => {
-                    try {
-                      exportDashboardPDF(customers, stats);
-                      toast.success("הדוח הורד בהצלחה", { id: t });
-                    } catch (e) {
-                      toast.error("שגיאה בהפקת הדוח", { id: t });
-                    }
-                  }, 400);
+                  try {
+                    await exportDashboardPDF(customers, stats);
+                    toast.success("הדוח הורד בהצלחה", { id: t });
+                  } catch (e) {
+                    console.error(e);
+                    toast.error("שגיאה בהפקת הדוח", { id: t });
+                  }
                 }}
                 className="flex items-center gap-2 rounded-sm border border-border bg-card px-5 py-3 text-sm font-semibold text-navy-deep transition-all hover:border-gold hover:text-gold"
               >
