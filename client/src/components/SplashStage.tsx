@@ -101,18 +101,16 @@ export function SplashStage({ onComplete, durationMs = 3500 }: SplashStageProps)
             ×
           </div>
 
-          {/* SPARK AI logo on matching white plate (clean fit) */}
+          {/* SPARK AI logo on matching white plate (filled, well-sized) */}
           <div
-            className="bg-white/95 rounded-md shadow-2xl shadow-gold/20 animate-fade-up flex items-center justify-center p-4"
+            className="bg-white/95 rounded-md shadow-2xl shadow-gold/20 animate-fade-up flex items-center justify-center px-8 py-2"
             style={{ animationDelay: "0.5s", animationDuration: "1.2s", width: "320px", height: "120px" }}
           >
-            <div className="relative w-full h-full">
-              <img
-                src={LOGO.clear}
-                alt="SPARK AI"
-                className="max-h-full max-w-full object-contain"
-              />
-            </div>
+            <img
+              src={LOGO.clear}
+              alt="SPARK AI"
+              className="w-full h-full object-contain"
+            />
           </div>
         </div>
 
