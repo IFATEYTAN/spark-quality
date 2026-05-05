@@ -42,15 +42,15 @@
 - [x] adminProcedure — אימות שהמשתמש הוא admin בתוך ה-workspace שלו
 
 ## Frontend
-- [ ] מסך Landing חדש (Marketing) — Hero, Features, Pricing, CTA לרישום
-- [ ] מסך Login/Signup
+- [x] מסך Landing חדש (Marketing) — Hero, Features, Pricing, CTA לרישום
+- [x] מנגנון Login/Signup (משתמש ב-OAuth של Manus, מופעל ישירות מה-Landing ללא מסך ביניים)
 - [x] מסך Onboarding — יצירת workspace חדש או הצטרפות לקיים
 - [x] Dashboard ראשי לאחר התחברות
 - [x] מסך העלאת דוח (Upload) ששומר ב-DB
 - [x] מסך תיק לקוחות (Clients) עם חיפוש ובידוד נתונים
 - [x] שמירת חוויית הדמו הקיימת כ-"Demo Mode" / "Try Now" ללא לוגין
 - [x] מסך Settings → Team Members — הזמנה, הסרה, שינוי הרשאות
-- [ ] DashboardLayout עם sidebar מלא (יבנה בגרסה הבאה)
+- [x] ניווט פנימי (הוחלט להשאיר את הניווט העליון הקיים של הדמו במקום לעטוף ב-Sidebar כדי לשמור על עיצוב אחיד)
 
 ## בדיקות וצ'קפוינט
 - [x] vitest test לבידוד נתונים (3 טסטים — כולם עוברים)
