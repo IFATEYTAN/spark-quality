@@ -4,6 +4,7 @@
 export const LOGO = {
   clear: "/manus-storage/spark_logo_clear_e216dedc.png",
   purple: "/manus-storage/spark_logo_purple_41de65b0.png",
+  quality: "/manus-storage/quality_logo_f5e2309b.png",
 };
 
 export const ASSETS = {

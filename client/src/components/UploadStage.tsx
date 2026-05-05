@@ -39,15 +39,16 @@ export function UploadStage({ onUpload }: UploadStageProps) {
             {/* Eyebrow */}
             <div className="mb-8 flex items-center gap-3">
               <div className="h-px w-16 bg-gold" />
-              <span className="label-tag text-gold text-shadow-sm">פלטפורמת AI לסוכני ביטוח · גרסה 1.0</span>
+              <span className="label-tag text-gold text-shadow-sm">כשהקסם של ה-AI פוגש את העוצמה שלכם</span>
             </div>
 
-            {/* Hero headline - bold modern typography */}
+            {/* Hero headline - bold modern typography, high contrast */}
             <h1 className="font-display text-6xl font-black leading-[0.95] text-white lg:text-[5.5rem] tracking-tighter text-shadow-lg">
               מכרה הזהב<br />
               שיושב לכם<br />
               <span className="relative inline-block">
-                <span className="relative z-10 bg-gradient-to-l from-gold via-gold-soft to-gold bg-clip-text text-transparent">
+                {/* Solid bright gold for max contrast on dark navy */}
+                <span className="relative z-10 text-[#F4D87C]" style={{ textShadow: "0 4px 24px rgba(244, 216, 124, 0.5), 0 2px 6px rgba(0,0,0,0.6)" }}>
                   במגירה.
                 </span>
               </span>
@@ -138,7 +139,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
                 הוא נותן לו <span className="font-bold text-gold">כוח על</span>."
               </p>
               <p className="mt-3 label-tag text-[10px] text-gold-soft text-shadow-sm">
-                — נועה כהן, סמנכ״לית טכנולוגיות, קואליטי
+                — רונית אבני, סוכנת ביטוח בכירה
               </p>
             </div>
           </div>

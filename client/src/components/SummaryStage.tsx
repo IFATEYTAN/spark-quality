@@ -136,11 +136,11 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                   </p>
                   <div className="mt-4 pt-4 border-t border-border/40 flex items-center gap-3">
                     <div className="h-10 w-10 rounded-full bg-gradient-to-br from-gold to-gold-soft flex items-center justify-center text-navy-deep font-display font-black">
-                      נכ
+                      רא
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-navy-deep">נועה כהן</div>
-                      <div className="text-xs text-muted-foreground">סמנכ“לית טכנולוגיות, קואליטי</div>
+                      <div className="text-sm font-bold text-navy-deep">רונית אבני</div>
+                      <div className="text-xs text-muted-foreground">סוכנת ביטוח בכירה</div>
                     </div>
                   </div>
                 </div>
