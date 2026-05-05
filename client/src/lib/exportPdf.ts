@@ -88,12 +88,12 @@ export async function exportDashboardPDF(
   pdf.setFontSize(7);
   pdf.setTextColor(120, 110, 90);
   pdf.text(
-    `QUALITY x SPARK AI  |  ${today}  |  ${customers.length} customers`,
+    `SPARK AI  |  ${today}  |  ${customers.length} customers`,
     margin,
     pageH - 4,
   );
   pdf.setTextColor(140, 130, 110);
-  pdf.text("www.quality-pension.co.il", pageW - margin, pageH - 4, {
+  pdf.text("SPARK AI · Sprinkle AI Magic", pageW - margin, pageH - 4, {
     align: "right",
   });
 
@@ -102,5 +102,5 @@ export async function exportDashboardPDF(
     // Multi-page handling: render a second page note (the image already fits scaled down)
   }
 
-  pdf.save(`SPARK-AI-Quality-Report-${today.replace(/\//g, "-")}.pdf`);
+  pdf.save(`SPARK-AI-Report-${today.replace(/\//g, "-")}.pdf`);
 }

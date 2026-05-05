@@ -175,11 +175,13 @@ function buildCustomersFromSheet(
 
     const firstName = idx.firstName !== -1 ? HE(row[idx.firstName]) : "";
     const lastName = idx.lastName !== -1 ? HE(row[idx.lastName]) : "";
-    const fullName =
+    const fullNameRaw =
       idx.fullName !== -1
         ? HE(row[idx.fullName])
         : `${firstName} ${lastName}`.trim();
-    if (!fullName) continue;
+    // Keep customer if we have either a name or a valid ID; only fallback to placeholder name when missing
+    if (!fullNameRaw && !idVal) continue;
+    const fullName = fullNameRaw || `לקוח ${idVal.slice(-4)}`;
 
     const r1 = {
       insurer: idx.insurer !== -1 ? HE(row[idx.insurer]).replace(/חברה לביטוח בע"מ|בע"מ/g, "").trim() : "—",

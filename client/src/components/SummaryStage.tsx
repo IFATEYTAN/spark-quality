@@ -19,7 +19,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
           <div className="max-w-2xl">
             <div className="mb-6 flex items-center gap-3 animate-fade-up">
               <div className="h-px w-16 bg-gold" />
-              <span className="label-tag text-gold">סיכום הדמו · קואליטי × SPARK AI</span>
+              <span className="label-tag text-gold">סיכום הדמו · SPARK AI</span>
             </div>
 
             <h1 className="font-display text-5xl font-black leading-[0.95] text-navy-deep lg:text-7xl tracking-tighter animate-fade-up" style={{ animationDelay: "0.1s" }}>
@@ -56,7 +56,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               <h3 className="font-display text-xl font-bold text-navy-deep mb-3 tracking-tight">השלבים הבאים שלכם</h3>
               <div className="space-y-2">
                 {[
-                  { num: "01", text: "פיילוט עם 5-10 סוכנים נבחרים מקואליטי" },
+                  { num: "01", text: "פיילוט עם 5-10 סוכנים נבחרים" },
                   { num: "02", text: "התמקדות ב-2 תהליכים: ניתוח דוחות + סיכומי פגישות" },
                   { num: "03", text: "מדידת ROI לאחר 30 יום והרחבה לכלל הסוכנות" },
                 ].map((step, i) => (
@@ -150,7 +150,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                   “You don't need more time. You need more focus.”
                 </p>
                 <p className="label-tag text-[10px] text-white/40 tracking-[0.3em] mt-2">
-                  QUALITY × SPARK AI
+                  SPARK AI
                 </p>
               </div>
             </div>
@@ -187,7 +187,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
           <p className="text-xs text-muted-foreground">
             הדמו מבוסס על דוח "מוצרים בניהול" אמיתי משורנס. כל הנתונים אנונימיים.
           </p>
-          <p className="text-xs text-muted-foreground">© 2026 SPARK AI · בשיתוף בית הסוכן קואליטי</p>
+          <p className="text-xs text-muted-foreground">© 2026 SPARK AI</p>
         </div>
       </div>
     </div>

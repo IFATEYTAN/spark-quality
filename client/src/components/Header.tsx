@@ -1,4 +1,4 @@
-// Editorial Fintech | header עם 2 לוגואים בשני צידי המסך - SPARK AI מימין | Quality משמאל
+// Editorial Fintech | header עם לוגו SPARK AI מימין, אינדיקטור שלב במרכז
 import { LOGO } from "@/lib/demoData";
 
 interface HeaderProps {
@@ -25,7 +25,7 @@ export function Header({ stage, onReset }: HeaderProps) {
             />
           </button>
 
-          {/* CENTER - stage indicator + LIVE pill */}
+          {/* LEFT side - stage indicator + LIVE pill */}
           <div className="hidden md:flex items-center gap-6">
             {stage && (
               <div className="flex items-center gap-3">
@@ -41,18 +41,6 @@ export function Header({ stage, onReset }: HeaderProps) {
                 LIVE DEMO
               </span>
             </div>
-          </div>
-
-          {/* LEFT side - Quality logo with centered caption above */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="label-tag text-[10px] text-muted-foreground tracking-[0.18em]">
-              בשיתוף בית הסוכן
-            </span>
-            <img
-              src={LOGO.quality}
-              alt="Quality - פיננסים וביטוח"
-              className="h-16 w-auto object-contain transition-transform duration-300 hover:scale-105"
-            />
           </div>
         </div>
       </div>

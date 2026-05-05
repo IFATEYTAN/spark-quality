@@ -99,7 +99,7 @@ export function SplashStage({ onComplete, durationMs = 4200 }: SplashStageProps)
           style={{ animationDelay: "0.2s", animationDuration: "1.4s" }}
         >
           <p className="label-tag text-[11px] text-gold/70 tracking-[0.45em]">
-            בשיתוף בית הסוכן קואליטי
+            Sprinkle AI · Automation Magic
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export function SplashStage({ onComplete, durationMs = 4200 }: SplashStageProps)
             className="mt-8 label-tag text-[11px] text-gold-soft/70 tracking-[0.4em] animate-fade-in"
             style={{ animationDelay: "2s", animationDuration: "1s" }}
           >
-            LIVE DEMO · QUALITY × SPARK AI · 2026
+            LIVE DEMO · SPARK AI · 2026
           </p>
         </div>
 
