@@ -101,16 +101,16 @@ export function SplashStage({ onComplete, durationMs = 3500 }: SplashStageProps)
             ×
           </div>
 
-          {/* SPARK AI logo on matching white plate (cropped to remove padding around logo) */}
+          {/* SPARK AI logo on matching white plate (clean fit) */}
           <div
-            className="bg-white/95 rounded-md shadow-2xl shadow-gold/20 animate-fade-up overflow-hidden flex items-center justify-center"
+            className="bg-white/95 rounded-md shadow-2xl shadow-gold/20 animate-fade-up flex items-center justify-center p-4"
             style={{ animationDelay: "0.5s", animationDuration: "1.2s", width: "320px", height: "120px" }}
           >
             <div className="relative w-full h-full">
               <img
                 src={LOGO.clear}
                 alt="SPARK AI"
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] max-w-none object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             </div>
           </div>
@@ -131,6 +131,17 @@ export function SplashStage({ onComplete, durationMs = 3500 }: SplashStageProps)
             כשהקסם של ה-AI{" "}
             <span className="text-gold font-semibold">פוגש את העוצמה שלכם</span>
           </p>
+          {/* Team credits — SPARK AI */}
+          <div className="mt-6 animate-fade-up" style={{ animationDelay: "1.4s", animationDuration: "1.2s" }}>
+            <p className="label-tag text-[10px] text-gold/60 tracking-[0.4em] mb-2">
+              צוות SPARK AI
+            </p>
+            <p className="font-display text-base text-gold-soft tracking-wide">
+              <span className="text-gold-light font-semibold">יפעת איתן</span>
+              <span className="mx-3 text-gold/40">×</span>
+              <span className="text-gold-light font-semibold">ענת גרינברג</span>
+            </p>
+          </div>
           <p className="mt-4 label-tag text-[11px] text-gold-soft/70 tracking-[0.4em]">
             LIVE DEMO · QUALITY × SPARK AI · 2026
           </p>

@@ -138,13 +138,18 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                 <br />שלכם.
               </h2>
 
-              {/* Bottom signature line */}
-              <div className="mt-6 flex flex-col items-center gap-2 animate-fade-up" style={{ animationDelay: "0.9s" }}>
-                <div className="h-px w-40 bg-gradient-to-r from-transparent via-gold to-transparent" />
-                <p className="font-display-light text-gold-soft text-base tracking-[0.15em] italic">
-                  Sprinkle AI &amp; Automation Magic
+              {/* Closing manifesto line */}
+              <div className="mt-7 flex flex-col items-center gap-3 animate-fade-up" style={{ animationDelay: "0.9s" }}>
+                <div className="h-px w-48 bg-gradient-to-r from-transparent via-gold to-transparent" />
+                <p className="font-display-light text-white text-lg lg:text-xl text-center tracking-tight leading-snug max-w-md">
+                  אתם לא צריכים <span className="text-gold/50 line-through decoration-gold/70">עוד זמן</span>.
+                  <br />
+                  אתם צריכים <span className="text-gold font-bold">יותר פוקוס</span>.
                 </p>
-                <p className="label-tag text-[10px] text-white/40 tracking-[0.3em]">
+                <p className="font-display-light text-gold-soft/60 text-xs tracking-[0.2em] italic mt-1">
+                  “You don't need more time. You need more focus.”
+                </p>
+                <p className="label-tag text-[10px] text-white/40 tracking-[0.3em] mt-2">
                   QUALITY × SPARK AI
                 </p>
               </div>
