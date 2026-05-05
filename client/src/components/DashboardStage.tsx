@@ -342,13 +342,13 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
-    "ריסק זמני": "bg-red-50 text-red-700 border-red-200",
-    "תום הנחה": "bg-amber-50 text-amber-700 border-amber-200",
-    "ללא פנסיה": "bg-gold/10 text-gold border-gold/30",
-    "ללא מייל": "bg-slate-50 text-slate-700 border-slate-200",
+    "ריסק זמני": "bg-red-100 text-red-800 border-red-300",
+    "תום הנחה": "bg-amber-100 text-amber-900 border-amber-300",
+    "ללא פנסיה": "bg-[#FFF4D6] text-[#7A5C12] border-[#E0C170]",
+    "ללא מייל": "bg-slate-200 text-slate-800 border-slate-400",
   };
   return (
-    <span className={`inline-flex items-center rounded-sm border px-2 py-1 text-[11px] font-semibold ${map[status] || "bg-muted"}`}>
+    <span className={`inline-flex items-center rounded-sm border px-2.5 py-1 text-[11px] font-bold ${map[status] || "bg-muted text-foreground"}`}>
       {status}
     </span>
   );
