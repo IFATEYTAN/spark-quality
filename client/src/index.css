@@ -274,17 +274,21 @@
 }
 
 
-/* Splash hero subtle Ken Burns zoom */
+/* Splash hero — cinematic Ken Burns: book starts dim & zoomed-in, slowly pans up while brightening */
 @keyframes splash-zoom {
   0% {
-    transform: scale(1.05);
-    filter: brightness(0.85);
+    transform: scale(1.18) translateY(2%);
+    filter: brightness(0.7) saturate(1.05);
+  }
+  60% {
+    filter: brightness(1.05) saturate(1.15);
   }
   100% {
-    transform: scale(1.12);
-    filter: brightness(1);
+    transform: scale(1.28) translateY(-3%);
+    filter: brightness(1.1) saturate(1.2);
   }
 }
 .animate-splash-zoom {
-  animation: splash-zoom 5s ease-out forwards;
+  animation: splash-zoom 6s ease-out forwards;
+  transform-origin: center 65%;
 }

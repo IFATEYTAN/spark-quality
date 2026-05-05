@@ -50,15 +50,15 @@ export function SplashStage({ onComplete, durationMs = 4200 }: SplashStageProps)
         }}
       />
 
-      {/* Dark navy overlay for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#06101F]/80 via-[#06101F]/55 to-[#06101F]/95" />
+      {/* Lighter overlay - lets the book image shine through */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#06101F]/45 via-[#06101F]/15 to-[#06101F]/75" />
 
-      {/* Top vignette to blend the image with the layout */}
+      {/* Soft side vignette only - keeps the center bright */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background:
-            "radial-gradient(ellipse at 50% 60%, transparent 0%, rgba(6,16,31,0.7) 80%)",
+            "radial-gradient(ellipse at 50% 65%, transparent 30%, rgba(6,16,31,0.55) 95%)",
         }}
       />
 
