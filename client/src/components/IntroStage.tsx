@@ -2,7 +2,6 @@
 // פריסה: 16:9 - גובה מלא, ללא גלילה, תוכן ממורכז
 import { useEffect, useState } from "react";
 import { ArrowLeft, FileSpreadsheet, Clock, AlertTriangle, Sparkles, Zap, Target } from "lucide-react";
-import { LOGO } from "@/lib/demoData";
 
 interface IntroStageProps {
   onContinue: () => void;
@@ -101,9 +100,9 @@ export function IntroStage({ onContinue }: IntroStageProps) {
           {phase === "pain" && (
             <div className="animate-fade-up">
               <div className="text-center mb-10">
-                <span className="label-tag text-rose-300/90">המציאות היומיומית</span>
+                <span className="label-tag text-gold-soft/90">המציאות היומיומית</span>
                 <h2 className="mt-4 font-display font-black text-white leading-[1.1] text-4xl lg:text-6xl tracking-tighter">
-                  אתם <span className="text-rose-300">קבורים בנתונים</span>.<br />
+                  אתם <span className="text-gold">קבורים בנתונים</span>.<br />
                   אבל לא רואים את הסיפור.
                 </h2>
               </div>
@@ -131,7 +130,7 @@ export function IntroStage({ onContinue }: IntroStageProps) {
                     className="rounded-md border border-white/10 bg-white/5 backdrop-blur-md p-6 text-right animate-fade-up"
                     style={{ animationDelay: `${0.15 * (i + 1)}s` }}
                   >
-                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-rose-500/15 text-rose-300">
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-md bg-gold/15 text-gold">
                       <item.icon className="h-6 w-6" strokeWidth={1.5} />
                     </div>
                     <h3 className="font-display font-bold text-xl text-white mb-2">
@@ -165,15 +164,9 @@ export function IntroStage({ onContinue }: IntroStageProps) {
           {/* PHASE 4: PROMISE - the solution intro */}
           {phase === "promise" && (
             <div className="animate-fade-up">
-              {/* Logo + tagline */}
+              {/* Tagline only (Logo removed) */}
               <div className="text-center mb-10">
-                <img
-                  src={LOGO.clear}
-                  alt="SPARK AI"
-                  className="h-32 mx-auto object-contain mb-2"
-                  style={{ filter: "drop-shadow(0 4px 20px rgba(244, 216, 124, 0.25))" }}
-                />
-                <p className="font-display-light text-white/85 text-xl">
+                <p className="font-display-light text-white/85 text-3xl">
                   הקסם של ה-AI. <span className="text-gold font-semibold">בעוצמה של הסוכן.</span>
                 </p>
               </div>

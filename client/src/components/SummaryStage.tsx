@@ -1,6 +1,5 @@
 // Editorial Fintech | מסך סיכום סופי - תמונה + טקסט מסודרים, Wow finale
 import { ArrowLeft, RotateCcw, Calendar } from "lucide-react";
-import { LOGO } from "@/lib/demoData";
 
 interface SummaryStageProps {
   onReset: () => void;
@@ -89,36 +88,37 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
           </div>
         </div>
 
-        {/* LEFT: SPARK AI signature logo card + floating quote */}
+        {/* LEFT: Editorial brand statement + floating testimonial */}
         <div className="hidden lg:col-span-5 lg:block relative h-full">
-          {/* Branded logo card with elegant frame */}
+          {/* Brand statement card - typographic, no logo */}
           <div className="absolute inset-8 overflow-hidden rounded-md shadow-2xl shadow-navy/30">
-            {/* Deep navy/purple gradient background to match the original logo aesthetic */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1a0f3d] via-navy-deep to-[#2a1854]" />
-            {/* Subtle gold border frame */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-navy-deep to-[#152844]" />
             <div className="absolute inset-3 border border-gold/30 rounded-md pointer-events-none" />
-            {/* Animated gold particles */}
             <div className="absolute inset-0 opacity-30" style={{
               backgroundImage: "radial-gradient(circle at 20% 30%, rgba(201, 169, 97, 0.4) 0%, transparent 8%), radial-gradient(circle at 80% 70%, rgba(201, 169, 97, 0.3) 0%, transparent 6%), radial-gradient(circle at 50% 50%, rgba(201, 169, 97, 0.2) 0%, transparent 10%)"
             }} />
-            {/* Grain texture */}
             <div className="absolute inset-0 opacity-[0.08] mix-blend-overlay pointer-events-none"
               style={{
                 backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E\")"
               }}
             />
 
-            {/* Logo centered */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center px-12">
-              <img
-                src={LOGO.clear}
-                alt="SPARK AI"
-                className="w-full max-w-md object-contain animate-fade-up drop-shadow-2xl"
-                style={{ filter: "drop-shadow(0 8px 32px rgba(201, 169, 97, 0.3))" }}
-              />
-              <div className="mt-6 h-px w-32 bg-gradient-to-r from-transparent via-gold to-transparent" />
-              <p className="mt-6 font-display text-lg text-gold-soft text-center tracking-wide" style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: "italic" }}>
-                Sprinkle AI &amp; Automation<br />Magic Into Your Business
+            {/* Typographic brand statement */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center px-12 text-center">
+              <span className="label-tag text-gold-soft tracking-[0.3em] text-xs mb-8">
+                THE FUTURE OF INSURANCE
+              </span>
+              <h2 className="font-display font-black text-white text-5xl lg:text-6xl leading-[1] tracking-tighter">
+                <span className="text-gold">הקסם</span>
+                <br />של ה-AI.
+                <br />
+                <span className="text-gold">העוצמה</span>
+                <br />שלכם.
+              </h2>
+              <div className="mt-8 h-px w-32 bg-gradient-to-r from-transparent via-gold to-transparent" />
+              <p className="mt-6 font-display-light text-gold-soft text-lg tracking-wide">
+                Sprinkle AI &amp; Automation
+                <br />Magic Into Your Business
               </p>
             </div>
           </div>
