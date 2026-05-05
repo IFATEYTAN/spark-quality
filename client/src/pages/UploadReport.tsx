@@ -1,20 +1,18 @@
-// SPARK AI · Upload Report - מסך העלאת דוח שורנס במערכת ה-SaaS
+// SPARK AI · Upload Report — בסגנון הסינמטי של הדמו
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { parseShorensReport, type ParsedReport } from "@/lib/parseReport";
 import { trpc } from "@/lib/trpc";
 import {
-  ArrowRight,
   CheckCircle2,
   FileSpreadsheet,
   Loader2,
-  Sparkles,
   Upload,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 
 type UploadState = "idle" | "parsing" | "saving" | "done";
 
@@ -32,14 +30,14 @@ export default function UploadReport() {
   }, [loading, isAuthenticated]);
 
   const saveReport = trpc.reports.save.useMutation({
-    onSuccess: data => {
+    onSuccess: (data) => {
       setImportedCount(data.importedCount);
       setState("done");
       toast.success(`הדוח נשמר! ${data.importedCount} לקוחות יובאו לתיק`);
       utils.clients.list.invalidate();
       utils.reports.list.invalidate();
     },
-    onError: err => {
+    onError: (err) => {
       toast.error("שגיאה בשמירת הדוח", { description: err.message });
       setState("idle");
     },
@@ -52,15 +50,14 @@ export default function UploadReport() {
       setParsed(result);
       setState("saving");
 
-      // Send to server with extracted client list
       const clientRows = result.customers
-        .map(c => ({
+        .map((c) => ({
           idNumber: String(c.id ?? "").trim(),
           fullName: c.name ?? null,
           email: c.email ?? null,
           phone: c.phone ?? null,
         }))
-        .filter(c => c.idNumber.length > 0);
+        .filter((c) => c.idNumber.length > 0);
 
       await saveReport.mutateAsync({
         fileName: file.name,
@@ -88,113 +85,118 @@ export default function UploadReport() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-navy-deep">
+      <div className="min-h-screen flex items-center justify-center bg-[#06101F]">
         <Loader2 className="h-8 w-8 animate-spin text-gold" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-navy-deep text-white">
-      <header className="border-b border-white/10">
-        <div className="container mx-auto py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Sparkles className="h-6 w-6 text-gold" />
-            <span className="font-serif text-lg text-gold">SPARK AI</span>
-          </div>
-          <Link href="/dashboard">
-            <Button variant="ghost" size="sm" className="text-white/70">
-              <ArrowRight className="h-4 w-4 ml-1" />
-              לדשבורד
-            </Button>
-          </Link>
+    <CinematicShell heroAsset="brain" overlayStrength={88} showSidebar>
+      <div className="container py-10 lg:py-14 max-w-3xl">
+        <div className="mb-10 animate-fade-up">
+          <GoldEyebrow>שלב 1 / 5 · העלאת דוח</GoldEyebrow>
+          <h1 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.05]">
+            העלאת דוח <span className="text-gold">שורנס</span>
+          </h1>
+          <p className="mt-4 text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
+            טעינת קובץ XLSX יחיד שמתפצל אוטומטית: לקוחות, פוליסות, AUM, פרמיות
+            ודגלים לפעולה.
+          </p>
         </div>
-      </header>
-
-      <main className="container mx-auto py-12 max-w-2xl">
-        <h1 className="text-3xl font-serif text-white mb-2">העלאת דוח שורנס</h1>
-        <p className="text-white/60 mb-8">
-          טעינת קובץ XLSX יחיד שמתפצל אוטומטית: לקוחות, פוליסות, AUM, פרמיות
-          ודגלים לפעולה
-        </p>
 
         {state === "idle" && (
-          <Card
-            className="p-12 bg-white/5 border-2 border-dashed border-white/20 hover:border-gold/50 transition-all cursor-pointer text-center"
-            onClick={() => fileInputRef.current?.click()}
+          <GlassCard
+            className="p-12 lg:p-16 border-dashed border-2 border-white/20 hover:border-gold/50 hover:bg-white/[0.07] transition-all cursor-pointer text-center animate-fade-up"
+            goldAccent={false}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".xlsx,.xls"
-              className="hidden"
-              onChange={e => {
-                const file = e.target.files?.[0];
-                if (file) handleFile(file);
-              }}
-            />
-            <Upload className="h-16 w-16 text-gold mx-auto mb-4" />
-            <h3 className="text-xl font-serif text-white mb-2">
-              לחץ או גרור קובץ לכאן
-            </h3>
-            <p className="text-sm text-white/50">
-              קבצי XLSX/XLS · עד 10MB · עיבוד אוטומטי
-            </p>
-          </Card>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleFile(file);
+                }}
+              />
+              <div className="h-20 w-20 rounded-full bg-gradient-to-br from-gold/30 to-gold/5 border border-gold/40 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(201,169,97,0.2)]">
+                <Upload className="h-9 w-9 text-gold" />
+              </div>
+              <h3 className="font-display text-2xl lg:text-3xl font-black text-white tracking-tight mb-3">
+                לחצי או גררי קובץ לכאן
+              </h3>
+              <p className="text-sm text-white/60 mb-6">
+                קבצי XLSX / XLS · עד 10MB · עיבוד אוטומטי
+              </p>
+              <span className="inline-flex items-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30">
+                בחירת קובץ
+              </span>
+            </button>
+          </GlassCard>
         )}
 
         {state === "parsing" && (
-          <Card className="p-12 bg-white/5 border-gold/30 text-center">
-            <Loader2 className="h-12 w-12 text-gold mx-auto mb-4 animate-spin" />
-            <h3 className="text-xl font-serif text-white mb-2">
+          <GlassCard goldAccent className="p-12 lg:p-16 text-center">
+            <Loader2 className="h-14 w-14 text-gold mx-auto mb-6 animate-spin" />
+            <h3 className="font-display text-2xl font-black text-white tracking-tight mb-3">
               מנתח את הדוח...
             </h3>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-white/65">
               זיהוי גליונות, מיפוי עמודות, חישוב AUM ופרמיות
             </p>
-          </Card>
+          </GlassCard>
         )}
 
         {state === "saving" && (
-          <Card className="p-12 bg-white/5 border-gold/30 text-center">
-            <Loader2 className="h-12 w-12 text-gold mx-auto mb-4 animate-spin" />
-            <h3 className="text-xl font-serif text-white mb-2">
+          <GlassCard goldAccent className="p-12 lg:p-16 text-center">
+            <Loader2 className="h-14 w-14 text-gold mx-auto mb-6 animate-spin" />
+            <h3 className="font-display text-2xl font-black text-white tracking-tight mb-3">
               שומר במערכת...
             </h3>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-white/65">
               {parsed?.stats.totalCustomers} לקוחות מועברים לתיק שלך
             </p>
-          </Card>
+          </GlassCard>
         )}
 
         {state === "done" && parsed && (
-          <Card className="p-8 bg-white/5 border-green-500/30">
-            <div className="flex items-center gap-3 mb-6">
-              <CheckCircle2 className="h-10 w-10 text-green-400" />
+          <GlassCard
+            className="p-8 lg:p-10 animate-fade-up"
+            goldAccent
+          >
+            <div className="flex items-center gap-4 mb-7">
+              <div className="h-14 w-14 rounded-full bg-emerald-500/15 border border-emerald-400/40 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+              </div>
               <div>
-                <h3 className="text-2xl font-serif text-white">
+                <h3 className="font-display text-2xl lg:text-3xl font-black text-white tracking-tight">
                   הדוח עובד בהצלחה!
                 </h3>
-                <p className="text-sm text-white/60">
+                <p className="text-sm text-white/65 mt-1">
                   {importedCount} לקוחות נוספו / עודכנו בתיק שלך
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <Stat label="לקוחות" value={parsed.stats.totalCustomers} />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+              <Stat label="לקוחות" value={parsed.stats.totalCustomers.toLocaleString("he-IL")} />
               <Stat
                 label="AUM"
                 value={`₪${(parsed.stats.totalAUM / 1_000_000).toFixed(1)}M`}
               />
               <Stat
-                label="פרמיה חודשית"
-                value={`₪${parsed.stats.monthlyPremium.toLocaleString()}`}
+                label="פרמיה / חודש"
+                value={`₪${parsed.stats.monthlyPremium.toLocaleString("he-IL")}`}
               />
-              <Stat label="דגלים" value={parsed.stats.riskFlags} />
+              <Stat label="דגלים" value={parsed.stats.riskFlags.toLocaleString("he-IL")} />
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -202,30 +204,34 @@ export default function UploadReport() {
                   setParsed(null);
                   setImportedCount(null);
                 }}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-white/25 bg-white/5 text-white hover:bg-white/10"
               >
                 העלאת דוח נוסף
               </Button>
               <Button
                 onClick={() => navigate("/clients")}
-                className="bg-gold text-navy-deep hover:bg-gold/90 flex-1"
+                className="bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] hover:shadow-lg hover:shadow-gold/30 flex-1 font-bold"
               >
                 <FileSpreadsheet className="h-4 w-4 ml-2" />
                 לתיק הלקוחות
               </Button>
             </div>
-          </Card>
+          </GlassCard>
         )}
-      </main>
-    </div>
+      </div>
+    </CinematicShell>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-white/5 rounded p-3 text-center border border-white/5">
-      <div className="text-xs text-white/50 mb-1">{label}</div>
-      <div className="text-lg font-serif text-gold">{value}</div>
+    <div className="rounded-md bg-white/5 border border-white/10 p-4 text-center">
+      <div className="text-[10px] tracking-[0.2em] uppercase text-white/50 mb-2">
+        {label}
+      </div>
+      <div className="font-display text-xl lg:text-2xl font-black text-gold">
+        {value}
+      </div>
     </div>
   );
 }

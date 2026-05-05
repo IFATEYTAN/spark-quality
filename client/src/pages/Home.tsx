@@ -1,226 +1,470 @@
-// Editorial Fintech | אורקסטרציה ראשית של הדמו
-// תכונות: ניווט מקלדת (חצים), מסך מלא, כפתורי ניווט קבועים, Splash דרמטי
-import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
-import { Header } from "@/components/Header";
-import { SplashStage } from "@/components/SplashStage";
-import { IntroStage } from "@/components/IntroStage";
-import { UploadStage } from "@/components/UploadStage";
-import { AnalyzingStage } from "@/components/AnalyzingStage";
-import { DashboardStage } from "@/components/DashboardStage";
-import { ActionsStage } from "@/components/ActionsStage";
-import { SummaryStage } from "@/components/SummaryStage";
-import type { Stage } from "@/lib/demoData";
-import type { ParsedReport } from "@/lib/parseReport";
-
-const STAGE_LABELS: Record<Stage, string> = {
-  splash: "0 / 5 · פתיחה",
-  intro: "0 / 5 · פתיחה",
-  upload: "1 / 5 · העלאת דוח",
-  analyzing: "2 / 5 · ניתוח AI",
-  dashboard: "3 / 5 · תוצאות",
-  actions: "4 / 5 · פעולות אוטומטיות",
-  summary: "5 / 5 · סיכום",
-};
-
-// Linear navigation order (skip splash from arrows after first time)
-const STAGE_ORDER: Stage[] = [
-  "intro",
-  "upload",
-  "analyzing",
-  "dashboard",
-  "actions",
-  "summary",
-];
+// Home — Landing שיווקי בסגנון הסינמטי של הדמו
+// רקע נייבי עמוק, חלקיקי זהב, טיפוגרפיה Rubik, כפתורי זהב
+import { useEffect, useMemo } from "react";
+import { Link } from "wouter";
+import {
+  ArrowLeft,
+  Play,
+  Sparkles,
+  TrendingUp,
+  Users,
+  Shield,
+  Zap,
+  Check,
+  ChevronLeft,
+} from "lucide-react";
+import { LOGO, ASSETS } from "@/lib/demoData";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 
 export default function Home() {
-  // Demo flow - no auth required
-  const [stage, setStage] = useState<Stage>("splash");
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
+  const { isAuthenticated, user, loading } = useAuth();
 
-  const reset = useCallback(() => {
-    setParsedReport(null);
-    setStage("splash");
-  }, []);
-
-  const goNext = useCallback(() => {
-    setStage((current) => {
-      if (current === "splash") return "intro";
-      const idx = STAGE_ORDER.indexOf(current);
-      if (idx >= 0 && idx < STAGE_ORDER.length - 1) {
-        return STAGE_ORDER[idx + 1];
-      }
-      return current;
-    });
-  }, []);
-
-  const goPrev = useCallback(() => {
-    setStage((current) => {
-      if (current === "splash") return current;
-      const idx = STAGE_ORDER.indexOf(current);
-      if (idx > 0) {
-        return STAGE_ORDER[idx - 1];
-      }
-      return current;
-    });
-  }, []);
-
-  const toggleFullscreen = useCallback(async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch {
-      // ignore
+  // אם המשתמש כבר מחובר — שלח אותו ל-/dashboard
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      window.location.href = "/dashboard";
     }
-  }, []);
+  }, [loading, isAuthenticated]);
 
-  // Keyboard navigation
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      // RTL: ArrowLeft = forward, ArrowRight = back  (intuitive for Hebrew flow)
-      if (e.key === "ArrowLeft" || e.key === " " || e.key === "PageDown") {
-        e.preventDefault();
-        goNext();
-      } else if (e.key === "ArrowRight" || e.key === "PageUp") {
-        e.preventDefault();
-        goPrev();
-      } else if (e.key === "f" || e.key === "F") {
-        e.preventDefault();
-        toggleFullscreen();
-      } else if (e.key === "Escape" && stage === "splash") {
-        e.preventDefault();
-        setStage("intro");
-      } else if (e.key === "Home") {
-        e.preventDefault();
-        reset();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [goNext, goPrev, toggleFullscreen, reset, stage]);
+  // חלקיקי זהב מאנימציה
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 28 }, (_, i) => ({
+        id: i,
+        top: Math.random() * 100,
+        left: Math.random() * 100,
+        size: 1 + Math.random() * 2.5,
+        delay: Math.random() * 3,
+        duration: 3 + Math.random() * 4,
+        opacity: 0.25 + Math.random() * 0.5,
+      })),
+    []
+  );
 
-  // Track fullscreen state
-  useEffect(() => {
-    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", onFsChange);
-    return () => document.removeEventListener("fullscreenchange", onFsChange);
-  }, []);
-
-  // Special: Splash is overlay, render BEFORE main shell
-  if (stage === "splash") {
-    return <SplashStage onComplete={() => setStage("intro")} />;
-  }
-
-  const currentIdx = STAGE_ORDER.indexOf(stage);
-  const canGoBack = currentIdx > 0;
-  const canGoForward = currentIdx < STAGE_ORDER.length - 1;
+  const loginHref = getLoginUrl();
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-navy-deep">
-      <Header stage={STAGE_LABELS[stage]} onReset={reset} />
+    <div className="relative min-h-screen w-full overflow-x-hidden bg-[#06101F] text-white">
+      {/* Cinematic background image */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <img
+          src={ASSETS.hero}
+          alt=""
+          className="h-full w-full object-cover opacity-90"
+        />
+        {/* Strong gradient overlay so text is readable */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#06101F]/55 via-[#06101F]/85 to-[#06101F]" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 35%, transparent 30%, rgba(6,16,31,0.7) 100%)",
+          }}
+        />
+        {/* Grain */}
+        <div
+          className="absolute inset-0 opacity-[0.06] mix-blend-overlay"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")",
+          }}
+        />
+      </div>
 
-      <main className="flex-1 overflow-hidden relative">
-        {stage === "intro" && (
-          <IntroStage onContinue={() => setStage("upload")} />
-        )}
-        {stage === "upload" && (
-          <UploadStage
-            onUpload={(parsed) => {
-              if (parsed) setParsedReport(parsed);
-              setStage("analyzing");
+      {/* Animated golden particles */}
+      <div className="fixed inset-0 z-[1] pointer-events-none">
+        {particles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full bg-gold animate-pulse"
+            style={{
+              top: `${p.top}%`,
+              left: `${p.left}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              opacity: p.opacity,
+              animationDelay: `${p.delay}s`,
+              animationDuration: `${p.duration}s`,
+              boxShadow: "0 0 12px rgba(201, 169, 97, 0.7)",
             }}
           />
-        )}
-        {stage === "analyzing" && (
-          <AnalyzingStage onComplete={() => setStage("dashboard")} />
-        )}
-        {stage === "dashboard" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} />
-        )}
-        {stage === "actions" && (
-          <ActionsStage onComplete={() => setStage("summary")} />
-        )}
-        {stage === "summary" && <SummaryStage onReset={reset} />}
-      </main>
-
-      {/* Floating navigation cluster - bottom-left corner (away from RTL primary action zone) */}
-      <div className="fixed bottom-6 left-6 z-50 flex items-center gap-2">
-        {/* Fullscreen toggle */}
-        <button
-          onClick={toggleFullscreen}
-          className="group relative h-11 w-11 rounded-full bg-navy-deep/85 backdrop-blur-md border border-gold/30 flex items-center justify-center text-gold/90 shadow-xl shadow-black/30 transition-all hover:bg-navy-deep hover:border-gold hover:text-gold hover:scale-105"
-          aria-label={isFullscreen ? "יציאה ממסך מלא" : "מסך מלא (F)"}
-          title={isFullscreen ? "יציאה ממסך מלא (Esc)" : "מסך מלא (F)"}
-        >
-          {isFullscreen ? (
-            <Minimize2 className="h-4 w-4" strokeWidth={2} />
-          ) : (
-            <Maximize2 className="h-4 w-4" strokeWidth={2} />
-          )}
-        </button>
-
-        {/* Previous */}
-        <button
-          onClick={goPrev}
-          disabled={!canGoBack}
-          className="group h-11 w-11 rounded-full bg-navy-deep/85 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/80 shadow-xl shadow-black/30 transition-all hover:bg-navy-deep hover:border-white/40 hover:text-white hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-          aria-label="מסך קודם (חץ ימין)"
-          title="מסך קודם (→)"
-        >
-          <ChevronRight className="h-5 w-5" strokeWidth={2} />
-        </button>
-
-        {/* Next - the primary, larger, gold */}
-        <button
-          onClick={goNext}
-          disabled={!canGoForward}
-          className="group h-12 w-12 rounded-full bg-gradient-to-br from-gold to-[#B89346] flex items-center justify-center text-navy-deep shadow-xl shadow-gold/30 transition-all hover:scale-110 hover:shadow-gold/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
-          aria-label="מסך הבא (חץ שמאל)"
-          title="מסך הבא (←)"
-        >
-          <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
-        </button>
+        ))}
       </div>
 
-      {/* Keyboard hint - first time only, fades after a few seconds */}
-      <KeyboardHint />
-    </div>
-  );
-}
+      {/* Top nav */}
+      <header className="relative z-20 border-b border-white/10 bg-[#06101F]/85 backdrop-blur-md">
+        <div className="container">
+          <div className="flex h-20 items-center justify-between gap-6">
+            <Link href="/" className="flex items-center gap-3">
+              <img
+                src={LOGO.clear}
+                alt="SPARK AI"
+                className="h-12 w-auto object-contain"
+                style={{
+                  filter: "drop-shadow(0 2px 8px rgba(201,169,97,0.4))",
+                }}
+              />
+            </Link>
+            <nav className="flex items-center gap-2 sm:gap-4">
+              <Link
+                href="/demo"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-white/80 hover:text-gold transition-colors"
+              >
+                <Play className="h-3.5 w-3.5" />
+                צפייה בדמו
+              </Link>
+              <a
+                href={loginHref}
+                className="flex items-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-4 py-2 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30 transition-all hover:scale-105"
+              >
+                לאזור האישי
+                <ChevronLeft className="h-4 w-4" />
+              </a>
+            </nav>
+          </div>
+        </div>
+        <div className="h-px bg-gradient-to-l from-transparent via-gold/60 to-transparent" />
+      </header>
 
-function KeyboardHint() {
-  const [visible, setVisible] = useState(true);
+      {/* HERO */}
+      <section className="relative z-10 pt-20 pb-24 lg:pt-32 lg:pb-40">
+        <div className="container">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Eyebrow */}
+            <div
+              className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold/10 px-4 py-1.5 mb-8 animate-fade-in"
+              style={{ animationDelay: "0.1s" }}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-gold" />
+              <span className="text-[11px] tracking-[0.35em] uppercase text-gold-soft font-medium">
+                AI לסוכני ביטוח · השקה ראשונה לבתי סוכן בישראל
+              </span>
+            </div>
 
-  useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), 6000);
-    return () => clearTimeout(timer);
-  }, []);
+            {/* Hero headline */}
+            <h1
+              className="font-display text-5xl lg:text-7xl font-black leading-[1.05] tracking-tighter text-white animate-fade-up"
+              style={{ animationDelay: "0.2s" }}
+            >
+              הסוכן שלך,
+              <br />
+              <span className="text-gold">משוחרר</span>
+              <span className="text-white/90"> מהעבודה</span>
+              <br />
+              <span className="text-white/90">הרפטטיבית</span>
+              <span className="text-gold">.</span>
+            </h1>
 
-  if (!visible) return null;
+            {/* Subhead */}
+            <p
+              className="mt-8 text-lg lg:text-xl leading-relaxed text-white/75 max-w-2xl mx-auto animate-fade-up"
+              style={{ animationDelay: "0.35s" }}
+            >
+              העלאת דוח שורנס, ניתוח ב-AI תוך שניות, וזיהוי אוטומטי של הזדמנויות
+              שימור, צ&apos;ק-אפים, ופוליסות שמתחדשות. בלי קוד. בלי גוגל-שיטס.
+              בלי הקלדות חוזרות.
+            </p>
 
-  return (
-    <div
-      className="fixed bottom-7 left-1/2 -translate-x-1/2 z-40 pointer-events-none animate-fade-in"
-      style={{ animationDelay: "1s" }}
-    >
-      <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-navy-deep/80 backdrop-blur-md border border-gold/20 shadow-lg">
-        <span className="label-tag text-[10px] text-white/60 tracking-widest">
-          טיפ
-        </span>
-        <kbd className="px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
-          ←
-        </kbd>
-        <span className="text-[11px] text-white/70">למעבר בין מסכים</span>
-        <span className="text-white/30">·</span>
-        <kbd className="px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
-          F
-        </kbd>
-        <span className="text-[11px] text-white/70">למסך מלא</span>
-      </div>
+            {/* CTAs */}
+            <div
+              className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-up"
+              style={{ animationDelay: "0.5s" }}
+            >
+              <Link
+                href="/demo"
+                className="group flex items-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-8 py-4 text-base font-bold text-[#06101F] shadow-2xl shadow-gold/30 transition-all hover:scale-105"
+              >
+                <Play className="h-4 w-4" />
+                צפייה בדמו אינטראקטיבי
+              </Link>
+              <a
+                href={loginHref}
+                className="group flex items-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-8 py-4 text-base font-bold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-gold/60"
+              >
+                התחילו 14 ימי ניסיון בחינם
+                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+              </a>
+            </div>
+
+            <p
+              className="mt-6 text-xs tracking-[0.2em] text-white/50 animate-fade-in"
+              style={{ animationDelay: "0.8s" }}
+            >
+              ללא כרטיס אשראי · הקמה תוך 60 שניות · ביטול בקליק
+            </p>
+          </div>
+
+          {/* Stats strip */}
+          <div
+            className="mt-24 grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto animate-fade-up"
+            style={{ animationDelay: "0.7s" }}
+          >
+            {[
+              { num: "47", unit: "שניות", lbl: "זמן ניתוח דוח" },
+              { num: "1,584", unit: "", lbl: "לקוחות בדוח לדוגמה" },
+              { num: "1,071", unit: "", lbl: "דגלים זוהו" },
+              { num: "2.84", unit: "M ₪", lbl: "פוטנציאל הכנסה" },
+            ].map((s, i) => (
+              <div
+                key={i}
+                className="text-center border-y border-white/10 py-5 lg:border-y-0 lg:border-l lg:border-r-0 lg:first:border-r-0 lg:last:border-l-0"
+              >
+                <div className="font-display text-4xl lg:text-5xl font-black text-gold">
+                  {s.num}
+                  {s.unit && (
+                    <span className="text-2xl text-gold-soft mr-1">
+                      {s.unit}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs tracking-[0.15em] uppercase text-white/60 mt-2">
+                  {s.lbl}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FEATURES */}
+      <section className="relative z-10 py-24 border-t border-white/5 bg-[#06101F]/40 backdrop-blur-sm">
+        <div className="container">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-12 bg-gold" />
+              <span className="text-[11px] tracking-[0.35em] uppercase text-gold font-medium">
+                מה SPARK AI עושה בשבילך
+              </span>
+              <div className="h-px w-12 bg-gold" />
+            </div>
+            <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight">
+              שלוש פעולות. <span className="text-gold">אין-סוף ערך.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                icon: Zap,
+                title: "ניתוח אוטומטי בשניות",
+                body: "מעלים דוח שורנס, ה-AI סורק את כל הלקוחות, מזהה דגלים — תום הנחה, ביטוחים פגי תוקף, יום הולדת מתקרב — ויוצר רשימת פעולות ממוקדת.",
+              },
+              {
+                icon: TrendingUp,
+                title: "תיק לקוחות מסודר",
+                body: "כל הלקוחות שלך במקום אחד, עם פילוח לפי גיל, יצרן ביטוח, נכסים, ופרמיות. חיפוש מהיר ופילטרים חכמים.",
+              },
+              {
+                icon: Users,
+                title: "צוות ובידוד מלא",
+                body: "סוכנים רואים רק את הלקוחות שלהם. מנהלים רואים את כל הסוכנות. הזמנת חברי צוות בקליק עם שליטה בהרשאות.",
+              },
+            ].map((f, i) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={i}
+                  className="relative rounded-lg p-8 backdrop-blur-md bg-white/5 border border-white/10 transition-all hover:bg-white/[0.07] hover:border-gold/30 hover:shadow-[0_8px_32px_rgba(201,169,97,0.15)]"
+                >
+                  <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 flex items-center justify-center mb-6">
+                    <Icon className="h-5 w-5 text-gold" />
+                  </div>
+                  <h3 className="font-display text-xl font-bold text-white mb-3 tracking-tight">
+                    {f.title}
+                  </h3>
+                  <p className="text-sm text-white/70 leading-relaxed">
+                    {f.body}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* PRIVACY / SECURITY */}
+      <section className="relative z-10 py-24 border-t border-white/5">
+        <div className="container">
+          <div className="max-w-4xl mx-auto">
+            <div className="rounded-lg border border-gold/20 bg-gradient-to-br from-[#06101F]/80 to-[#0B1A2D]/80 backdrop-blur-md p-10 lg:p-14 text-center">
+              <Shield className="h-10 w-10 text-gold mx-auto mb-6" />
+              <h2 className="font-display text-3xl lg:text-4xl font-black text-white tracking-tight mb-4">
+                הנתונים שלך — <span className="text-gold">שלך בלבד.</span>
+              </h2>
+              <p className="text-base lg:text-lg text-white/75 leading-relaxed max-w-2xl mx-auto">
+                בידוד מלא בין סוכנויות, הצפנה בכל שכבה, התאמה לחוקי הגנת הפרטיות
+                בישראל. שום לקוח לא רואה את הלקוחות של סוכן אחר. שום סוכנות לא
+                רואה את הסוכנויות האחרות.
+              </p>
+              <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
+                {[
+                  "Multi-Tenant Isolation",
+                  "Encrypted at Rest",
+                  "Israeli Privacy Law",
+                ].map((b) => (
+                  <div
+                    key={b}
+                    className="flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-white/5 border border-white/10 text-xs text-white/85"
+                  >
+                    <Check className="h-3.5 w-3.5 text-gold" />
+                    {b}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section className="relative z-10 py-24 border-t border-white/5 bg-[#06101F]/40 backdrop-blur-sm">
+        <div className="container">
+          <div className="max-w-3xl mx-auto text-center mb-16">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-12 bg-gold" />
+              <span className="text-[11px] tracking-[0.35em] uppercase text-gold font-medium">
+                מחירים שקופים
+              </span>
+              <div className="h-px w-12 bg-gold" />
+            </div>
+            <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight">
+              תוכנית לכל גודל סוכנות
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Base */}
+            <div className="rounded-lg p-8 backdrop-blur-md bg-white/5 border border-white/10">
+              <div className="text-[11px] tracking-[0.3em] uppercase text-white/60 mb-3">
+                Base
+              </div>
+              <h3 className="font-display text-3xl font-black text-white tracking-tight">
+                סוכן יחיד
+              </h3>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="font-display text-5xl font-black text-white">
+                  150
+                </span>
+                <span className="text-base text-white/60">₪ / חודש</span>
+              </div>
+              <p className="text-xs text-white/50 mt-1">
+                או 1,500 ₪ לשנה (חיסכון של 17%)
+              </p>
+              <ul className="mt-8 space-y-3 text-sm text-white/80">
+                {[
+                  "עד 500 לקוחות",
+                  "ניתוח דוחות שורנס",
+                  "דשבורד דגלים",
+                  "אזור אישי מלא",
+                ].map((p) => (
+                  <li key={p} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold shrink-0" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={loginHref}
+                className="mt-8 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60"
+              >
+                התחילו ניסיון
+              </a>
+            </div>
+
+            {/* Premium */}
+            <div className="relative rounded-lg p-8 backdrop-blur-md bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/40 shadow-[0_8px_32px_rgba(201,169,97,0.2)]">
+              <div className="absolute -top-3 right-1/2 translate-x-1/2 px-3 py-1 bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] text-[11px] font-bold tracking-widest uppercase rounded-full shadow-lg">
+                המומלץ
+              </div>
+              <div className="text-[11px] tracking-[0.3em] uppercase text-gold mb-3">
+                Premium
+              </div>
+              <h3 className="font-display text-3xl font-black text-white tracking-tight">
+                סוכנות / בית-סוכן
+              </h3>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="font-display text-5xl font-black text-gold">
+                  350
+                </span>
+                <span className="text-base text-white/60">₪ / חודש</span>
+              </div>
+              <p className="text-xs text-white/50 mt-1">
+                או 3,500 ₪ לשנה (חיסכון של 17%)
+              </p>
+              <ul className="mt-8 space-y-3 text-sm text-white/85">
+                {[
+                  "לקוחות ללא הגבלה",
+                  "צוות סוכנים + מנהל",
+                  "בידוד נתונים בין סוכנים",
+                  "הזמנות בקליק לחברי צוות",
+                  "תמיכה VIP",
+                ].map((p) => (
+                  <li key={p} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold shrink-0" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={loginHref}
+                className="mt-8 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30 transition-all hover:scale-[1.02]"
+              >
+                התחילו ניסיון פרימיום
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="relative z-10 py-24 border-t border-white/5">
+        <div className="container">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight mb-6">
+              מוכנה לראות את <span className="text-gold">SPARK AI</span> בפעולה?
+            </h2>
+            <p className="text-base text-white/70 leading-relaxed mb-10">
+              הפעילו את הדמו האינטראקטיבי וצפו איך 1,584 לקוחות הופכים בתוך
+              דקה ל-1,071 פעולות עסקיות מוכנות.
+            </p>
+            <Link
+              href="/demo"
+              className="inline-flex items-center gap-3 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-10 py-5 font-display font-bold text-[#06101F] text-lg tracking-tight shadow-2xl shadow-gold/30 transition-all hover:scale-105"
+            >
+              <Play className="h-5 w-5" />
+              לדמו האינטראקטיבי
+            </Link>
+            {user && (
+              <p className="mt-6 text-xs text-white/50">
+                מחובר/ת בתור {user.name}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="relative z-10 py-10 border-t border-white/10 bg-[#06101F]/80 backdrop-blur-md">
+        <div className="container">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/50">
+            <div className="flex items-center gap-3">
+              <img
+                src={LOGO.clear}
+                alt="SPARK AI"
+                className="h-7 w-auto opacity-80"
+              />
+              <span>© 2026 SPARK AI · כל הזכויות שמורות</span>
+            </div>
+            <div className="flex items-center gap-2 tracking-[0.2em] uppercase">
+              <span>צוות</span>
+              <span className="text-white/80">יפעת איתן</span>
+              <span className="text-gold/60">×</span>
+              <span className="text-white/80">ענת גרינברג</span>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
