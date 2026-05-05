@@ -1,6 +1,7 @@
 // Editorial Fintech | מודאל ניסוח AI - אפקט ה-WOW
 import { useEffect, useState, useRef } from "react";
-import { X, Mail, MessageSquare, Sparkles, Send, Brain, CheckCircle2, Copy, Wand2 } from "lucide-react";
+import { X, Mail, MessageSquare, Sparkles, Send, Brain, CheckCircle2, Copy, Wand2, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import type { Customer } from "@/lib/demoData";
 
 interface AIComposerModalProps {
@@ -148,6 +149,35 @@ export function AIComposerModal({ customer, channel, onClose }: AIComposerModalP
   const channelColor = isEmail ? "from-gold to-gold-soft" : "from-emerald-500 to-emerald-400";
   const channelTextColor = isEmail ? "text-gold" : "text-emerald-400";
   const channelLabel = isEmail ? "Email · Outlook" : "WhatsApp Business";
+
+  const handleCopy = async () => {
+    const text = isEmail
+      ? `נושא: ${typedSubject}\n\n${typedBody}`
+      : typedBody;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("ההודעה הועתקה לזיכרון");
+    } catch {
+      toast.error("לא ניתן להעתיק");
+    }
+  };
+
+  const handleSend = () => {
+    if (!customer) return;
+    if (isEmail) {
+      const to = customer.email || "";
+      const subject = encodeURIComponent(typedSubject);
+      const body = encodeURIComponent(typedBody);
+      window.open(`mailto:${to}?subject=${subject}&body=${body}`, "_blank");
+      toast.success("נפתח Outlook עם טיוטה מוכנה");
+    } else {
+      const phone = customer.phone.replace(/\D/g, "");
+      const intl = phone.startsWith("0") ? "972" + phone.slice(1) : phone;
+      const text = encodeURIComponent(typedBody);
+      window.open(`https://wa.me/${intl}?text=${text}`, "_blank");
+      toast.success("נפתח WhatsApp עם ההודעה");
+    }
+  };
 
   return (
     <div
@@ -312,18 +342,20 @@ export function AIComposerModal({ customer, channel, onClose }: AIComposerModalP
               </div>
               <div className="flex items-center gap-2">
                 <button
+                  onClick={handleCopy}
                   disabled={phase !== "done"}
-                  className="flex items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-xs font-semibold text-navy-deep transition-all hover:border-gold hover:text-gold disabled:opacity-40"
+                  className="flex items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-xs font-semibold text-navy-deep transition-all hover:border-gold hover:text-gold disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Copy className="h-3.5 w-3.5" />
                   העתק
                 </button>
                 <button
+                  onClick={handleSend}
                   disabled={phase !== "done"}
-                  className={`group flex items-center gap-2 rounded-md bg-gradient-to-l ${channelColor} px-5 py-2 text-xs font-bold text-navy-deep transition-all hover:shadow-lg disabled:opacity-40`}
+                  className={`group flex items-center gap-2 rounded-md bg-gradient-to-l ${channelColor} px-5 py-2 text-xs font-bold text-navy-deep transition-all hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed`}
                 >
-                  שלח עכשיו
-                  <Send className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
+                  {isEmail ? "פתח ב-Outlook" : "פתח ב-WhatsApp"}
+                  <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5" />
                 </button>
               </div>
             </div>

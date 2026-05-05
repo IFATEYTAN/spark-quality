@@ -2,26 +2,36 @@
 import { useState } from "react";
 import { AlertTriangle, TrendingUp, Calendar, Mail, Gift, Sparkles, ArrowLeft, Download, Mail as MailIcon, MessageSquare } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from "recharts";
+import { toast } from "sonner";
 import { CUSTOMERS, STATS, INSURER_BREAKDOWN, AGE_GROUPS_NO_PENSION, formatCurrency } from "@/lib/demoData";
 import type { Customer } from "@/lib/demoData";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { AIComposerModal } from "./AIComposerModal";
+import { exportDashboardPDF } from "@/lib/exportPdf";
+import type { ParsedReport } from "@/lib/parseReport";
 
 interface DashboardStageProps {
   onAction: () => void;
+  parsed?: ParsedReport | null;
 }
 
-const TRIGGER_CARDS = [
-  { id: "risk", name: "ריסק זמני", value: STATS.riskFlags, sub: "דורש פעולה מיידית", icon: AlertTriangle, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
-  { id: "pension", name: "ללא פנסיה", value: STATS.noPension, sub: "הזדמנות אאפסל", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
-  { id: "discount", name: "תום הנחה", value: STATS.endingDiscount, sub: "סיכון נטישה", icon: Calendar, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
-  { id: "email", name: "ללא מייל", value: STATS.noEmail, sub: `${STATS.noEmailPercent}% מהתיק`, icon: Mail, accent: "text-slate-700", bg: "bg-slate-50", border: "border-slate-200" },
-  { id: "birthday", name: "יום הולדת", value: STATS.upcomingBirthdays, sub: "בחודש הקרוב", icon: Gift, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
-  { id: "crosssell", name: "קרוס-סייל", value: STATS.crossSellOpps, sub: "הזדמנויות מכירה", icon: Sparkles, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
-];
+function buildTriggerCards(stats: typeof STATS) {
+  return [
+    { id: "risk", name: "ריסק זמני", value: stats.riskFlags, sub: "דורש פעולה מיידית", icon: AlertTriangle, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
+    { id: "pension", name: "ללא פנסיה", value: stats.noPension, sub: "הזדמנות אאפסל", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
+    { id: "discount", name: "תום הנחה", value: stats.endingDiscount, sub: "סיכון נטישה", icon: Calendar, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
+    { id: "email", name: "ללא מייל", value: stats.noEmail, sub: `${stats.noEmailPercent}% מהתיק`, icon: Mail, accent: "text-slate-700", bg: "bg-slate-50", border: "border-slate-200" },
+    { id: "birthday", name: "יום הולדת", value: stats.upcomingBirthdays, sub: "בחודש הקרוב", icon: Gift, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
+    { id: "crosssell", name: "קרוס-סייל", value: stats.crossSellOpps, sub: "הזדמנויות מכירה", icon: Sparkles, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
+  ];
+}
 
-export function DashboardStage({ onAction }: DashboardStageProps) {
-  const insurerData = INSURER_BREAKDOWN.map(d => ({ name: d.name, customers: d.customers }));
+export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
+  // Use parsed data if a real file was uploaded, otherwise fall back to demo data
+  const customers: Customer[] = parsed?.customers ?? CUSTOMERS;
+  const stats = parsed?.stats ?? STATS;
+  const TRIGGER_CARDS = buildTriggerCards(stats);
+  const insurerData = (parsed?.insurerBreakdown ?? INSURER_BREAKDOWN).map((d: { name: string; customers: number }) => ({ name: d.name, customers: d.customers }));
   const [composerCustomer, setComposerCustomer] = useState<Customer | null>(null);
   const [composerChannel, setComposerChannel] = useState<"email" | "whatsapp" | null>(null);
 
@@ -35,7 +45,7 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
   };
 
   return (
-    <div className="h-[calc(100vh-7rem)] w-full overflow-y-auto animate-fade-in">
+    <div className="h-[calc(100vh-7rem)] w-full overflow-y-auto animate-fade-in bg-background">
       {/* Page header */}
       <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
         <div className="container py-8">
@@ -55,7 +65,20 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 rounded-sm border border-border bg-card px-5 py-3 text-sm font-semibold text-navy-deep transition-all hover:border-gold hover:text-gold">
+              <button
+                onClick={() => {
+                  const t = toast.loading("מכין דוח PDF…");
+                  setTimeout(() => {
+                    try {
+                      exportDashboardPDF(customers, stats);
+                      toast.success("הדוח הורד בהצלחה", { id: t });
+                    } catch (e) {
+                      toast.error("שגיאה בהפקת הדוח", { id: t });
+                    }
+                  }, 400);
+                }}
+                className="flex items-center gap-2 rounded-sm border border-border bg-card px-5 py-3 text-sm font-semibold text-navy-deep transition-all hover:border-gold hover:text-gold"
+              >
                 <Download className="h-4 w-4" strokeWidth={2} />
                 ייצוא PDF
               </button>
@@ -85,13 +108,13 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
                 <div>
                   <div className="label-tag text-[10px] text-muted-foreground">לקוחות</div>
                   <div className="font-display text-2xl font-bold text-navy-deep">
-                    <AnimatedNumber value={STATS.totalCustomers} />
+                    <AnimatedNumber value={stats.totalCustomers} />
                   </div>
                 </div>
                 <div>
                   <div className="label-tag text-[10px] text-muted-foreground">מוצרים פעילים</div>
                   <div className="font-display text-2xl font-bold text-navy-deep">
-                    <AnimatedNumber value={STATS.activeProducts} />
+                    <AnimatedNumber value={stats.activeProducts} />
                   </div>
                 </div>
               </div>
@@ -105,13 +128,13 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
                 <div>
                   <div className="label-tag text-gold mb-2">פוטנציאל הכנסה מהפעולות שזוהו</div>
                   <div className="display-number text-6xl font-bold text-navy-deep">
-                    {formatCurrency(STATS.potentialRevenue)}
+                    {formatCurrency(stats.potentialRevenue)}
                   </div>
                 </div>
                 <div className="text-left">
                   <div className="label-tag text-[10px] text-muted-foreground">חיסכון בזמן</div>
                   <div className="font-display text-3xl font-bold text-gold">
-                    <AnimatedNumber value={STATS.timesSaved} />h
+                    <AnimatedNumber value={stats.timesSaved} />h
                   </div>
                   <div className="text-xs text-muted-foreground">בחודש</div>
                 </div>
@@ -275,7 +298,7 @@ export function DashboardStage({ onAction }: DashboardStageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {CUSTOMERS.map((c, i) => (
+                  {customers.map((c, i) => (
                     <tr key={c.id} className="border-b border-border/30 transition-colors hover:bg-gold/[0.04]" style={{ animationDelay: `${0.05 * i}s` }}>
                       <td className="p-4">
                         <div className="font-display font-bold text-navy-deep">{c.name}</div>

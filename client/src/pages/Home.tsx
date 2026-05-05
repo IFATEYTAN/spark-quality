@@ -11,6 +11,7 @@ import { DashboardStage } from "@/components/DashboardStage";
 import { ActionsStage } from "@/components/ActionsStage";
 import { SummaryStage } from "@/components/SummaryStage";
 import type { Stage } from "@/lib/demoData";
+import type { ParsedReport } from "@/lib/parseReport";
 
 const STAGE_LABELS: Record<Stage, string> = {
   splash: "0 / 5 · פתיחה",
@@ -35,8 +36,12 @@ const STAGE_ORDER: Stage[] = [
 export default function Home() {
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
 
-  const reset = useCallback(() => setStage("splash"), []);
+  const reset = useCallback(() => {
+    setParsedReport(null);
+    setStage("splash");
+  }, []);
 
   const goNext = useCallback(() => {
     setStage((current) => {
@@ -122,13 +127,18 @@ export default function Home() {
           <IntroStage onContinue={() => setStage("upload")} />
         )}
         {stage === "upload" && (
-          <UploadStage onUpload={() => setStage("analyzing")} />
+          <UploadStage
+            onUpload={(parsed) => {
+              if (parsed) setParsedReport(parsed);
+              setStage("analyzing");
+            }}
+          />
         )}
         {stage === "analyzing" && (
           <AnalyzingStage onComplete={() => setStage("dashboard")} />
         )}
         {stage === "dashboard" && (
-          <DashboardStage onAction={() => setStage("actions")} />
+          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} />
         )}
         {stage === "actions" && (
           <ActionsStage onComplete={() => setStage("summary")} />
