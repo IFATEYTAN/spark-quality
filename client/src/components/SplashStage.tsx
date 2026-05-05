@@ -103,39 +103,17 @@ export function SplashStage({ onComplete, durationMs = 4200 }: SplashStageProps)
           </p>
         </div>
 
-        {/* Two logos side by side with × separator */}
-        <div className="flex items-center gap-8 lg:gap-14 animate-fade-up" style={{ animationDuration: "1.2s" }}>
-          {/* Quality logo plate */}
-          <div
-            className="bg-white/95 backdrop-blur-sm rounded-lg px-7 py-6 shadow-[0_25px_60px_-15px_rgba(201,169,97,0.45)] animate-fade-up flex items-center justify-center ring-1 ring-gold/20"
-            style={{ animationDelay: "0.4s", animationDuration: "1.2s", minWidth: "220px", minHeight: "130px" }}
-          >
-            <img
-              src={LOGO.quality}
-              alt="Quality"
-              className="h-20 lg:h-24 w-auto object-contain"
-            />
-          </div>
-
-          {/* × Multiplier */}
-          <div
-            className="font-display text-5xl lg:text-7xl font-thin text-gold/80 animate-fade-in"
-            style={{ animationDelay: "0.7s", animationDuration: "1s" }}
-          >
-            ×
-          </div>
-
-          {/* SPARK AI logo plate */}
-          <div
-            className="bg-white/95 backdrop-blur-sm rounded-lg px-8 py-4 shadow-[0_25px_60px_-15px_rgba(201,169,97,0.45)] animate-fade-up flex items-center justify-center ring-1 ring-gold/20"
-            style={{ animationDelay: "0.55s", animationDuration: "1.2s", width: "330px", height: "130px" }}
-          >
-            <img
-              src={LOGO.clear}
-              alt="SPARK AI"
-              className="w-full h-full object-contain"
-            />
-          </div>
+        {/* SPARK AI logo - centered, integrated into the scene without a plate */}
+        <div
+          className="animate-fade-up flex items-center justify-center"
+          style={{ animationDelay: "0.4s", animationDuration: "1.4s" }}
+        >
+          <img
+            src={LOGO.clear}
+            alt="SPARK AI"
+            className="w-[420px] lg:w-[520px] h-auto object-contain drop-shadow-[0_10px_40px_rgba(201,169,97,0.55)]"
+            style={{ filter: "drop-shadow(0 0 30px rgba(201,169,97,0.4))" }}
+          />
         </div>
 
         {/* Golden divider with sparkle */}
