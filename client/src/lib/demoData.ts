@@ -171,6 +171,57 @@ export const CUSTOMERS: Customer[] = [
     flag: "צעיר ללא קרן פנסיה",
     recommendation: "הזדמנות אאפסל - מוקד צעירים",
   },
+  {
+    id: "309012345",
+    name: "עופר כהן",
+    age: 62,
+    city: "סביון",
+    phone: "050-888-9999",
+    email: "ofer.c@demo.co.il",
+    product: "הפניקס - גמל",
+    insurer: "הפניקס",
+    premium: 0,
+    accumulation: 1250000,
+    lastPayment: "01/12/2025",
+    status: "VIP",
+    priority: "גבוהה",
+    flag: "לקוח VIP - צבירה מעל 1M ₪",
+    recommendation: "פגישת תכנון פיננסי מקיפה",
+  },
+  {
+    id: "310123456",
+    name: "מאיה לוי",
+    age: 48,
+    city: "רעננה",
+    phone: "052-777-6666",
+    email: "maya.l@demo.co.il",
+    product: "ילין לפידות - השתלמות",
+    insurer: "ילין לפידות",
+    premium: 0,
+    accumulation: 280000,
+    lastPayment: "01/12/2025",
+    status: "השתלמות נזילה",
+    priority: "גבוהה",
+    flag: "קרן השתלמות נזילה (ותק 6+ שנים)",
+    recommendation: "הזדמנות להשקעה / IRA",
+  },
+  {
+    id: "311234567",
+    name: "יעקב שפירא",
+    age: 66,
+    city: "חיפה",
+    phone: "054-555-4444",
+    email: "yaakov.s@demo.co.il",
+    product: "מגדל - חיסכון פרט",
+    insurer: "מגדל",
+    premium: 0,
+    accumulation: 450000,
+    lastPayment: "01/12/2025",
+    status: "תיקון 190",
+    priority: "בינונית",
+    flag: "פוטנציאל לתיקון 190 (גיל 60+)",
+    recommendation: "בחינת כדאיות הפקדה לפטור ממס",
+  },
 ];
 
 // סטטיסטיקות מצרפיות (מתואמות לסיפור של "1,247 לקוחות בתיק")
@@ -187,6 +238,11 @@ export const STATS = {
   noEmailPercent: 58,
   upcomingBirthdays: 89,    // יום הולדת בחודש הקרוב
   crossSellOpps: 312,       // הזדמנויות קרוס סייל
+  // דגלים פיננסיים
+  vipCustomers: 42,         // לקוחות VIP
+  liquidFunds: 186,         // השתלמויות נזילות
+  amendment190: 54,         // פוטנציאל תיקון 190
+  lowYield: 87,             // תשואה חלשה / דמי ניהול גבוהים
   // ערך עסקי
   potentialRevenue: 2_840_000, // הכנסה פוטנציאלית מהפעולות
   timesSaved: 47, // שעות שנחסכו בחודש
@@ -217,10 +273,10 @@ export const AGE_GROUPS_NO_PENSION = [
 export const TRIGGERS = [
   { id: "risk", name: "ריסק זמני", count: 21, color: "destructive", icon: "AlertTriangle" },
   { id: "pension", name: "ללא פנסיה", count: 148, color: "gold", icon: "TrendingUp" },
-  { id: "discount", name: "תום הנחה", count: 67, color: "navy", icon: "Calendar" },
-  { id: "email", name: "ללא מייל", count: 723, color: "muted", icon: "Mail" },
-  { id: "birthday", name: "יום הולדת", count: 89, color: "navy", icon: "Gift" },
-  { id: "crosssell", name: "קרוס-סייל", count: 312, color: "gold", icon: "Sparkles" },
+  { id: "vip", name: "לקוחות VIP", count: 42, color: "gold", icon: "Crown" },
+  { id: "liquid", name: "השתלמות נזילה", count: 186, color: "navy", icon: "Wallet" },
+  { id: "amendment190", name: "תיקון 190", count: 54, color: "navy", icon: "Landmark" },
+  { id: "lowYield", name: "תשואה חלשה", count: 87, color: "destructive", icon: "TrendingDown" },
 ];
 
 // דוגמאות להתראות אוטומטיות

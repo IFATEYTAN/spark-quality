@@ -51,6 +51,29 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               ))}
             </div>
 
+            {/* מטריקות פיננסיות - פס צהוב בולט */}
+            <div className="mt-4 rounded-md border border-gold/30 bg-gradient-to-l from-gold/5 to-transparent p-4 animate-fade-up" style={{ animationDelay: "0.35s" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px w-6 bg-gold" />
+                <span className="label-tag text-[10px] text-gold tracking-[0.3em]">זיהוי הזדמנויות פיננסיות</span>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: "לקוחות VIP", value: "42", sub: "צבירה מעל 1M ₪" },
+                  { label: "השתלמויות נזילות", value: "186", sub: "להגדלה / IRA" },
+                  { label: "תיקון 190", value: "54", sub: "פטור ממס רווחי הון" },
+                ].map((m, i) => (
+                  <div key={i}>
+                    <div className="text-[10px] text-gold/80 mb-1 font-semibold">{m.label}</div>
+                    <div className="display-number text-2xl font-black text-gold">
+                      {m.value}
+                    </div>
+                    <div className="text-[10px] text-navy-deep/70 mt-1">{m.sub}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Next steps */}
             <div className="mt-5 animate-fade-up" style={{ animationDelay: "0.4s" }}>
               <h3 className="font-display text-xl font-bold text-navy-deep mb-3 tracking-tight">השלבים הבאים שלכם</h3>

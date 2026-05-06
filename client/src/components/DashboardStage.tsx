@@ -1,6 +1,6 @@
 // Editorial Fintech | דשבורד תוצאות
 import { useState } from "react";
-import { AlertTriangle, TrendingUp, Calendar, Mail, Gift, Sparkles, ArrowLeft, Download, Mail as MailIcon, MessageSquare } from "lucide-react";
+import { AlertTriangle, TrendingUp, Calendar, Mail, Gift, Sparkles, ArrowLeft, Download, Mail as MailIcon, MessageSquare, Briefcase } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from "recharts";
 import { toast } from "sonner";
 import { CUSTOMERS, STATS, INSURER_BREAKDOWN, AGE_GROUPS_NO_PENSION, formatCurrency } from "@/lib/demoData";
@@ -17,12 +17,14 @@ interface DashboardStageProps {
 
 function buildTriggerCards(stats: typeof STATS) {
   return [
+    // 💸 קטגוריות פיננסיות (3)
+    { id: "vip", name: "לקוחות VIP", value: 42, sub: "צבירה מעל 1M ₪", icon: Sparkles, accent: "text-gold", bg: "bg-gold/15", border: "border-gold/50" },
+    { id: "liquid", name: "השתלמויות נזילות", value: 186, sub: "להגדלה / IRA", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
+    { id: "190", name: "תיקון 190", value: 54, sub: "פטור ממס רווחי הון", icon: Briefcase, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
+    // 🚨 קטגוריות סיכון / שימור (3)
     { id: "risk", name: "ריסק זמני", value: stats.riskFlags, sub: "דורש פעולה מיידית", icon: AlertTriangle, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
-    { id: "pension", name: "ללא פנסיה", value: stats.noPension, sub: "הזדמנות אאפסל", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
     { id: "discount", name: "תום הנחה", value: stats.endingDiscount, sub: "סיכון נטישה", icon: Calendar, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
-    { id: "email", name: "ללא מייל", value: stats.noEmail, sub: `${stats.noEmailPercent}% מהתיק`, icon: Mail, accent: "text-slate-700", bg: "bg-slate-50", border: "border-slate-200" },
     { id: "birthday", name: "יום הולדת", value: stats.upcomingBirthdays, sub: "בחודש הקרוב", icon: Gift, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
-    { id: "crosssell", name: "קרוס-סייל", value: stats.crossSellOpps, sub: "הזדמנויות מכירה", icon: Sparkles, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
   ];
 }
 
@@ -141,9 +143,10 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
               {/* Mini progress bars */}
               <div className="space-y-3">
                 {[
-                  { label: "אאפסל פנסיה", value: 1_640_000, max: 2_840_000, color: "bg-gold" },
-                  { label: "שימור לקוחות", value: 820_000, max: 2_840_000, color: "bg-navy-deep" },
-                  { label: "חידוש כיסויים", value: 380_000, max: 2_840_000, color: "bg-emerald-700" },
+                  { label: "תיקון 190 / IRA · VIP", value: 1_220_000, max: 2_840_000, color: "bg-gold" },
+                  { label: "השתלמויות נזילות · הגדלת הפקדות", value: 720_000, max: 2_840_000, color: "bg-navy-deep" },
+                  { label: "שימור · דמי ניהול גבוהים", value: 520_000, max: 2_840_000, color: "bg-emerald-700" },
+                  { label: "חידוש ריסק / תום הנחה", value: 380_000, max: 2_840_000, color: "bg-rose-600" },
                 ].map((b, i) => (
                   <div key={i}>
                     <div className="flex justify-between text-xs mb-1">

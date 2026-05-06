@@ -31,6 +31,8 @@ export interface ParsedReport {
     vipCustomers: number;
     liquidFunds: number;
     liquidAUM: number;
+    amendment190: number;
+    lowYield: number;
   };
 }
 
@@ -373,6 +375,8 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   const liquidFundsCustomers = customers.filter((c) => c.status === "השתלמות נזילה");
   const liquidFunds = liquidFundsCustomers.length;
   const liquidAUM = liquidFundsCustomers.reduce((s, c) => s + c.accumulation, 0);
+  const amendment190 = customers.filter((c) => c.status === "תיקון 190").length;
+  const lowYield = customers.filter((c) => c.status === "תשואה חלשה").length;
 
   const insurerCount = new Map<string, number>();
   for (const c of customers) {
@@ -413,6 +417,8 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       vipCustomers,
       liquidFunds,
       liquidAUM,
+      amendment190,
+      lowYield,
     },
   };
 }
