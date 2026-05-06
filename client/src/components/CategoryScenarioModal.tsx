@@ -204,11 +204,11 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
 
       {/* Panel */}
       <div
-        className="relative w-full max-w-6xl max-h-[92vh] overflow-y-auto bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up"
+        className="relative w-full max-w-6xl max-h-[92vh] overflow-y-auto bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up scroll-pt-32"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-border/60 bg-cream/95 backdrop-blur px-4 sm:px-10 py-4 sm:py-5">
+        {/* Header (non-sticky to avoid clipping inner headlines) */}
+        <div className="flex items-start justify-between gap-3 border-b border-border/60 bg-cream px-4 sm:px-10 py-4 sm:py-5">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-px w-10 bg-gold" />

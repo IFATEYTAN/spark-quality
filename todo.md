@@ -240,3 +240,8 @@
 - [ ] באג: ייבוא דוח לא מסנכרן ל-categories (תקין רק ל-"לקוחות"; קטגוריות 0 בכולם) — לאתר בכל הזרימה: parseReport → bulkUpsertClients → DB → financial.metrics
 - [ ] לתקן את הסנכרון
 - [ ] vitest + checkpoint + push GitHub
+
+
+## Round 27 - תיקון חיתוך כותרת CategoryScenarioModal (2026-05-07)
+- [ ] להגדיל padding-top במודל הקטגוריה כך שהכותרת "תרשים זרימה אינטראקטיבי" לא נחתכת מתחת ל-Header של הדף
+- [ ] checkpoint + push GitHub
