@@ -6,10 +6,11 @@ import { trpc } from "@/lib/trpc";
 import {
   AlertCircle,
   Building2,
-  Database,
+  Crown,
   FileSpreadsheet,
   Loader2,
   Sparkles,
+  TrendingUp,
   Upload,
   Users,
   ArrowLeft,
@@ -160,35 +161,27 @@ export default function Dashboard() {
           <GlassCard className="p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="h-9 w-9 rounded-md bg-gold/15 border border-gold/30 flex items-center justify-center">
-                <AlertCircle className="h-4 w-4 text-gold" />
+                <Crown className="h-4 w-4 text-gold" />
               </div>
               <span className="text-[10px] tracking-[0.25em] uppercase text-white/45">
-                משימות
+                לקוחות VIP
               </span>
             </div>
             <div className="font-display text-4xl font-black text-white">0</div>
-            <div className="text-xs text-white/55 mt-1">פתוחות</div>
+            <div className="text-xs text-white/55 mt-1">עתירי נכסים</div>
           </GlassCard>
 
           <GlassCard className="p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="h-9 w-9 rounded-md bg-gold/15 border border-gold/30 flex items-center justify-center">
-                <Database className="h-4 w-4 text-gold" />
+                <TrendingUp className="h-4 w-4 text-gold" />
               </div>
               <span className="text-[10px] tracking-[0.25em] uppercase text-white/45">
-                תוכנית
+                הון נזיל
               </span>
             </div>
-            <div className="font-display text-2xl font-black text-white">
-              {workspace?.plan === "trial"
-                ? "ניסיון"
-                : workspace?.plan === "basic"
-                  ? "בסיסית"
-                  : workspace?.plan === "premium"
-                    ? "פרימיום"
-                    : "ארגונית"}
-            </div>
-            <div className="text-xs text-white/55 mt-1">פעילה</div>
+            <div className="font-display text-2xl font-black text-white">₪0</div>
+            <div className="text-xs text-white/55 mt-1">קרנות השתלמות נזילות</div>
           </GlassCard>
         </div>
 

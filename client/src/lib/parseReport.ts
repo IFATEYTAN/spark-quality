@@ -27,6 +27,10 @@ export interface ParsedReport {
     crossSellOpps: number;
     potentialRevenue: number;
     timesSaved: number;
+    // מטריקות פיננסיות חדשות
+    vipCustomers: number;
+    liquidFunds: number;
+    liquidAUM: number;
   };
 }
 
@@ -91,8 +95,63 @@ function classify(row: Record<string, any>): {
   const email = HE(row.email);
   const product = HE(row.product).toLowerCase();
   const accumulation = toNumber(row.accumulation);
+  const age = toNumber(row.age);
+  const lastPayment = HE(row.lastPayment); // תאריך הצטרפות / פתיחה
 
-  // Heuristics
+  // חישוב ותק בשנים (הערכה גסה לפי שנת ההצטרפות)
+  let yearsActive = 0;
+  if (lastPayment) {
+    const yearMatch = lastPayment.match(/\d{4}/);
+    if (yearMatch) {
+      const startYear = parseInt(yearMatch[0], 10);
+      yearsActive = new Date().getFullYear() - startYear;
+    }
+  }
+
+  // --- דגלים פיננסיים ---
+  
+  // 1. VIP - צבירה מעל מיליון ש"ח
+  if (accumulation >= 1000000) {
+    return {
+      status: "VIP",
+      priority: "גבוהה",
+      flag: "לקוח עתיר נכסים (מעל 1M ₪)",
+      recommendation: "פגישת תכנון פיננסי מקיפה / ניהול עושר",
+    };
+  }
+
+  // 2. תיקון 190 - גיל 60+ עם צבירה פנויה
+  if (age >= 60 && accumulation >= 300000 && !product.includes("פנסיה")) {
+    return {
+      status: "תיקון 190",
+      priority: "גבוהה",
+      flag: "פוטנציאל להפקדה לפי תיקון 190",
+      recommendation: "בחינת כדאיות הפקדה לטובת פטור ממס רווחי הון",
+    };
+  }
+
+  // 3. השתלמות נזילה - קרן השתלמות מעל 6 שנים
+  if (product.includes("השתלמות") && yearsActive >= 6) {
+    return {
+      status: "השתלמות נזילה",
+      priority: "גבוהה",
+      flag: "קרן השתלמות נזילה",
+      recommendation: "הזדמנות להשקעה / פתיחת פוליסת חיסכון / IRA",
+    };
+  }
+
+  // 4. דמי ניהול גבוהים - צבירה משמעותית ללא הטבה (היוריסטיקה)
+  if (accumulation >= 500000 && status.includes("פעיל") && !status.includes("הנחה")) {
+    return {
+      status: "דמי ניהול גבוהים",
+      priority: "בינונית",
+      flag: "צבירה גבוהה ללא הטבת דמי ניהול",
+      recommendation: "פגישת שימור - הוזלת דמי ניהול למניעת ניוד",
+    };
+  }
+
+  // --- דגלי סיכונים קלאסיים ---
+
   if (status.includes("ריסק") || status.includes("מסתיים")) {
     return {
       status: "ריסק זמני",
@@ -109,7 +168,7 @@ function classify(row: Record<string, any>): {
       recommendation: "פגישת שימור · הצעת חידוש הטבה",
     };
   }
-  if (!product.includes("פנסיה") && !product.includes("גמל")) {
+  if (!product.includes("פנסיה") && !product.includes("גמל") && !product.includes("השתלמות")) {
     return {
       status: "ללא פנסיה",
       priority: "בינונית",
@@ -295,6 +354,12 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   const riskFlags = customers.filter((c) => c.status === "ריסק זמני").length;
   const endingDiscount = customers.filter((c) => c.status === "תום הנחה").length;
   const noEmail = customers.filter((c) => !c.email || c.status === "ללא מייל").length;
+  
+  // מטריקות פיננסיות
+  const vipCustomers = customers.filter((c) => c.status === "VIP").length;
+  const liquidFundsCustomers = customers.filter((c) => c.status === "השתלמות נזילה");
+  const liquidFunds = liquidFundsCustomers.length;
+  const liquidAUM = liquidFundsCustomers.reduce((s, c) => s + c.accumulation, 0);
 
   const insurerCount = new Map<string, number>();
   for (const c of customers) {
@@ -332,6 +397,9 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       crossSellOpps: Math.round(totalCustomers * 0.18),
       potentialRevenue,
       timesSaved: 30,
+      vipCustomers,
+      liquidFunds,
+      liquidAUM,
     },
   };
 }

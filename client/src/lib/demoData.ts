@@ -27,7 +27,7 @@ export interface Customer {
   premium: number;
   accumulation: number;
   lastPayment: string;
-  status: "ריסק זמני" | "תום הנחה" | "ללא פנסיה" | "ללא מייל" | "פעיל";
+  status: "ריסק זמני" | "תום הנחה" | "ללא פנסיה" | "ללא מייל" | "פעיל" | "VIP" | "השתלמות נזילה" | "תיקון 190" | "דמי ניהול גבוהים";
   priority: "גבוהה" | "בינונית" | "נמוכה";
   flag: string;
   recommendation: string;
