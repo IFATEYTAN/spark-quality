@@ -1,6 +1,7 @@
 // Editorial Fintech | אורקסטרציה ראשית של הדמו
 // תכונות: ניווט מקלדת (חצים), מסך מלא, כפתורי ניווט קבועים, Splash דרמטי
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
 import { Header } from "@/components/Header";
 import { SplashStage } from "@/components/SplashStage";
@@ -35,6 +36,13 @@ const STAGE_ORDER: Stage[] = [
 
 export default function DemoExperience() {
   // Demo flow - no auth required
+  const [location] = useLocation();
+  // Presentation mode: ?clean=true → hides header (no "חזרה למסך הראשי" / יציאה)
+  // Useful for live training so the user can't accidentally exit back to /dashboard
+  const cleanMode = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("clean") === "true";
+  }, [location]);
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
@@ -121,7 +129,7 @@ export default function DemoExperience() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-navy-deep">
-      <Header stage={STAGE_LABELS[stage]} onReset={reset} />
+      {!cleanMode && <Header stage={STAGE_LABELS[stage]} onReset={reset} />}
 
       <main className="flex-1 overflow-hidden relative">
         {stage === "intro" && (

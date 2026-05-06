@@ -92,7 +92,7 @@ export default function UploadReport() {
   }
 
   return (
-    <CinematicShell heroAsset="brain" overlayStrength={88} showSidebar>
+    <CinematicShell showHero={false} showSidebar>
       <div className="container py-10 lg:py-14 max-w-3xl">
         <div className="mb-10 animate-fade-up">
           <GoldEyebrow>שלב 1 / 5 · העלאת דוח</GoldEyebrow>
