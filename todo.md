@@ -97,16 +97,16 @@
 - [x] שמירת floating nav (back/forward/fullscreen) ב-fixed bottom-6 left-6 - תמיד נגיש
 
 ## 🏷️ Round 12 - הסרת מיתוג ספציפי של "קוואליטי" (2026-05-06)
-- [ ] להחליף את כל המופעים של "קואליטי" / "קוואליטי" בעברית (בהקשר של סוכנות) לניסוח גנרי או SPARK AI
-- [ ] לשנות את שם המוצר ל-"SPARK Quality מבית SPARK AI" ב-title, ב-Landing וב-Splash
-- [ ] להשאיר את יפעת וענת כצוות SPARK AI
-- [ ] לבדוק בדפדפן ולוודא שאין שום אזכור של "קוואליטי" כסוכנות בכל המסכים (Landing, /demo, /demo?clean=true, /dashboard, /pricing)
-- [ ] להריץ vitest ולוודא שאין שבירה
+- [x] להחליף את כל המופעים של "קואליטי" / "קוואליטי" בעברית (בהקשר של סוכנות) לניסוח גנרי או SPARK AI
+- [x] לשנות את שם המוצר ל-"SPARK Quality מבית SPARK AI" ב-title, ב-Landing וב-Splash
+- [x] להשאיר את יפעת וענת כצוות SPARK AI
+- [x] לבדוק בדפדפן ולוודא שאין שום אזכור של "קוואליטי" כסוכנות בכל המסכים (Landing, /demo, /demo?clean=true, /dashboard, /pricing)
+- [x] להריץ vitest ולוודא שאין שבירה
 
 ## 📚 Round 13 - מסמכי אפיון + GitHub (2026-05-06)
-- [ ] להוסיף tagline "SPARK Quality מבית SPARK AI" ל-Splash וגם ל-Landing
-- [ ] לכתוב PRODUCT_SPEC.md - מסמך אפיון מלא של המוצר (זרימות, מסכים, onboarding, קטגוריות, scenarios, סטטוס פיתוח, APIs חסרים, אינטגרציות עתידיות)
-- [ ] לכתוב PRESENTATION_GUIDE.md - מדריך הצגה להדרכה ביום ראשון (טקסט מדבר לכל מסך, מה להראות מתי)
-- [ ] להמיר את PRESENTATION_GUIDE לפורמט הדפסה (PDF)
-- [ ] ליצור Repository פרטי חדש ב-GitHub עבור הפרויקט
-- [ ] לאתחל git, לדחוף את כל הקוד ל-Repository (כולל המסמכים)
+- [x] להוסיף tagline "SPARK Quality מבית SPARK AI" ל-Splash וגם ל-Landing
+- [x] לכתוב PRODUCT_SPEC.md - מסמך אפיון מלא של המוצר (זרימות, מסכים, onboarding, קטגוריות, scenarios, סטטוס פיתוח, APIs חסרים, אינטגרציות עתידיות)
+- [x] לכתוב PRESENTATION_GUIDE.md - מדריך הצגה להדרכה ביום ראשון (טקסט מדבר לכל מסך, מה להראות מתי)
+- [x] להמיר את PRESENTATION_GUIDE לפורמט הדפסה (PDF)
+- [x] ליצור Repository פרטי חדש ב-GitHub עבור הפרויקט (IFATEYTAN/spark-quality, פרטי)
+- [x] לאתחל git, לדחוף את כל הקוד ל-Repository (כולל המסמכים)
