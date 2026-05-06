@@ -193,7 +193,7 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-6 animate-fade-in"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -207,7 +207,7 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-border/60 bg-cream/95 backdrop-blur px-6 sm:px-10 py-5">
+        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-border/60 bg-cream/95 backdrop-blur px-4 sm:px-10 py-4 sm:py-5">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-px w-10 bg-gold" />
@@ -231,7 +231,7 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
         </div>
 
         {/* Body */}
-        <div className="px-6 sm:px-10 py-6 sm:py-8 space-y-7">
+        <div className="px-4 sm:px-10 py-5 sm:py-8 space-y-6">
           {/* Trigger banner */}
           <div className="flex items-center gap-3 rounded-md border border-gold/30 bg-gradient-to-l from-gold/10 to-transparent px-4 py-3">
             <Sparkles className="h-5 w-5 text-gold flex-shrink-0" />

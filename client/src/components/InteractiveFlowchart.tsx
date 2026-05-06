@@ -104,11 +104,12 @@ export function InteractiveFlowchart({ data, autoPlay = false, minHeight = 480 }
 
   return (
     <div className="space-y-3">
-      {/* Controls bar */}
-      <div className="flex items-center justify-between gap-3 flex-wrap">
+      {/* Controls bar - desktop only (mobile has its own inside MobileFlowchartView) */}
+      <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Zap className="h-3.5 w-3.5 text-gold" />
-          <span>תרשים זרימה אינטראקטיבי - העבירי עכבר לפרטים</span>
+          <span className="hidden sm:inline">תרשים זרימה אינטראקטיבי - העבירי עכבר לפרטים</span>
+          <span className="sm:hidden">תרשים זרימה - הקישי לפרטים</span>
         </div>
         <div className="flex items-center gap-2">
           {!isPlaying && activeStep < data.nodes.length - 1 && (
@@ -137,9 +138,24 @@ export function InteractiveFlowchart({ data, autoPlay = false, minHeight = 480 }
         </div>
       </div>
 
-      {/* Canvas */}
+      {/* Mobile vertical timeline (under lg breakpoint) */}
+      <div className="lg:hidden">
+        <MobileFlowchartView
+          data={data}
+          activeStep={activeStep}
+          hoveredNode={hoveredNode}
+          setHoveredNode={setHoveredNode}
+          isPlaying={isPlaying}
+          startSimulation={startSimulation}
+          resetSimulation={resetSimulation}
+          isNodeActive={isNodeActive}
+          isEdgeActive={isEdgeActive}
+        />
+      </div>
+
+      {/* Desktop canvas (lg and up) */}
       <div
-        className="relative rounded-lg border-2 border-border/60 bg-gradient-to-br from-cream to-cream/60 overflow-hidden"
+        className="hidden lg:block relative rounded-lg border-2 border-border/60 bg-gradient-to-br from-cream to-cream/60 overflow-hidden"
         style={{ minHeight: `${minHeight}px` }}
       >
         {/* Grid background */}
@@ -338,6 +354,166 @@ export function InteractiveFlowchart({ data, autoPlay = false, minHeight = 480 }
             <span className="flex items-center gap-1"><span className="h-1.5 w-3 bg-slate-400 rounded-full" style={{ backgroundImage: "repeating-linear-gradient(90deg, #94a3b8 0 2px, transparent 2px 4px)" }} /> מסלול חלופי</span>
           </div>
           <span>{data.nodes.length} שלבים · {data.edges.length} חיבורים</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// תצוגת מובייל אנכית - שלבים אחד מתחת לשני עם חיבורים אנכיים
+// ---------------------------------------------------------------------------
+function MobileFlowchartView({
+  data,
+  activeStep,
+  hoveredNode,
+  setHoveredNode,
+  isPlaying,
+  startSimulation,
+  resetSimulation,
+  isNodeActive,
+  isEdgeActive,
+}: {
+  data: FlowchartData;
+  activeStep: number;
+  hoveredNode: string | null;
+  setHoveredNode: (id: string | null) => void;
+  isPlaying: boolean;
+  startSimulation: () => void;
+  resetSimulation: () => void;
+  isNodeActive: (i: number) => boolean;
+  isEdgeActive: (fromIdx: number) => boolean;
+}) {
+  // Build adjacency: for each node, find its outgoing edges (for showing branch labels)
+  const outgoingEdges = (nodeId: string) => data.edges.filter((e) => e.from === nodeId);
+
+  return (
+    <div className="space-y-3">
+      {/* Controls bar */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <Zap className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+          <span>תרשים זרימה - הקישי לפרטים</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isPlaying && activeStep < data.nodes.length - 1 && (
+            <button
+              onClick={startSimulation}
+              className="flex items-center gap-1.5 rounded-md bg-navy-deep px-4 py-2.5 text-xs font-semibold text-cream min-h-[44px] min-w-[44px]"
+            >
+              <Sparkles className="h-3.5 w-3.5 text-gold" />
+              {activeStep === -1 ? "הפעל" : "המשך"}
+            </button>
+          )}
+          {isPlaying && (
+            <div className="flex items-center gap-1.5 rounded-md bg-gold/10 border border-gold/30 px-3 py-2.5 text-[11px] font-semibold text-gold min-h-[44px]">
+              <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+              {activeStep + 1}/{data.nodes.length}
+            </div>
+          )}
+          {(activeStep >= 0 && !isPlaying) && (
+            <button
+              onClick={resetSimulation}
+              className="rounded-md border border-border/70 bg-white px-4 py-2.5 text-xs font-semibold text-navy-deep min-h-[44px] min-w-[44px]"
+            >
+              איפוס
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Vertical timeline */}
+      <div className="relative rounded-lg border-2 border-border/60 bg-gradient-to-b from-cream to-cream/60 p-3 space-y-2">
+        {data.nodes.map((node, i) => {
+          const style = NODE_STYLES[node.type];
+          const Icon = node.icon ?? defaultIconForType(node.type);
+          const active = isNodeActive(i);
+          const expanded = hoveredNode === node.id;
+          const edgeActive = isEdgeActive(i);
+          const isLast = i === data.nodes.length - 1;
+          const branches = outgoingEdges(node.id);
+          const hasBranchLabels = branches.some((b) => b.label);
+
+          return (
+            <div key={node.id} className="relative">
+              {/* Node card - full width row */}
+              <div
+                onClick={() => setHoveredNode(expanded ? null : node.id)}
+                className={[
+                  "w-full flex items-start gap-3 rounded-lg border-2 px-3 py-3 text-right transition-all",
+                  style.bg,
+                  style.text,
+                  active ? "border-gold shadow-lg shadow-gold/20" : style.border,
+                  expanded ? "ring-2 ring-gold/40" : "",
+                ].join(" ")}
+              >
+                {/* Step number + icon column */}
+                <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${style.iconBg} ${style.iconText} shadow-md`}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-[10px] font-bold text-muted-foreground">
+                    {i + 1}/{data.nodes.length}
+                  </span>
+                </div>
+
+                {/* Content column */}
+                <div className="flex-1 min-w-0 text-right">
+                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-black tracking-[0.1em] uppercase ${style.iconBg} ${style.iconText}`}>
+                      {style.label}
+                    </span>
+                    {node.metric && (
+                      <span className="inline-block rounded bg-gold/15 px-1.5 py-0.5 text-[10px] font-bold text-gold">
+                        {node.metric}
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-display font-bold text-sm leading-tight">
+                    {node.label}
+                  </div>
+                  <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+                    {node.detail}
+                  </p>
+                </div>
+              </div>
+
+              {/* Vertical connector to next node */}
+              {!isLast && (
+                <div className="flex flex-col items-center py-1" aria-hidden="true">
+                  {hasBranchLabels && (
+                    <div className="flex items-center gap-2 mb-1">
+                      {branches.map((b, bi) => (
+                        <span
+                          key={bi}
+                          className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                            edgeActive ? "bg-gold text-navy-deep" : "bg-white text-muted-foreground border border-border/60"
+                          }`}
+                        >
+                          {b.label || (b.variant === "alt" ? "חלופי" : "")}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div
+                    className={`h-6 w-0.5 ${edgeActive ? "bg-gold" : "bg-slate-300"} transition-colors`}
+                  />
+                  <ArrowRight
+                    className={`h-3.5 w-3.5 rotate-90 ${edgeActive ? "text-gold" : "text-slate-400"} transition-colors`}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Legend */}
+        <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground/80 font-medium">
+          <span>{data.nodes.length} שלבים · {data.edges.length} חיבורים</span>
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-3 bg-gold rounded-full" />
+            פעיל
+          </span>
         </div>
       </div>
     </div>
