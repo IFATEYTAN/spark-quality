@@ -105,6 +105,15 @@ export default function Home() {
                   filter: "drop-shadow(0 2px 8px rgba(201,169,97,0.4))",
                 }}
               />
+              <div className="hidden md:flex flex-col leading-tight border-r border-white/15 pr-3">
+                <span className="font-display text-base text-gold-light tracking-[0.15em]">
+                  <span className="font-semibold">SPARK</span>{" "}
+                  <span className="font-light">Quality</span>
+                </span>
+                <span className="text-[9px] tracking-[0.35em] text-white/45 mt-0.5">
+                  מבית SPARK AI
+                </span>
+              </div>
             </Link>
             <nav className="flex items-center gap-2 sm:gap-4">
               <Link

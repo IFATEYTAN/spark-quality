@@ -1,10 +1,9 @@
-// Editorial Fintech | SPARK AI × קוואליטי
+// Editorial Fintech | SPARK AI
 // נתוני דמו - מבוססים על דוח "מוצרים בניהול" האמיתי, מותאמים להדרכה
 
 export const LOGO = {
   clear: "/manus-storage/spark_logo_tight_38c6fe50.png",
   purple: "/manus-storage/spark_logo_tight_38c6fe50.png",
-  quality: "/manus-storage/quality_logo_157d21ea.png",
 };
 
 export const ASSETS = {
@@ -283,7 +282,7 @@ export const TRIGGERS = [
 export const NOTIFICATIONS = [
   {
     type: "email",
-    to: "סוכן: יפעת איתן",
+    to: "סוכן: הסוכן המוביל",
     subject: "🚨 דחוף: 21 לקוחות בריסק זמני - דורש טיפול מיידי",
     preview: "המערכת זיהתה 21 לקוחות שכיסויי הריסק שלהם מסתיימים תוך 30 יום...",
     time: "לפני 2 דקות",

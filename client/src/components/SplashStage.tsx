@@ -117,6 +117,20 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
           />
         </div>
 
+        {/* Product name - SPARK Quality מבית SPARK AI */}
+        <div
+          className="mt-6 text-center animate-fade-in"
+          style={{ animationDelay: "0.7s", animationDuration: "1.4s" }}
+        >
+          <p className="font-display text-2xl lg:text-3xl text-gold-light tracking-[0.18em]">
+            <span className="font-semibold">SPARK</span>{" "}
+            <span className="font-light">Quality</span>
+          </p>
+          <p className="label-tag text-[10px] text-gold-soft/70 tracking-[0.4em] mt-2">
+            מבית SPARK AI
+          </p>
+        </div>
+
         {/* Golden divider with sparkle */}
         <div
           className="relative mt-14 animate-fade-in"

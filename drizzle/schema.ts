@@ -36,7 +36,7 @@ import {
 // ============================================================
 export const workspaces = mysqlTable("workspaces", {
   id: int("id").autoincrement().primaryKey(),
-  /** Display name, e.g. "קוואליטי" or "ביטוח דניאל" */
+  /** Display name, e.g. "קסם" או "ביטוח דניאל" */
   name: varchar("name", { length: 200 }).notNull(),
   /** Subscription plan: trial | basic | premium | enterprise */
   plan: mysqlEnum("plan", ["trial", "basic", "premium", "enterprise"]).default("trial").notNull(),
@@ -78,7 +78,7 @@ export const users = mysqlTable(
     /**
      * Role inside the workspace:
      * - owner: created the workspace, full control + billing
-     * - admin: like nova at קוואליטי - sees all clients, manages team
+     * - admin: like the admin at the agency - sees all clients, manages team
      * - agent: regular agent, sees only their own clients
      */
     workspaceRole: mysqlEnum("workspaceRole", ["owner", "admin", "agent"]).default("agent").notNull(),
