@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import * as db from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
@@ -41,6 +42,31 @@ const workspaceAdminProcedure = workspaceProcedure.use(async ({ ctx, next }) => 
 
 export const appRouter = router({
   system: systemRouter,
+
+  // ========================================================
+  // CONTACT (Public - landing page contact form)
+  // ========================================================
+  contact: router({
+    /** Send a contact-request to the workspace owner (Manus-side notification) */
+    send: publicProcedure
+      .input(
+        z.object({
+          name: z.string().trim().min(2).max(120),
+          email: z.string().trim().email().max(200),
+          phone: z.string().trim().min(7).max(40).optional().or(z.literal("")),
+          message: z.string().trim().min(5).max(2000),
+          source: z.string().trim().max(80).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const phoneLine = input.phone && input.phone.length > 0 ? `טלפון: ${input.phone}\n` : "";
+        const sourceLine = input.source ? `מקור: ${input.source}\n` : "";
+        const title = `✨ בקשת פגישה חדשה — ${input.name}`;
+        const content = `מילוא טופס צור קשר בדמו של SPARK Quality:\n\nשם: ${input.name}\nמייל: ${input.email}\n${phoneLine}${sourceLine}\n---\n${input.message}`;
+        const delivered = await notifyOwner({ title, content });
+        return { ok: true, delivered } as const;
+      }),
+  }),
 
   // ========================================================
   // AUTH

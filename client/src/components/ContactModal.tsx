@@ -1,6 +1,6 @@
-// Editorial Fintech | מודאל "קבעו פגישת אפיון" — פרטי קשר + טופס יצירת קשר
+// Editorial Fintech | מודאל "קבעו פגישת אפיון" — פרטי קשר + טופס יצירת קשר אמיתי (tRPC + notifyOwner)
 // פרטים: ענת (anathemell@gmail.com, 054-739-5570), יפעת (0545633661)
-// קישורים: SPARK AI website, Facebook, LinkedIn, כרטיס ביקור דיגיטלי
+// קישורים: SPARK AI website, Facebook, כרטיס ביקור דיגיטלי (LinkedIn הוסר עד מתן URL מאומת)
 import { useEffect, useState } from "react";
 import {
   X,
@@ -10,12 +10,12 @@ import {
   ExternalLink,
   CheckCircle2,
   AlertCircle,
-  Linkedin,
   Facebook,
   Globe,
   CreditCard,
   Sparkles,
 } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 
 interface ContactModalProps {
   open: boolean;
@@ -32,7 +32,6 @@ const SOCIAL_LINKS = {
   website: "https://get-marketing.co.il/spark-ai/",
   facebook: "https://www.facebook.com/people/Spark-Ai/61572580830662/",
   digitalCard: "https://spark-ai-sprinkle-ai-and-automat-30332645.base44.app/Main",
-  linkedin: "https://www.linkedin.com/company/spark-ai-il/",
 };
 
 type SubmitState = "idle" | "submitting" | "ok" | "error";
@@ -43,6 +42,15 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
+  const [errorMessage, setErrorMessage] = useState<string>("");
+
+  const sendMutation = trpc.contact.send.useMutation({
+    onSuccess: () => setSubmitState("ok"),
+    onError: (err) => {
+      setErrorMessage(err.message ?? "שליחת ההודעה נכשלה. נסה שוב או שלחו וואטסאפ ישירות.");
+      setSubmitState("error");
+    },
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -64,38 +72,21 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !isValidEmail(email)) {
+    if (!name.trim() || !isValidEmail(email) || !message.trim() || message.trim().length < 5) {
+      setErrorMessage("אנא מלאו שם, מייל תקין והודעה (לפחות 5 תווים) לפני השליחה.");
       setSubmitState("error");
       return;
     }
 
     setSubmitState("submitting");
-
-    // Open user's mail client with a pre-filled message to anat@
-    const subject = encodeURIComponent("פגישת אפיון · SPARK AI Quality");
-    const body = encodeURIComponent(
-      [
-        `שם: ${name}`,
-        `מייל: ${email}`,
-        phone ? `טלפון: ${phone}` : "",
-        "",
-        "הודעה:",
-        message || "(ללא הודעה)",
-        "",
-        "—",
-        "נשלח דרך SPARK AI Quality Demo",
-      ]
-        .filter(Boolean)
-        .join("\n")
-    );
-
-    // Use mailto: to leverage the user's email client (no backend needed for demo)
-    const mailto = `mailto:${ANAT_EMAIL}?subject=${subject}&body=${body}`;
-    window.location.href = mailto;
-
-    setTimeout(() => {
-      setSubmitState("ok");
-    }, 400);
+    setErrorMessage("");
+    sendMutation.mutate({
+      name: name.trim(),
+      email: email.trim(),
+      phone: phone.trim() || undefined,
+      message: message.trim(),
+      source: "SPARK Quality Demo · ContactModal",
+    });
   };
 
   const handleReset = () => {
@@ -103,6 +94,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
     setEmail("");
     setPhone("");
     setMessage("");
+    setErrorMessage("");
     setSubmitState("idle");
   };
 
@@ -229,10 +221,10 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
               <div className="rounded-md border border-emerald-300 bg-emerald-50 p-5 text-center space-y-3">
                 <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto" />
                 <h4 className="font-display text-lg font-bold text-emerald-800">
-                  המייל נפתח בקליינט שלך
+                  ההודעה נשלחה בהצלחה לצוות SPARK AI ✨
                 </h4>
                 <p className="text-sm text-emerald-700/90 max-w-md mx-auto leading-relaxed">
-                  אם נפתח לך תוכנת מייל — לחצי שלח. אחרת, אפשר ליצור קשר ישירות:
+                  נחזור אליך בתוך 24 שעות. אם זה דחוף — אפשר לפנות ישירות:
                 </p>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
                   <a
@@ -334,17 +326,17 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                 {submitState === "error" && (
                   <div className="flex items-start gap-2 rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">
                     <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                    <span>אנא מלאו שם ומייל תקין לפני השליחה.</span>
+                    <span>{errorMessage || "אנא מלאו שם, מייל תקין והודעה לפני השליחה."}</span>
                   </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
                   <button
                     type="submit"
-                    disabled={submitState === "submitting"}
+                    disabled={submitState === "submitting" || sendMutation.isPending}
                     className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded bg-navy-deep px-6 py-3 text-sm font-bold text-cream transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20 disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px]"
                   >
-                    {submitState === "submitting" ? (
+                    {submitState === "submitting" || sendMutation.isPending ? (
                       <>
                         <Sparkles className="h-4 w-4 animate-spin text-gold" />
                         שולח...
@@ -357,11 +349,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                     )}
                   </button>
                   <p className="text-[11px] text-muted-foreground sm:flex-1 leading-relaxed">
-                    לחיצה תפתח את תוכנת המייל שלכם עם הודעה ערוכה אל{" "}
-                    <span dir="ltr" className="font-mono text-navy-deep">
-                      {ANAT_EMAIL}
-                    </span>
-                    .
+                    ההודעה תגיע ישירות לצוות SPARK AI — אנחנו נחזור אליכם תוך 24 שעות.
                   </p>
                 </div>
               </form>
@@ -374,7 +362,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
               <div className="h-px w-6 bg-gold" />
               רשת SPARK AI
             </h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <SocialLink href={SOCIAL_LINKS.website} icon={Globe} label="אתר רשמי" />
               <SocialLink
                 href={SOCIAL_LINKS.digitalCard}
@@ -382,7 +370,6 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                 label="כרטיס דיגיטלי"
               />
               <SocialLink href={SOCIAL_LINKS.facebook} icon={Facebook} label="Facebook" />
-              <SocialLink href={SOCIAL_LINKS.linkedin} icon={Linkedin} label="LinkedIn" />
             </div>
           </div>
         </div>

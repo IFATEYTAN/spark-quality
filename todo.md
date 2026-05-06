@@ -120,7 +120,7 @@
 - [x] לתקן ניגודיות של "SPARK Quality" ו"מבית SPARK AI" + שמות צוות
 - [x] להבטיח רספונסיביות מלאה במובייל
 - [x] לאמת בדפדפן
-- [ ] לוודא שהמשתמשת לוחצת Publish כדי לראות את השינויים
+- [x] לוודא שהמשתמשת לוחצת Publish — דווח בהודעה למשתמשת בכל סיבוב
 
 
 ## 🪄 Round 15 - Onboarding מלא + פיה אשפית (2026-05-06)
@@ -198,17 +198,18 @@
 
 
 ## Round 22 - תיקוני עיצוב + טופס יצירת קשר (2026-05-06)
-- [ ] InteractiveFlowchart - לעבור לפלטת המערכת (navy/gold/cream) במקום הצבעים האקראיים
-- [ ] InteractiveFlowchart - לתקן את הפריסה והגלישה של טקסטים, להבטיח אחידות
-- [ ] InteractiveFlowchart - אנימציה אינטראקטיבית של הזרימה לכל שלב
-- [ ] SummaryStage - לתקן את הפוטר התחתון הנחתך + לאפשר גלילה
-- [ ] SummaryStage - לתקן את הקלף השמאלי "אתם לא צריכים עוד זמן..." (טקסט נחתך)
-- [ ] להחליף כפתור "קבעו פגישת אפיון" בטופס יצירת קשר עם:
-  - מייל ענת: anathemell@gmail.com
-  - וואטסאפ יפעת: 0545633661
-  - וואטסאפ ענת: 054-739-5570
-  - Facebook: https://www.facebook.com/people/Spark-Ai/61572580830662/
-  - LinkedIn (לבדוק עם המשתמשת)
-  - אתר: https://get-marketing.co.il/spark-ai/
-  - כרטיס ביקור דיגיטלי: https://spark-ai-sprinkle-ai-and-automat-30332645.base44.app/Main
-- [ ] vitest + checkpoint + push GitHub
+- [x] InteractiveFlowchart - ניתן לפלטת המערכת (navy/gold/cream) — בוטלה של הצבעים האקראיים
+- [x] InteractiveFlowchart - נבנה מחדש עם grid אופקי בדסקטופ (desktopColumns prop) + leading-snug לטקסטי nodes למניעת גלישה
+- [x] InteractiveFlowchart - אנימציה: "הפעל סימולציה" מדגיש צמתים לפי סדר + חיזורי זוהרים מונפשים
+- [x] SummaryStage - הפוטר הוצא מ-absolute ל-flow + העמוד כולו הפך ל-overflow-y-auto, ללא חיתוך בתחתית
+- [x] SummaryStage - המאניפסט השמאלי לא נחתך: הוסר absolute, גדלים רספונסיביים, min-h מוגדר
+- [x] הוחלף כפתור "קבעו פגישת אפיון" ב- ContactModal: מייל ענת, וואטסאפ יפעת+ענת, Facebook+LinkedIn, אתר רשמי + כרטיס דיגיטלי, טופס mailto לשליחה לענת
+- [x] vitest 13/13 + checkpoint 7b92e1b9 + push GitHub (מתבצע אוטומטי דרך ה-checkpoint)
+
+
+## Round 23 - טופס צור קשר אמיתי (2026-05-06)
+- [ ] tRPC procedure `contact.send` שמקבלת name/email/phone/message ושולחת notifyOwner + מייל לענת
+- [ ] ContactModal - להחליף mailto ב-trpc.contact.send.useMutation עם success/error states
+- [ ] להסיר את קישור LinkedIn הלא-מאומת זמנית
+- [ ] vitest לכיסוי contact.send (input validation, success path)
+- [ ] checkpoint + push GitHub
