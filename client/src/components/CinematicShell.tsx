@@ -132,7 +132,7 @@ export function CinematicHeader() {
   return (
     <header className="relative z-20 border-b border-white/10 bg-[#06101F]/85 backdrop-blur-md">
       <div className="container">
-        <div className="flex h-20 items-center justify-between gap-6">
+        <div className="flex h-24 items-center justify-between gap-6">
           {/* Right (RTL primary) - SPARK AI logo */}
           <Link
             href="/"
@@ -142,8 +142,8 @@ export function CinematicHeader() {
             <img
               src={LOGO.clear}
               alt="SPARK AI"
-              className="h-12 w-auto object-contain"
-              style={{ filter: "drop-shadow(0 2px 8px rgba(201,169,97,0.4))" }}
+              className="h-16 lg:h-20 w-auto object-contain"
+              style={{ filter: "drop-shadow(0 2px 12px rgba(201,169,97,0.55)) brightness(1.1)" }}
             />
           </Link>
 

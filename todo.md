@@ -25,7 +25,7 @@
 
 - [ ] DashboardLayout עם sidebar מלא למסכי SaaS (במקום navigation מבוזר)
 - [ ] Pricing page (טבלת תוכניות תמחור)
-- [ ] שילוב הלוגו הרשמי של SPARK AI ב-CinematicShell (כרגע מוצגת מילת SPARK AI בלבד)
+- [x] שילוב הלוגו הרשמי של SPARK AI ב-CinematicShell (כולל חיתוך שקיפות)
 - [ ] בדיקה ויזואלית מקיפה של כל 6 המסכים בתצוגות מובייל/דסקטופ עם screenshots מסודרים
 
 ---
