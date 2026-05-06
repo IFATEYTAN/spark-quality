@@ -20,12 +20,13 @@ import { getLoginUrl } from "@/const";
 export default function Home() {
   const { isAuthenticated, user, loading } = useAuth();
 
-  // אם המשתמש כבר מחובר — שלח אותו ל-/dashboard
+  // אם המשתמש כבר מחובר — נתב אותו למסך הנכון לפי מצב הסוכנות
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      window.location.href = "/dashboard";
-    }
-  }, [loading, isAuthenticated]);
+    if (loading) return;
+    if (!isAuthenticated || !user) return;
+    const hasWorkspace = Boolean((user as { workspaceId?: number | null }).workspaceId);
+    window.location.replace(hasWorkspace ? "/dashboard" : "/onboarding");
+  }, [loading, isAuthenticated, user]);
 
   // חלקיקי זהב מאנימציה
   const particles = useMemo(

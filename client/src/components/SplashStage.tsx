@@ -92,95 +92,100 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
         }}
       />
 
-      {/* Centered content - logos + tagline */}
-      <div className="relative h-full w-full flex flex-col items-center justify-center px-8">
-        {/* Top label - Hebrew kicker */}
-        <div
-          className="mb-10 text-center animate-fade-in"
-          style={{ animationDelay: "0.2s", animationDuration: "1.4s" }}
-        >
-          <p className="label-tag text-[11px] text-gold/70 tracking-[0.45em]">
-            Sprinkle AI · Automation Magic
-          </p>
-        </div>
-
-        {/* SPARK AI logo - centered, integrated into the scene without a plate */}
-        <div
-          className="animate-fade-up flex items-center justify-center"
-          style={{ animationDelay: "0.4s", animationDuration: "1.4s" }}
-        >
-          <img
-            src={LOGO.clear}
-            alt="SPARK AI"
-            className="w-[420px] lg:w-[520px] h-auto object-contain drop-shadow-[0_10px_40px_rgba(201,169,97,0.55)]"
-            style={{ filter: "drop-shadow(0 0 30px rgba(201,169,97,0.4))" }}
-          />
-        </div>
-
-        {/* Product name - SPARK Quality מבית SPARK AI */}
-        <div
-          className="mt-6 text-center animate-fade-in"
-          style={{ animationDelay: "0.7s", animationDuration: "1.4s" }}
-        >
-          <p className="font-display text-2xl lg:text-3xl text-gold-light tracking-[0.18em]">
-            <span className="font-semibold">SPARK</span>{" "}
-            <span className="font-light">Quality</span>
-          </p>
-          <p className="label-tag text-[10px] text-gold-soft/70 tracking-[0.4em] mt-2">
-            מבית SPARK AI
-          </p>
-        </div>
-
-        {/* Golden divider with sparkle */}
-        <div
-          className="relative mt-14 animate-fade-in"
-          style={{ animationDelay: "1.1s", animationDuration: "1s" }}
-        >
-          <div className="h-px bg-gradient-to-r from-transparent via-gold to-transparent" style={{ width: "380px" }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-gold shadow-[0_0_15px_rgba(201,169,97,1)]" />
-        </div>
-
-        {/* Tagline */}
-        <div
-          className="mt-10 text-center animate-fade-up max-w-3xl"
-          style={{ animationDelay: "1.4s", animationDuration: "1.2s" }}
-        >
-          <p className="font-display-light text-3xl lg:text-4xl text-white tracking-wide leading-relaxed">
-            כשהקסם של ה-AI{" "}
-            <span className="text-gold font-semibold">פוגש את העוצמה שלכם</span>
-          </p>
-
-          {/* Team credits — SPARK AI */}
+      {/* Centered content - logos + tagline. גדלים רספונסיביים + scroll במובייל כדי שטקסט לא ייחתך */}
+      <div className="relative h-full w-full overflow-y-auto px-5 sm:px-8 py-10">
+        <div className="min-h-full w-full flex flex-col items-center justify-center text-center">
+          {/* Top label - Hebrew kicker */}
           <div
-            className="mt-10 animate-fade-up"
-            style={{ animationDelay: "1.7s", animationDuration: "1.2s" }}
+            className="mb-6 sm:mb-10 animate-fade-in"
+            style={{ animationDelay: "0.2s", animationDuration: "1.4s" }}
           >
-            <p className="label-tag text-[10px] text-gold/60 tracking-[0.4em] mb-3">
-              צוות SPARK AI
-            </p>
-            <p className="font-display text-lg text-gold-light tracking-wide">
-              <span className="font-semibold">יפעת איתן</span>
-              <span className="mx-4 text-gold/50">×</span>
-              <span className="font-semibold">ענת גרינברג</span>
+            <p className="label-tag text-[10px] sm:text-[11px] text-gold/80 tracking-[0.35em] sm:tracking-[0.45em]">
+              Sprinkle AI · Automation Magic
             </p>
           </div>
 
-          <p
-            className="mt-8 label-tag text-[11px] text-gold-soft/70 tracking-[0.4em] animate-fade-in"
-            style={{ animationDelay: "2s", animationDuration: "1s" }}
+          {/* SPARK AI logo */}
+          <div
+            className="animate-fade-up flex items-center justify-center w-full"
+            style={{ animationDelay: "0.4s", animationDuration: "1.4s" }}
           >
-            LIVE DEMO · SPARK AI · 2026
-          </p>
-        </div>
+            <img
+              src={LOGO.clear}
+              alt="SPARK AI"
+              className="w-[260px] sm:w-[380px] lg:w-[520px] h-auto object-contain drop-shadow-[0_10px_40px_rgba(201,169,97,0.55)]"
+              style={{ filter: "drop-shadow(0 0 30px rgba(201,169,97,0.4))" }}
+            />
+          </div>
 
-        {/* Skip hint - bottom */}
-        <div
-          className="absolute bottom-8 right-1/2 translate-x-1/2 animate-fade-in"
-          style={{ animationDelay: "2.4s", animationDuration: "1s" }}
-        >
-          <p className="label-tag text-[10px] text-white/35 tracking-[0.3em]">
-            לחצו בכל מקום כדי לדלג
-          </p>
+          {/* Product name - SPARK Quality מבית SPARK AI */}
+          <div
+            className="mt-5 sm:mt-6 animate-fade-in"
+            style={{ animationDelay: "0.7s", animationDuration: "1.4s" }}
+          >
+            <p className="font-display text-xl sm:text-2xl lg:text-3xl text-gold-light tracking-[0.15em] sm:tracking-[0.18em]">
+              <span className="font-semibold">SPARK</span>{" "}
+              <span className="font-light">Quality</span>
+            </p>
+            <p className="label-tag text-[9px] sm:text-[10px] text-gold-soft/80 tracking-[0.35em] sm:tracking-[0.4em] mt-2">
+              מבית SPARK AI
+            </p>
+          </div>
+
+          {/* Golden divider with sparkle */}
+          <div
+            className="relative mt-10 sm:mt-14 animate-fade-in w-full max-w-[380px]"
+            style={{ animationDelay: "1.1s", animationDuration: "1s" }}
+          >
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-gold to-transparent" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-gold shadow-[0_0_15px_rgba(201,169,97,1)]" />
+          </div>
+
+          {/* Tagline */}
+          <div
+            className="mt-8 sm:mt-10 animate-fade-up max-w-3xl w-full"
+            style={{ animationDelay: "1.4s", animationDuration: "1.2s" }}
+          >
+            <p className="font-display-light text-2xl sm:text-3xl lg:text-4xl text-white tracking-wide leading-relaxed">
+              כשהקסם של ה-AI{" "}
+              <span className="text-gold font-semibold">פוגש את העוצמה שלכם</span>
+            </p>
+
+            {/* Team credits — SPARK AI — זהב מודגש ומוצל לקריאה מלאה */}
+            <div
+              className="mt-8 sm:mt-10 animate-fade-up"
+              style={{ animationDelay: "1.7s", animationDuration: "1.2s" }}
+            >
+              <p className="label-tag text-[9px] sm:text-[10px] text-gold/70 tracking-[0.35em] sm:tracking-[0.4em] mb-2 sm:mb-3">
+                צוות SPARK AI
+              </p>
+              <p
+                className="font-display text-base sm:text-lg text-gold-light tracking-wide"
+                style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6), 0 0 18px rgba(201,169,97,0.35)" }}
+              >
+                <span className="font-bold text-gold">יפעת איתן</span>
+                <span className="mx-3 sm:mx-4 text-gold/60">×</span>
+                <span className="font-bold text-gold">ענת גרינברג</span>
+              </p>
+            </div>
+
+            <p
+              className="mt-6 sm:mt-8 label-tag text-[10px] sm:text-[11px] text-gold-soft/80 tracking-[0.35em] sm:tracking-[0.4em] animate-fade-in"
+              style={{ animationDelay: "2s", animationDuration: "1s" }}
+            >
+              LIVE DEMO · SPARK AI · 2026
+            </p>
+          </div>
+
+          {/* Skip hint - inline (לא absolute) כדי שלא ייחתך במובייל */}
+          <div
+            className="mt-12 mb-6 animate-fade-in"
+            style={{ animationDelay: "2.4s", animationDuration: "1s" }}
+          >
+            <p className="label-tag text-[9px] sm:text-[10px] text-white/45 tracking-[0.3em]">
+              לחצו בכל מקום כדי לדלג
+            </p>
+          </div>
         </div>
       </div>
     </div>

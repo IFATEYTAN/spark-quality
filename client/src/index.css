@@ -44,6 +44,7 @@
   --color-navy-deep: var(--navy-deep);
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
+  --color-gold-light: var(--gold-light);
   --color-cream: var(--cream);
   --color-ivory: var(--ivory);
   --font-display: 'Rubik', sans-serif;
@@ -56,6 +57,7 @@
   --navy: oklch(0.25 0.05 254);
   --gold: oklch(0.74 0.10 80);
   --gold-soft: oklch(0.84 0.07 80);
+  --gold-light: oklch(0.91 0.10 85);
   --cream: oklch(0.96 0.012 80);
   --ivory: oklch(0.985 0.005 80);
 

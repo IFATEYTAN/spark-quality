@@ -143,3 +143,25 @@
 - [x] כל 13 vitest tests עוברים
 - [x] LSP/TypeScript ללא שגיאות
 - [x] שמירת checkpoint + push ל-GitHub
+
+
+## 🔧 Round 17 - תיקון שם בדף ה-OAuth (2026-05-06)
+- [ ] לעדכן את VITE_APP_TITLE מ-"SPARK AI × קוואליטי - דמו הדרכה" ל-"SPARK Quality מבית SPARK AI"
+- [ ] checkpoint + push ל-GitHub
+
+
+## 🛠️ Round 17 - שיפורי UX קריטיים (2026-05-06)
+- [ ] להסתיר את כפתור "דמו הדרכה" מ-Header עבור משתמשים שאינם אדמינים (להציג רק ל-role==admin)
+- [ ] להפוך את FairyMascot לגריר/למזעור (draggable/minimizable)
+- [ ] לתקן ריצוד טעינה: משתמש עם workspaceId יועבר מיד ל-/dashboard, משתמש בלי - ל-/onboarding, אורח - ל-Home
+- [ ] להבליט את כפתור יצירת קישור ההזמנה ב-Team עם הסבר ברור על הקוד
+- [ ] vitest + checkpoint + push GitHub
+
+
+## 🎨 Round 18 - תיקוני עיצוב קריטיים מהמובייל (2026-05-06)
+- [x] לתקן צבע שמות הצוות ב-Splash - הוחלף ל-text-gold עם font-bold ו-textShadow זהוב לקריאה מלאה
+- [x] לאחד טיפוגרפיה - הוספה משתנה --gold-light לתמיכת Tailwind
+- [x] לתקן רספונסיביות ב-Splash - לוגו 260px במובייל, sm:380, lg:520; הודעה 4xl→3xl במובייל, padding מותאם, overflow-y-auto + min-h-full
+- [x] לוודא שמסך הבית ברור - תוקן תנאי ניתוב: workspaceId → dashboard, אחרת → onboarding
+- [x] להחביא כפתור "דמו הדרכה" מ-non-admins (Round 17)
+- [x] vitest 13/13 עוברים
