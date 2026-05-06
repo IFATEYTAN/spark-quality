@@ -235,13 +235,29 @@
 
 
 ## Round 26 - תיקון פריסת AdminPanel + סנכרון קטגוריות בייבוא (2026-05-06)
-- [ ] AdminPanel - תיקון כרטיסי הסטטיסטיקה (טקסט מסובב 90° → אופקי, grid responsive)
-- [ ] AdminPanel - שיפור ניגודיות הלשוניות (כחול-זוהר → gold-fade על glass)
-- [ ] באג: ייבוא דוח לא מסנכרן ל-categories (תקין רק ל-"לקוחות"; קטגוריות 0 בכולם) — לאתר בכל הזרימה: parseReport → bulkUpsertClients → DB → financial.metrics
-- [ ] לתקן את הסנכרון
-- [ ] vitest + checkpoint + push GitHub
+- [x] AdminPanel - כרטיסי הסטטיסטיקה אופקיים (grid 1→2→3→6 לפי breakpoint, whitespace-nowrap)
+- [x] AdminPanel - לשוניות עברו ל-glass + hover gold + data-state border
+- [x] באג הסנכרון תוקן: ה-merge ב- parseShorensReport הסתמך על severity rank (vip > tikun_190 > liquid_fund > high_fees > risk_ending > coverage_gaps), VIP sticky, accumulation מ-non-insurance sheets
+- [x] vitest 30/30 + checkpoint fa35208c + push GitHub (commit fa35208)
 
 
 ## Round 27 - תיקון חיתוך כותרת CategoryScenarioModal (2026-05-07)
-- [ ] להגדיל padding-top במודל הקטגוריה כך שהכותרת "תרשים זרימה אינטראקטיבי" לא נחתכת מתחת ל-Header של הדף
+- [x] הוסר sticky מה-Header של המודל — לכן כותרות פנימיות (ברנס trigger, "תרשים זרימה אינטראקטיבי") לא נחתכות יותר מאחוריו; הוסף scroll-pt-32 לבטחון
+- [x] checkpoint f56d944a + push ל-IFATEYTAN/spark-quality (commit f56d944) | 30/30 vitest עוברים
+
+## Round 28 - Action Center במערכת האמיתית אחרי ייבוא (2026-05-07)
+- [ ] להוסיף ל-/upload מסך תוצאה מורחב אחרי העלאה (כמה לקוחות זוהו, כמה דגלים, לאיזו קטגוריות יש לפעול, CTA לדשבורד)
+- [ ] להוסיף ל-Dashboard סקציה "Action Center" שמציגה 6 כרטיסי קטגוריה עם מספר הלקוחות המתויגים ותיאור הצעד הבא
+- [ ] כל כרטיס פותח את CategoryScenarioModal (זהה לדמו)
+- [ ] CTA ראשי "הפעל את האוטומציה הראשונה" מצביע על הקטגוריה החזקה ביותר
+- [ ] מקומות דומים מהדמו (התקדמות בדהלו → SummaryStage) משוקעים גם בדף ה-/upload הרגיל
+- [ ] vitest ל-financial.metrics ממשיך להחזיר את המספרים לכל קטגוריה — לתקף את התצוגה בהתאם לשינוי ה-merge
 - [ ] checkpoint + push GitHub
+
+
+## Round 28 - מרכז פעולות (Action Center) פוסט-העלאה (2026-05-07)
+- [x] הרחבת getWorkspaceMetrics ב-server/db.ts: כעת מחזיר 6 קטגוריות (vipClients, liquidFunds, tikun190Candidates, highFees, riskEnding, coverageGaps)
+- [x] רכיב חדש client/src/components/ActionCenter.tsx — 6 כרטיסי קטגוריה ממוינים לפי כמות, פתיחת CategoryScenarioModal בלחיצה, CTA זהב להפעלת האוטומציה הראשונה
+- [x] חיבור ActionCenter ל-Dashboard.tsx (כשיש לקוחות בתיק)
+- [x] חיבור ActionCenter ל-UploadReport.tsx במצב done (showWhenEmpty=true) עם ספירה מקומית מתוך parsed.customers
+- [x] vitest 30/30 עוברים, אין שגיאות TypeScript

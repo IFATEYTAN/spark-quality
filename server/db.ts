@@ -399,6 +399,9 @@ export async function getWorkspaceMetrics(opts: {
       vipClients: 0,
       liquidFunds: 0,
       tikun190Candidates: 0,
+      highFees: 0,
+      riskEnding: 0,
+      coverageGaps: 0,
       totalAum: 0,
     };
   }
@@ -415,6 +418,9 @@ export async function getWorkspaceMetrics(opts: {
   const vipClients = rows.filter(r => r.isVip).length;
   const tikun190Candidates = rows.filter(r => r.flagStatus === "tikun_190").length;
   const liquidFunds = rows.filter(r => r.flagStatus === "liquid_fund").length;
+  const highFees = rows.filter(r => r.flagStatus === "high_fees").length;
+  const riskEnding = rows.filter(r => r.flagStatus === "risk_ending").length;
+  const coverageGaps = rows.filter(r => r.flagStatus === "coverage_gaps").length;
   const totalAum = rows.reduce(
     (sum, r) => sum + Number(r.totalBalance ?? 0),
     0
@@ -424,6 +430,9 @@ export async function getWorkspaceMetrics(opts: {
     vipClients,
     liquidFunds,
     tikun190Candidates,
+    highFees,
+    riskEnding,
+    coverageGaps,
     totalAum,
   };
 }

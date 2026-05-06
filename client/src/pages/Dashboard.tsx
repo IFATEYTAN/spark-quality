@@ -2,6 +2,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
+import { ActionCenter } from "@/components/ActionCenter";
 import { trpc } from "@/lib/trpc";
 import {
   AlertCircle,
@@ -205,6 +206,21 @@ export default function Dashboard() {
             </div>
           </GlassCard>
         </div>
+
+        {/* Action Center — surfaces post-import next steps */}
+        {totalClients > 0 && (
+          <ActionCenter
+            counts={{
+              vipClients: metricsQuery.data?.vipClients ?? 0,
+              liquidFunds: metricsQuery.data?.liquidFunds ?? 0,
+              tikun190Candidates: metricsQuery.data?.tikun190Candidates ?? 0,
+              highFees: metricsQuery.data?.highFees ?? 0,
+              riskEnding: metricsQuery.data?.riskEnding ?? 0,
+              coverageGaps: metricsQuery.data?.coverageGaps ?? 0,
+            }}
+            subtitle="זיהינו את הקטגוריות הפעילות בתיק שלך — לחצי על קטגוריה כדי לראות את תרשים הזרימה האוטומטי ואת הצעד הבא."
+          />
+        )}
 
         {/* Action cards */}
         <div className="grid md:grid-cols-2 gap-5">

@@ -2,6 +2,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
+import { ActionCenter } from "@/components/ActionCenter";
 import { parseShorensReport, type ParsedReport } from "@/lib/parseReport";
 import { trpc } from "@/lib/trpc";
 import {
@@ -220,6 +221,35 @@ export default function UploadReport() {
               </Button>
             </div>
           </GlassCard>
+        )}
+
+        {state === "done" && parsed && (
+          <div className="mt-8">
+            <ActionCenter
+              counts={{
+                vipClients: parsed.customers.filter((c) => (c as { isVip?: boolean }).isVip).length,
+                liquidFunds: parsed.customers.filter(
+                  (c) => (c as { flagStatus?: string }).flagStatus === "liquid_fund"
+                ).length,
+                tikun190Candidates: parsed.customers.filter(
+                  (c) => (c as { flagStatus?: string }).flagStatus === "tikun_190"
+                ).length,
+                highFees: parsed.customers.filter(
+                  (c) => (c as { flagStatus?: string }).flagStatus === "high_fees"
+                ).length,
+                riskEnding: parsed.customers.filter(
+                  (c) => (c as { flagStatus?: string }).flagStatus === "risk_ending"
+                ).length,
+                coverageGaps: parsed.customers.filter(
+                  (c) => (c as { flagStatus?: string }).flagStatus === "coverage_gaps"
+                ).length,
+              }}
+              showWhenEmpty
+              eyebrow="מרכז הפעולות · מה לעשות עכשיו"
+              title={<>המהלכים הבאים שלך</>}
+              subtitle="זיהינו אוטומטית את הלקוחות בתיק — לחצי על כל קטגוריה כדי לראות את התרשים האוטומטי ואת הצעד הבא."
+            />
+          </div>
         )}
       </div>
     </CinematicShell>
