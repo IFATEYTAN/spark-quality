@@ -349,15 +349,17 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   // Skip summary/aggregate sheets (דוח מסכם) which would inflate counts.
   const allCustomers = new Map<string, Customer>();
   let totalRows = 0;
-  const SAVINGS_SHEET_HINTS = ["חיסון", "פנסיה וגמל", "פינסים"];
+  const SAVINGS_SHEET_HINTS = ["חיסון", "חיסון", "פנסיה", "גמל", "פינסים", "השתלמות"];
   const INSURANCE_SHEET_HINTS = ["ביטוח"];
   const SKIP_HINTS = ["מסכם", "מסלול", "כיסוי"]; // skip aggregates and coverage detail sheet
   
   for (const sheetName of wb.SheetNames) {
     if (SKIP_HINTS.some(h => sheetName.includes(h))) continue;
     const sheet = wb.Sheets[sheetName];
-    const isSavings = SAVINGS_SHEET_HINTS.some(h => sheetName.includes(h)) || sheetName.includes("חיסון");
     const isInsurance = INSURANCE_SHEET_HINTS.some(h => sheetName.includes(h));
+    const isSavings = !isInsurance && (
+      SAVINGS_SHEET_HINTS.some(h => sheetName.includes(h)) || sheetName.includes("חיסון")
+    );
     const customers = buildCustomersFromSheet(sheet);
     totalRows += customers.length;
     for (const c of customers) {
@@ -368,16 +370,37 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
         if (isSavings) init.premium = 0; // savings premium is yearly contribution, not monthly insurance
         allCustomers.set(c.id, init);
       } else {
-        // Merge: accumulation comes only from savings sheet, premium from insurance
-        const ex = allCustomers.get(c.id)!;
-        if (isSavings && ex.accumulation === 0) ex.accumulation = c.accumulation;
+        // Merge: accumulation comes from any non-insurance row whose accumulation is larger; premium accumulates from insurance.
+        const ex = allCustomers.get(c.id)! as Customer & { flagStatus?: string; isVip?: boolean };
+        const cc = c as Customer & { flagStatus?: string; isVip?: boolean };
+        if (!isInsurance && c.accumulation > ex.accumulation) ex.accumulation = c.accumulation;
         if (isInsurance) ex.premium += c.premium;
         if (!ex.email && c.email) ex.email = c.email;
-        if (ex.priority !== "גבוהה" && c.priority === "גבוהה") {
+
+        // Severity ranking for flagStatus: stronger flag wins regardless of priority
+        const RANK: Record<string, number> = {
+          vip: 6,
+          tikun_190: 5,
+          liquid_fund: 4,
+          high_fees: 3,
+          risk_ending: 2,
+          coverage_gaps: 1,
+          regular: 0,
+        };
+        const exRank = RANK[ex.flagStatus ?? "regular"] ?? 0;
+        const ccRank = RANK[cc.flagStatus ?? "regular"] ?? 0;
+        if (ccRank > exRank) {
+          ex.flagStatus = cc.flagStatus ?? ex.flagStatus;
           ex.priority = c.priority;
           ex.status = c.status;
           ex.flag = c.flag;
           ex.recommendation = c.recommendation;
+        }
+        // VIP is sticky: once true, stays true
+        if (cc.isVip) {
+          ex.isVip = true;
+          // Promote flagStatus to vip only if it wasn't already a strictly stronger flag (none exists now)
+          if ((RANK[ex.flagStatus ?? "regular"] ?? 0) < RANK.vip) ex.flagStatus = "vip";
         }
       }
     }

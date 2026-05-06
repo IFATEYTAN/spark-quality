@@ -227,8 +227,16 @@
 
 
 ## Round 25 - שליחת מייל אמיתית לענת דרך Resend (2026-05-06)
-- [ ] לבקש RESEND_API_KEY במאובטח + לאמת מול Resend API
-- [ ] server/email.ts — wrapper דק ל-Resend (sendEmail מ-noreply@ ל-anathemell@gmail.com)
-- [ ] חיבור contact.send לשליחה לענת בנוסף ל-notifyOwner; בלי לחסום אם Resend נכשל
-- [ ] vitest שמוודא ש-contact.send מפעיל את שליחת המייל לענת (mock Resend)
-- [ ] checkpoint + push GitHub
+- [x] RESEND_API_KEY נשמר במאובטח + smoke test live מול GET /domains (200 OK, דומיין spark-ai.co.il מאומת)
+- [x] server/email.ts — wrapper ל-Resend (FROM=noreply@spark-ai.co.il, best-effort, לא זורק שגיאות)
+- [x] contact.send שולח את המייל לענת (anathemell@gmail.com) במקביל ל-notifyOwner + שמירה ב-DB; כולל reply-to לשולח, escapeHtml ל-XSS
+- [x] vitest 5 בדיקות (rejects validation, calls notifyOwner+sendEmail עם הפרטים הנכונים, optional phone, Resend failure ≠ throw, notifyOwner=false ≠ חוסם email)
+- [x] checkpoint 9cc54f76 + push ל-IFATEYTAN/spark-quality (commit 9cc54f7)
+
+
+## Round 26 - תיקון פריסת AdminPanel + סנכרון קטגוריות בייבוא (2026-05-06)
+- [ ] AdminPanel - תיקון כרטיסי הסטטיסטיקה (טקסט מסובב 90° → אופקי, grid responsive)
+- [ ] AdminPanel - שיפור ניגודיות הלשוניות (כחול-זוהר → gold-fade על glass)
+- [ ] באג: ייבוא דוח לא מסנכרן ל-categories (תקין רק ל-"לקוחות"; קטגוריות 0 בכולם) — לאתר בכל הזרימה: parseReport → bulkUpsertClients → DB → financial.metrics
+- [ ] לתקן את הסנכרון
+- [ ] vitest + checkpoint + push GitHub

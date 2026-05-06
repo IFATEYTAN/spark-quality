@@ -124,21 +124,33 @@ export default function AdminPanel() {
 
         <DashboardStats />
 
-        <Tabs defaultValue="workspaces" className="w-full">
-          <TabsList className="bg-white/5 border border-white/10">
-            <TabsTrigger value="workspaces" className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+        <Tabs defaultValue="workspaces" className="w-full" dir="rtl">
+          <TabsList className="bg-white/[0.04] border border-white/10 backdrop-blur-md p-1 h-auto flex-wrap gap-1 justify-start">
+            <TabsTrigger
+              value="workspaces"
+              className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold data-[state=active]:border-gold/40 border border-transparent text-white/70 hover:text-white hover:bg-white/[0.06] transition px-4 py-2 rounded-md"
+            >
               <Building2 className="h-4 w-4 ml-2" />
               סוכנויות
             </TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+            <TabsTrigger
+              value="users"
+              className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold data-[state=active]:border-gold/40 border border-transparent text-white/70 hover:text-white hover:bg-white/[0.06] transition px-4 py-2 rounded-md"
+            >
               <UsersIcon className="h-4 w-4 ml-2" />
               משתמשים
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+            <TabsTrigger
+              value="contacts"
+              className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold data-[state=active]:border-gold/40 border border-transparent text-white/70 hover:text-white hover:bg-white/[0.06] transition px-4 py-2 rounded-md"
+            >
               <Inbox className="h-4 w-4 ml-2" />
               פניות
             </TabsTrigger>
-            <TabsTrigger value="audit" className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold">
+            <TabsTrigger
+              value="audit"
+              className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold data-[state=active]:border-gold/40 border border-transparent text-white/70 hover:text-white hover:bg-white/[0.06] transition px-4 py-2 rounded-md"
+            >
               <ScrollText className="h-4 w-4 ml-2" />
               לוג פעולות
             </TabsTrigger>
@@ -189,11 +201,15 @@ function DashboardStats() {
   ];
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
       {items.map(it => (
-        <GlassCard key={it.label} className="p-4" goldAccent={it.accent}>
-          <p className="text-[10px] uppercase tracking-[0.25em] text-white/50 mb-1">{it.label}</p>
-          <p className={`text-2xl font-light ${it.accent ? "text-gold" : "text-white"}`}>{it.value}</p>
+        <GlassCard key={it.label} className="p-4 min-w-0" goldAccent={it.accent}>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/55 mb-2 whitespace-nowrap overflow-hidden text-ellipsis" dir="rtl">
+            {it.label}
+          </p>
+          <p className={`text-2xl font-semibold leading-tight whitespace-nowrap overflow-hidden text-ellipsis ${it.accent ? "text-gold" : "text-white"}`} dir="ltr">
+            {it.value}
+          </p>
         </GlassCard>
       ))}
     </div>

@@ -115,3 +115,87 @@ describe("parseReport · קטגוריות פיננסיות", () => {
     expect(result.customers[0].status).toBe("תשואה חזקה");
   });
 });
+
+describe("parseReport · רגרסיה: merge בין sheet ביטוח וsheet חיסכון", () => {
+  function makeMixedExcel(): File {
+    // לקוח אחד מופיע גם ב-sheet ביטוח (פרמיה, ללא צבירה) וגם ב-sheet חיסכון (צבירה גבוהה).
+    // אם ה-merge מקלקל, flagStatus יישאר זה של ה-sheet הראשון (בד״כ ביטוח → "regular" / coverage_gaps).
+    const insRows = [{
+      "תעודת זהות": "401010101",
+      "שם": "לקוח דו-Sheet",
+      "גיל": 65,
+      "אימייל": "merge@test.co.il",
+      "מוצר": "ביטוח חיים",
+      "חברה": "מגדל",
+      "פרמיה": 1200,
+      "צבירה": 0,
+      "תאריך הצטרפות": "01/01/2018",
+      "סטטוס": "פעיל",
+    }];
+    const savRows = [{
+      "תעודת זהות": "401010101",
+      "שם": "לקוח דו-Sheet",
+      "גיל": 65,
+      "אימייל": "merge@test.co.il",
+      "מוצר": "מגדל - חיסכון פרט",
+      "חברה": "מגדל",
+      "פרמיה": 0,
+      "צבירה": 1500000, // VIP
+      "תאריך הצטרפות": "01/01/2018",
+      "סטטוס": "פעיל",
+    }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(insRows), "מוצרי ביטוח");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(savRows), "מוצרי חיסכון");
+    const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+    return new File([buf], "mixed.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+  }
+
+  it("שומר flagStatus=vip ו-isVip=true גם כשהלקוח הופיע קודם ב-sheet ביטוח", async () => {
+    const result = await parseShorensReport(makeMixedExcel());
+    expect(result.customers).toHaveLength(1);
+    const c = result.customers[0] as { flagStatus?: string; isVip?: boolean; accumulation: number };
+    expect(c.flagStatus).toBe("vip");
+    expect(c.isVip).toBe(true);
+    expect(c.accumulation).toBe(1500000);
+  });
+
+  it("דירוג חזק יותר מנצח: tikun_190 גובר על coverage_gaps", async () => {
+    const insRows = [{
+      "תעודת זהות": "501010101",
+      "שם": "לקוח 190 דו-Sheet",
+      "גיל": 67,
+      "אימייל": "x@y.co.il",
+      "מוצר": "ביטוח חיים",
+      "חברה": "מגדל",
+      "פרמיה": 0,
+      "צבירה": 0,
+      "תאריך הצטרפות": "01/01/2018",
+      "סטטוס": "פעיל",
+    }];
+    const savRows = [{
+      "תעודת זהות": "501010101",
+      "שם": "לקוח 190 דו-Sheet",
+      "גיל": 67,
+      "אימייל": "x@y.co.il",
+      "מוצר": "מגדל - חיסכון פרט",
+      "חברה": "מגדל",
+      "פרמיה": 0,
+      "צבירה": 400000,
+      "תאריך הצטרפות": "01/01/2018",
+      "סטטוס": "פעיל",
+    }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(insRows), "מוצרי ביטוח");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(savRows), "מוצרי חיסכון");
+    const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+    const file = new File([buf], "mix2.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const result = await parseShorensReport(file);
+    const c = result.customers[0] as { flagStatus?: string };
+    expect(c.flagStatus).toBe("tikun_190");
+  });
+});
