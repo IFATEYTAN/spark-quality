@@ -123,9 +123,9 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
             className="mt-5 sm:mt-6 animate-fade-in"
             style={{ animationDelay: "0.7s", animationDuration: "1.4s" }}
           >
-            <p className="font-display text-xl sm:text-2xl lg:text-3xl text-gold-light tracking-[0.15em] sm:tracking-[0.18em]">
-              <span className="font-semibold">SPARK</span>{" "}
-              <span className="font-light">Quality</span>
+            <p className="font-brand text-2xl sm:text-3xl lg:text-4xl text-gold-light tracking-[0.18em] sm:tracking-[0.22em]">
+              <span className="font-bold">SPARK</span>{" "}
+              <span className="font-medium">Quality</span>
             </p>
             <p className="label-tag text-[9px] sm:text-[10px] text-gold-soft/80 tracking-[0.35em] sm:tracking-[0.4em] mt-2">
               מבית SPARK AI

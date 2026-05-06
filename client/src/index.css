@@ -47,8 +47,9 @@
   --color-gold-light: var(--gold-light);
   --color-cream: var(--cream);
   --color-ivory: var(--ivory);
-  --font-display: 'Rubik', sans-serif;
-  --font-sans: 'Assistant', system-ui, sans-serif;
+  --font-display: 'Heebo', system-ui, sans-serif;
+  --font-sans: 'Heebo', system-ui, sans-serif;
+  --font-brand: 'Cinzel', 'Heebo', serif;
 }
 
 :root {
@@ -108,7 +109,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Assistant', system-ui, sans-serif;
+    font-family: 'Heebo', system-ui, sans-serif;
     font-weight: 400;
     font-feature-settings: "ss01", "ss02", "cv11";
     -webkit-font-smoothing: antialiased;
@@ -120,15 +121,22 @@
     background-attachment: fixed;
   }
   h1, h2, h3, h4, .font-display {
-    font-family: 'Rubik', sans-serif;
+    font-family: 'Heebo', system-ui, sans-serif;
     font-weight: 800;
-    letter-spacing: -0.035em;
-    line-height: 1;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
   }
   .font-display-light {
-    font-family: 'Rubik', sans-serif;
+    font-family: 'Heebo', system-ui, sans-serif;
     font-weight: 300;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
+  }
+  /* SPARK ברנד — Cinzel בלבד לכותרות המותג */
+  .font-brand,
+  .font-spark {
+    font-family: 'Cinzel', 'Heebo', serif;
+    font-weight: 600;
+    letter-spacing: 0.04em;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -183,7 +191,7 @@
 
   /* Number display style */
   .display-number {
-    font-family: 'Rubik', sans-serif;
+    font-family: 'Heebo', system-ui, sans-serif;
     font-weight: 900;
     letter-spacing: -0.05em;
     line-height: 0.85;
@@ -192,7 +200,7 @@
   }
 
   .label-tag {
-    font-family: 'Rubik', sans-serif;
+    font-family: 'Heebo', system-ui, sans-serif;
     font-weight: 600;
     font-size: 0.7rem;
     letter-spacing: 0.18em;
