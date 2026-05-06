@@ -49,6 +49,11 @@ export default function Dashboard() {
     retry: false,
   });
 
+  const metricsQuery = trpc.workspaces.metrics.useQuery(undefined, {
+    enabled: Boolean((user as { workspaceId?: number } | null)?.workspaceId),
+    retry: false,
+  });
+
   if (loading || workspaceQuery.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#06101F]">
@@ -61,8 +66,16 @@ export default function Dashboard() {
   const userRole = (user as { workspaceRole?: string } | null)?.workspaceRole;
   const isAdmin = userRole === "owner" || userRole === "admin";
 
-  const totalClients = clientsQuery.data?.length ?? 0;
+  const totalClients = metricsQuery.data?.totalClients ?? clientsQuery.data?.length ?? 0;
   const totalReports = reportsQuery.data?.length ?? 0;
+  const vipCount = metricsQuery.data?.vipClients ?? 0;
+  const liquidFundsCount = metricsQuery.data?.liquidFunds ?? 0;
+  const totalAum = metricsQuery.data?.totalAum ?? 0;
+  const formatIls = (n: number) => {
+    if (n >= 1_000_000) return `₪${(n / 1_000_000).toFixed(1)}M`;
+    if (n >= 1_000) return `₪${(n / 1_000).toFixed(0)}K`;
+    return `₪${n.toLocaleString("he-IL")}`;
+  };
   const firstName = user?.name?.split(" ")[0] || "סוכן";
 
   const trialDaysLeft =
@@ -167,7 +180,9 @@ export default function Dashboard() {
                 לקוחות VIP
               </span>
             </div>
-            <div className="font-display text-4xl font-black text-white">0</div>
+            <div className="font-display text-4xl font-black text-white">
+              {vipCount.toLocaleString("he-IL")}
+            </div>
             <div className="text-xs text-white/55 mt-1">עתירי נכסים</div>
           </GlassCard>
 
@@ -177,11 +192,17 @@ export default function Dashboard() {
                 <TrendingUp className="h-4 w-4 text-gold" />
               </div>
               <span className="text-[10px] tracking-[0.25em] uppercase text-white/45">
-                הון נזיל
+                ס"כ AUM
               </span>
             </div>
-            <div className="font-display text-2xl font-black text-white">₪0</div>
-            <div className="text-xs text-white/55 mt-1">קרנות השתלמות נזילות</div>
+            <div className="font-display text-2xl font-black text-white mono-num">
+              {formatIls(totalAum)}
+            </div>
+            <div className="text-xs text-white/55 mt-1">
+              {liquidFundsCount > 0
+                ? `מהם · ${liquidFundsCount} קרנות השתלמות נזילות`
+                : "סך צבירות בתיק"}
+            </div>
           </GlassCard>
         </div>
 

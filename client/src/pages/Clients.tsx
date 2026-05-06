@@ -13,14 +13,28 @@ import {
   User,
   Users,
   Upload,
+  Sparkles,
+  Wallet,
+  TrendingUp,
 } from "lucide-react";
+
+type FlagKind = "all" | "vip" | "liquid_fund" | "tikun_190" | "high_fees";
+
+const FLAG_META: Record<
+  Exclude<FlagKind, "all" | "vip">,
+  { label: string; icon: typeof Sparkles; color: string }
+> = {
+  liquid_fund: { label: "השתלמות נזילה", icon: Sparkles, color: "emerald" },
+  tikun_190: { label: "תיקון 190", icon: Wallet, color: "sky" },
+  high_fees: { label: "דמי ניהול גבוהים", icon: TrendingUp, color: "amber" },
+};
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 
 export default function Clients() {
   const { user, loading, isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
-  const [vipOnly, setVipOnly] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FlagKind>("all");
 
   useEffect(() => {
     if (!loading && !isAuthenticated) window.location.href = "/";
@@ -32,7 +46,12 @@ export default function Clients() {
 
   const filtered = useMemo(() => {
     let list = clientsQuery.data ?? [];
-    if (vipOnly) list = list.filter((c) => c.isVip);
+    if (activeFilter === "vip") list = list.filter((c) => c.isVip);
+    else if (activeFilter !== "all") {
+      list = list.filter(
+        (c) => (c as { flagStatus?: string }).flagStatus === activeFilter
+      );
+    }
     if (!search.trim()) return list;
     const q = search.trim().toLowerCase();
     return list.filter(
@@ -42,12 +61,19 @@ export default function Clients() {
         c.email?.toLowerCase().includes(q) ||
         c.phone?.includes(q)
     );
-  }, [clientsQuery.data, search, vipOnly]);
+  }, [clientsQuery.data, search, activeFilter]);
 
-  const vipCount = useMemo(
-    () => (clientsQuery.data ?? []).filter((c) => c.isVip).length,
-    [clientsQuery.data]
-  );
+  const counts = useMemo(() => {
+    const list = clientsQuery.data ?? [];
+    const flagOf = (c: unknown) =>
+      (c as { flagStatus?: string }).flagStatus ?? "regular";
+    return {
+      vip: list.filter((c) => c.isVip).length,
+      liquid_fund: list.filter((c) => flagOf(c) === "liquid_fund").length,
+      tikun_190: list.filter((c) => flagOf(c) === "tikun_190").length,
+      high_fees: list.filter((c) => flagOf(c) === "high_fees").length,
+    };
+  }, [clientsQuery.data]);
 
   if (loading) {
     return (
@@ -99,24 +125,42 @@ export default function Clients() {
               />
             </div>
           </GlassCard>
-          <button
-            onClick={() => setVipOnly((v) => !v)}
-            className={`group flex items-center gap-2 rounded-md px-5 h-[60px] font-semibold text-sm transition-all border ${
-              vipOnly
-                ? "bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] border-gold shadow-lg shadow-gold/30"
-                : "bg-white/[0.03] text-gold border-gold/30 hover:bg-gold/10"
-            }`}
-          >
-            <Crown className="h-4 w-4" />
-            רק VIP
-            <span
-              className={`mono-num text-xs px-2 py-0.5 rounded-full ${
-                vipOnly ? "bg-[#06101F]/20" : "bg-gold/15"
-              }`}
-            >
-              {vipCount.toLocaleString("he-IL")}
-            </span>
-          </button>
+        </div>
+
+        {/* Filter chips: All / VIP / financial flags */}
+        <div className="flex flex-wrap gap-2 mb-6">
+          {(
+            [
+              { key: "all" as const, label: "הכל", icon: Users, count: clientsQuery.data?.length ?? 0 },
+              { key: "vip" as const, label: "VIP", icon: Crown, count: counts.vip },
+              { key: "liquid_fund" as const, label: "השתלמות נזילה", icon: Sparkles, count: counts.liquid_fund },
+              { key: "tikun_190" as const, label: "תיקון 190", icon: Wallet, count: counts.tikun_190 },
+              { key: "high_fees" as const, label: "דמי ניהול גבוהים", icon: TrendingUp, count: counts.high_fees },
+            ]
+          ).map(({ key, label, icon: Icon, count }) => {
+            const active = activeFilter === key;
+            return (
+              <button
+                key={key}
+                onClick={() => setActiveFilter(key)}
+                className={`flex items-center gap-2 rounded-md px-3.5 h-10 text-xs font-semibold transition-all border ${
+                  active
+                    ? "bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] border-gold shadow-md shadow-gold/30"
+                    : "bg-white/[0.03] text-white/75 border-white/15 hover:bg-white/[0.06] hover:border-gold/40 hover:text-gold"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+                <span
+                  className={`mono-num text-[10px] px-1.5 py-0.5 rounded-full ${
+                    active ? "bg-[#06101F]/20" : "bg-white/10"
+                  }`}
+                >
+                  {count.toLocaleString("he-IL")}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Body */}
@@ -170,7 +214,7 @@ export default function Clients() {
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-display text-base font-bold text-white tracking-tight">
                           {client.fullName ||
                             `לקוח ${client.idNumber.slice(-4)}`}
@@ -180,6 +224,22 @@ export default function Clients() {
                             VIP
                           </span>
                         )}
+                        {(() => {
+                          const f = (client as { flagStatus?: string })
+                            .flagStatus;
+                          if (!f || f === "regular") return null;
+                          const meta = FLAG_META[f as keyof typeof FLAG_META];
+                          if (!meta) return null;
+                          const Icon = meta.icon;
+                          return (
+                            <span
+                              className={`text-[10px] font-semibold tracking-wide bg-${meta.color}-500/15 text-${meta.color}-300 border border-${meta.color}-500/30 px-2 py-0.5 rounded-sm flex items-center gap-1`}
+                            >
+                              <Icon className="h-3 w-3" />
+                              {meta.label}
+                            </span>
+                          );
+                        })()}
                       </div>
                       <p className="text-[11px] text-white/45 font-mono tracking-wider mt-0.5">
                         ת&quot;ז · {client.idNumber}
@@ -187,6 +247,14 @@ export default function Clients() {
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
+                    {Number((client as { totalBalance?: string }).totalBalance ?? 0) > 0 && (
+                      <div className="flex items-center gap-1.5 text-white/75">
+                        <span className="text-[10px] tracking-wider text-white/45 uppercase">צבירה</span>
+                        <span className="text-xs font-mono font-bold text-gold mono-num">
+                          ₪{Number((client as { totalBalance?: string }).totalBalance ?? 0).toLocaleString("he-IL", { maximumFractionDigits: 0 })}
+                        </span>
+                      </div>
+                    )}
                     {client.email && (
                       <div className="flex items-center gap-1.5 text-white/65">
                         <Mail className="h-3.5 w-3.5 text-gold/80" />

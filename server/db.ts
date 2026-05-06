@@ -310,3 +310,99 @@ export async function bulkUpsertClients(opts: {
   }
   return total;
 }
+
+// ============================================================
+// FINANCIAL / VIP HELPERS
+// ============================================================
+
+/** Update the VIP threshold (in ILS) for a workspace */
+export async function updateWorkspaceVipThreshold(
+  workspaceId: number,
+  vipThreshold: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(workspaces)
+    .set({ vipThreshold: String(vipThreshold) })
+    .where(eq(workspaces.id, workspaceId));
+}
+
+/**
+ * Re-classify all clients in a workspace based on the new VIP threshold.
+ * Sets isVip=true where totalBalance >= threshold; isVip=false otherwise.
+ */
+export async function reclassifyClientVipStatus(
+  workspaceId: number,
+  vipThreshold: number
+): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  await db
+    .update(clients)
+    .set({ isVip: true })
+    .where(
+      and(
+        eq(clients.workspaceId, workspaceId),
+        sql`CAST(${clients.totalBalance} AS DECIMAL(14,2)) >= ${vipThreshold}`
+      )
+    );
+  await db
+    .update(clients)
+    .set({ isVip: false })
+    .where(
+      and(
+        eq(clients.workspaceId, workspaceId),
+        sql`CAST(${clients.totalBalance} AS DECIMAL(14,2)) < ${vipThreshold}`
+      )
+    );
+  const all = await db
+    .select({ id: clients.id })
+    .from(clients)
+    .where(eq(clients.workspaceId, workspaceId));
+  return all.length;
+}
+
+/**
+ * Aggregate metrics for the dashboard, scoped by role.
+ */
+export async function getWorkspaceMetrics(opts: {
+  workspaceId: number;
+  userId: number;
+  workspaceRole: "owner" | "admin" | "agent";
+}) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalClients: 0,
+      vipClients: 0,
+      liquidFunds: 0,
+      tikun190Candidates: 0,
+      totalAum: 0,
+    };
+  }
+  const condition =
+    opts.workspaceRole === "agent"
+      ? and(
+          eq(clients.workspaceId, opts.workspaceId),
+          eq(clients.ownerUserId, opts.userId)
+        )
+      : eq(clients.workspaceId, opts.workspaceId);
+
+  const rows = await db.select().from(clients).where(condition);
+  const totalClients = rows.length;
+  const vipClients = rows.filter(r => r.isVip).length;
+  const tikun190Candidates = rows.filter(r => r.flagStatus === "tikun_190").length;
+  const liquidFunds = rows.filter(r => r.flagStatus === "liquid_fund").length;
+  const totalAum = rows.reduce(
+    (sum, r) => sum + Number(r.totalBalance ?? 0),
+    0
+  );
+  return {
+    totalClients,
+    vipClients,
+    liquidFunds,
+    tikun190Candidates,
+    totalAum,
+  };
+}

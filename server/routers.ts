@@ -122,6 +122,25 @@ export const appRouter = router({
       return db.listWorkspaceInvitations(ctx.user.workspaceId);
     }),
 
+    /** Update VIP threshold (owner/admin only) - clients with totalBalance >= threshold are auto-flagged VIP */
+    updateVipThreshold: workspaceAdminProcedure
+      .input(z.object({ vipThreshold: z.number().int().min(0).max(100_000_000) }))
+      .mutation(async ({ ctx, input }) => {
+        await db.updateWorkspaceVipThreshold(ctx.user.workspaceId, input.vipThreshold);
+        // Re-classify all clients in this workspace based on the new threshold
+        const updated = await db.reclassifyClientVipStatus(ctx.user.workspaceId, input.vipThreshold);
+        return { ok: true, reclassified: updated };
+      }),
+
+    /** Dashboard metrics: real numbers from DB (VIP count, liquid funds, etc.) */
+    metrics: workspaceProcedure.query(async ({ ctx }) => {
+      return db.getWorkspaceMetrics({
+        workspaceId: ctx.user.workspaceId,
+        userId: ctx.user.id,
+        workspaceRole: ctx.user.workspaceRole,
+      });
+    }),
+
     /** Accept an invitation (any logged-in user) */
     acceptInvite: protectedProcedure
       .input(z.object({ token: z.string() }))

@@ -40,6 +40,8 @@ export const workspaces = mysqlTable("workspaces", {
   name: varchar("name", { length: 200 }).notNull(),
   /** Subscription plan: trial | basic | premium | enterprise */
   plan: mysqlEnum("plan", ["trial", "basic", "premium", "enterprise"]).default("trial").notNull(),
+  /** VIP threshold in ILS - clients with total balance above this are auto-flagged as VIP. Default 1,000,000. */
+  vipThreshold: decimal("vipThreshold", { precision: 14, scale: 2 }).default("1000000.00").notNull(),
   /** Trial ends at this date (null after upgrade) */
   trialEndsAt: timestamp("trialEndsAt"),
   /** Active subscription end date (null if no active sub) */
@@ -146,6 +148,16 @@ export const clients = mysqlTable(
     notes: text("notes"),
     /** VIP / strategic client flag */
     isVip: boolean("isVip").default(false).notNull(),
+    /**
+     * Auto-classified financial flag from parser. Examples:
+     * - liquid_fund (השתלמות נזילה)
+     * - tikun_190 (תיקון 190)
+     * - high_fees (דמי ניהול גבוהים)
+     * - regular
+     */
+    flagStatus: varchar("flagStatus", { length: 32 }).default("regular").notNull(),
+    /** Total balance / AUM in ILS (denormalized cache from policies for fast dashboard queries) */
+    totalBalance: decimal("totalBalance", { precision: 14, scale: 2 }).default("0").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   },
