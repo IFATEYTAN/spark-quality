@@ -15,7 +15,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
       <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12 items-center">
         {/* RIGHT (RTL primary): content */}
-        <div className="lg:col-span-7 px-6 py-6 lg:px-12 lg:py-8">
+        <div className="lg:col-span-7 px-6 py-4 lg:px-10 lg:py-6 max-h-full overflow-y-auto">
           <div className="max-w-2xl">
             <div className="mb-6 flex items-center gap-3 animate-fade-up">
               <div className="h-px w-16 bg-gold" />
@@ -75,19 +75,19 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
             </div>
 
             {/* Next steps */}
-            <div className="mt-5 animate-fade-up" style={{ animationDelay: "0.4s" }}>
+            <div className="mt-4 animate-fade-up" style={{ animationDelay: "0.4s" }}>
               <h3 className="font-display text-xl font-bold text-navy-deep mb-3 tracking-tight">השלבים הבאים שלכם</h3>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { num: "01", text: "פיילוט עם 5-10 סוכנים נבחרים" },
                   { num: "02", text: "התמקדות ב-2 תהליכים: ניתוח דוחות + סיכומי פגישות" },
                   { num: "03", text: "מדידת ROI לאחר 30 יום והרחבה לכלל הסוכנות" },
                 ].map((step, i) => (
-                  <div key={i} className="flex items-start gap-4 group">
-                    <span className="font-display text-2xl font-black text-gold/40 group-hover:text-gold transition-colors mono-num leading-none">
+                  <div key={i} className="flex flex-col items-start gap-1.5 rounded-md border border-gold/25 bg-gold/5 p-3 transition-all hover:border-gold hover:bg-gold/10">
+                    <span className="font-display text-xl font-black text-gold mono-num leading-none">
                       {step.num}
                     </span>
-                    <span className="text-base text-foreground/85 leading-relaxed pt-1">{step.text}</span>
+                    <span className="text-xs text-navy-deep/85 leading-snug font-medium">{step.text}</span>
                   </div>
                 ))}
               </div>

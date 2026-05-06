@@ -33,6 +33,7 @@ export interface ParsedReport {
     liquidAUM: number;
     amendment190: number;
     lowYield: number;
+    coverageGaps: number;
   };
 }
 
@@ -419,6 +420,7 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       liquidAUM,
       amendment190,
       lowYield,
+      coverageGaps: noPension, // Using noPension as proxy for coverage gaps
     },
   };
 }

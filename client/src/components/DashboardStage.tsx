@@ -1,11 +1,12 @@
 // Editorial Fintech | דשבורד תוצאות
 import { useState } from "react";
-import { AlertTriangle, TrendingUp, Calendar, Mail, Gift, Sparkles, ArrowLeft, Download, Mail as MailIcon, MessageSquare, Briefcase } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip } from "recharts";
+import { AlertTriangle, TrendingUp, Calendar, Mail, Gift, Sparkles, ArrowLeft, Download, Mail as MailIcon, MessageSquare, Briefcase, AlertOctagon, X } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip, LabelList } from "recharts";
 import { toast } from "sonner";
 import { CUSTOMERS, STATS, INSURER_BREAKDOWN, AGE_GROUPS_NO_PENSION, formatCurrency } from "@/lib/demoData";
 import type { Customer } from "@/lib/demoData";
 import { AnimatedNumber } from "./AnimatedNumber";
+import { CategoryScenarioModal } from "./CategoryScenarioModal";
 import { AIComposerModal } from "./AIComposerModal";
 import { exportDashboardPDF } from "@/lib/exportPdf";
 import type { ParsedReport } from "@/lib/parseReport";
@@ -19,16 +20,17 @@ function buildTriggerCards(stats: typeof STATS) {
   return [
     // 💸 קטגוריות פיננסיות (3)
     { id: "vip", name: "לקוחות VIP", value: 42, sub: "צבירה מעל 1M ₪", icon: Sparkles, accent: "text-gold", bg: "bg-gold/15", border: "border-gold/50" },
-    { id: "liquid", name: "השתלמויות נזילות", value: 186, sub: "להגדלה / IRA", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
+    { id: "lowYield", name: "תשואות נמוכות", value: stats.lowYield, sub: "דמי ניהול גבוהים מהממוצע", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
     { id: "190", name: "תיקון 190", value: 54, sub: "פטור ממס רווחי הון", icon: Briefcase, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
     // 🚨 קטגוריות סיכון / שימור (3)
     { id: "risk", name: "ריסק זמני", value: stats.riskFlags, sub: "דורש פעולה מיידית", icon: AlertTriangle, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
     { id: "discount", name: "תום הנחה", value: stats.endingDiscount, sub: "סיכון נטישה", icon: Calendar, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
-    { id: "birthday", name: "יום הולדת", value: stats.upcomingBirthdays, sub: "בחודש הקרוב", icon: Gift, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
+    { id: "coverageGaps", name: "חוסרים בכיסויים", value: (stats as any).coverageGaps ?? stats.noPension, sub: "הזדמנות להשלמת תיק", icon: AlertOctagon, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
   ];
 }
 
 export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
+  const [activeScenario, setActiveScenario] = useState<string | null>(null);
   // Use parsed data if a real file was uploaded, otherwise fall back to demo data
   const customers: Customer[] = parsed?.customers ?? CUSTOMERS;
   const stats = parsed?.stats ?? STATS;
@@ -172,9 +174,11 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
           </div>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
             {TRIGGER_CARDS.map((card, i) => (
-              <div
+              <button
                 key={card.id}
-                className={`group relative overflow-hidden rounded-sm border ${card.border} ${card.bg} p-5 transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer animate-fade-up`}
+                type="button"
+                onClick={() => setActiveScenario(card.id)}
+                className={`group relative overflow-hidden rounded-sm border ${card.border} ${card.bg} p-5 text-right transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer animate-fade-up focus:outline-none focus-visible:ring-2 focus-visible:ring-gold`}
                 style={{ animationDelay: `${0.05 * i + 0.2}s` }}
               >
                 <card.icon className={`h-5 w-5 ${card.accent} mb-3`} strokeWidth={1.5} />
@@ -183,7 +187,11 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
                 </div>
                 <div className="mt-2 text-sm font-semibold text-navy-deep">{card.name}</div>
                 <div className="mt-1 text-xs text-muted-foreground">{card.sub}</div>
-              </div>
+                <div className="mt-3 flex items-center gap-1 text-[10px] font-bold text-gold opacity-0 transition-opacity group-hover:opacity-100">
+                  <span>צפה בסנריו</span>
+                  <span aria-hidden>←</span>
+                </div>
+              </button>
             ))}
           </div>
         </div>
@@ -199,27 +207,28 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
                   <h3 className="font-display text-xl font-bold text-navy-deep">לפי יצרן ביטוח</h3>
                 </div>
               </div>
-              <div className="h-64">
+              <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={insurerData} layout="vertical" margin={{ top: 0, right: 10, left: 60, bottom: 0 }}>
+                  <BarChart data={insurerData} layout="vertical" margin={{ top: 5, right: 60, left: 10, bottom: 5 }} barSize={26}>
                     <XAxis type="number" hide />
                     <YAxis
                       type="category"
                       dataKey="name"
                       orientation="right"
-                      tick={{ fontSize: 12, fontFamily: "Heebo", fill: "#0A1628" }}
+                      tick={{ fontSize: 14, fontWeight: 700, fontFamily: "Heebo", fill: "#0A1628" }}
                       axisLine={false}
                       tickLine={false}
-                      width={80}
+                      width={120}
                     />
                     <Tooltip
                       contentStyle={{ background: "#0A1628", border: "none", borderRadius: 4, color: "#F5F1EA", fontFamily: "Heebo" }}
                       cursor={{ fill: "rgba(201, 169, 97, 0.1)" }}
                       formatter={(v: number) => [`${v} לקוחות`, ""]}
                     />
-                    <Bar dataKey="customers" radius={[0, 2, 2, 0]}>
+                    <Bar dataKey="customers" radius={[0, 4, 4, 0]}>
+                      <LabelList dataKey="customers" position="insideRight" fill="#FFFFFF" fontSize={13} fontWeight={700} fontFamily="Heebo" formatter={(v: any) => Number(v).toLocaleString('he-IL')} />
                       {insurerData.map((_, i) => (
-                        <Cell key={i} fill={i === 0 ? "#C9A961" : i < 3 ? "#1F3A5F" : "#0A1628"} fillOpacity={1 - i * 0.08} />
+                        <Cell key={i} fill={i === 0 ? "#C9A961" : i < 3 ? "#1F3A5F" : "#3B5478"} fillOpacity={1} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -361,6 +370,15 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
         channel={composerChannel}
         onClose={closeComposer}
       />
+      <CategoryScenarioModal
+        categoryId={activeScenario}
+        onClose={() => setActiveScenario(null)}
+        onActivate={() => {
+          setActiveScenario(null);
+          onAction();
+        }}
+      />
+
     </div>
   );
 }
