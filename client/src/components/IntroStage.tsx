@@ -10,10 +10,12 @@ interface IntroStageProps {
 export function IntroStage({ onContinue }: IntroStageProps) {
   const [phase, setPhase] = useState<"hook" | "pain" | "transition" | "promise">("hook");
 
+  // Slowed-down phase transitions for live presentation: ~7s per phase
+  // Click "דלג להתחלה" to advance manually faster
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("pain"), 2200);
-    const t2 = setTimeout(() => setPhase("transition"), 5500);
-    const t3 = setTimeout(() => setPhase("promise"), 7200);
+    const t1 = setTimeout(() => setPhase("pain"), 6500);
+    const t2 = setTimeout(() => setPhase("transition"), 13500);
+    const t3 = setTimeout(() => setPhase("promise"), 19500);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);

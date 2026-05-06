@@ -12,7 +12,8 @@ interface SplashStageProps {
 const HERO_IMAGE =
   "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/splash_hero_cinematic-hy4Db4SsQYS4322PWXEJLK.webp";
 
-export function SplashStage({ onComplete, durationMs = 4200 }: SplashStageProps) {
+// 12s default duration so the presenter can talk over the splash; click skips manually
+export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps) {
   // Floating extra particles in front of the image
   const particles = useMemo(
     () =>

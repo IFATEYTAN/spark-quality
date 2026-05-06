@@ -305,14 +305,15 @@ export const NOTIFICATIONS = [
 ];
 
 // תהליך האנליזה - שלבים שמוצגים בזמן אמת
+// Slowed for live presentation: ~3s per step → ~21s total
 export const ANALYSIS_STEPS = [
-  { label: "טעינת קובץ Excel", duration: 600 },
-  { label: "פענוח 6 גיליונות נתונים", duration: 800 },
-  { label: "מיפוי 1,247 לקוחות ייחודיים", duration: 900 },
-  { label: "ניתוח 2,891 מוצרים פעילים", duration: 800 },
-  { label: "זיהוי דגלים אדומים (AI)", duration: 1100 },
-  { label: "חישוב הזדמנויות עסקיות", duration: 700 },
-  { label: "הפקת דשבורד תובנות", duration: 500 },
+  { label: "טעינת קובץ Excel", duration: 2200 },
+  { label: "פענוח 6 גיליונות נתונים", duration: 2800 },
+  { label: "מיפוי 1,247 לקוחות ייחודיים", duration: 3200 },
+  { label: "ניתוח 2,891 מוצרים פעילים", duration: 3000 },
+  { label: "זיהוי דגלים אדומים (AI)", duration: 3800 },
+  { label: "חישוב הזדמנויות עסקיות", duration: 2600 },
+  { label: "הפקת דשבורד תובנות", duration: 2200 },
 ];
 
 export const formatCurrency = (n: number): string => {
