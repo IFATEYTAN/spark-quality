@@ -157,12 +157,13 @@ const SCENARIOS: Record<string, CategoryScenario> = {
   },
 };
 
+// All step variants use the SPARK system palette (navy / gold / cream).
 const VARIANT_STYLES: Record<ScenarioStep["variant"], { ring: string; bg: string; text: string; label: string }> = {
-  trigger: { ring: "ring-red-200", bg: "bg-red-50", text: "text-red-700", label: "טריגר" },
-  ai: { ring: "ring-gold/40", bg: "bg-gold/10", text: "text-gold", label: "ניתוח AI" },
-  action: { ring: "ring-blue-200", bg: "bg-blue-50", text: "text-blue-700", label: "פעולה" },
-  approval: { ring: "ring-emerald-200", bg: "bg-emerald-50", text: "text-emerald-700", label: "אישור" },
-  result: { ring: "ring-navy/30", bg: "bg-navy-deep", text: "text-cream", label: "תוצאה" },
+  trigger:  { ring: "ring-gold/30",   bg: "bg-gold/15",       text: "text-navy-deep", label: "טריגר" },
+  ai:       { ring: "ring-gold/40",   bg: "bg-navy-deep",     text: "text-gold",      label: "ניתוח AI" },
+  action:   { ring: "ring-navy/30",   bg: "bg-navy-deep",     text: "text-cream",     label: "פעולה" },
+  approval: { ring: "ring-gold/30",   bg: "bg-cream",         text: "text-navy-deep", label: "אישור" },
+  result:   { ring: "ring-gold/50",   bg: "bg-gold",          text: "text-navy-deep", label: "תוצאה" },
 };
 
 interface CategoryScenarioModalProps {
@@ -248,7 +249,7 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
                 <div className="h-px w-6 bg-gold" />
                 תרשים זרימה אינטראקטיבי
               </h3>
-              <InteractiveFlowchart data={FLOWCHART_DATA[scenario.id]} minHeight={520} />
+              <InteractiveFlowchart data={FLOWCHART_DATA[scenario.id]} desktopColumns={4} />
             </div>
           )}
 

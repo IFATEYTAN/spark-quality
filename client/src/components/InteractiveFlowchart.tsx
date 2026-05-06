@@ -1,13 +1,12 @@
 // SPARK AI · Interactive Flowchart - תרשים זרימה ויזואלי אינטראקטיבי
-// מציג את הזרימה המלאה של תהליך אוטומציה עם nodes, decision points, אנימציה ו-hover details
-import { useEffect, useState } from "react";
+// פלטה: navy / gold / cream בלבד. פריסת גריד קבועה, ללא חפיפה, אנימציה לכל שלב.
+import { useEffect, useMemo, useState } from "react";
 import {
   Database,
   Brain,
   AlertTriangle,
   Mail,
   MessageSquare,
-  CheckCircle2,
   Calendar,
   AlertOctagon,
   FileSpreadsheet,
@@ -19,6 +18,9 @@ import {
   Clock,
   ArrowRight,
   Zap,
+  RotateCcw,
+  Pause,
+  Play,
   type LucideIcon,
 } from "lucide-react";
 
@@ -30,491 +32,543 @@ export interface FlowNode {
   label: string;
   detail: string;
   icon?: LucideIcon;
-  /** קואורדינטות בקנבס (0-100 אחוז) */
-  x: number;
-  y: number;
-  /** למצב של החלטה - כן/לא תוויות */
+  /** קואורדינטות נשמרות לתאימות לאחור אך הפריסה כעת לפי גריד שלבים אוטומטי */
+  x?: number;
+  y?: number;
   decisionLabels?: { yes: string; no: string };
-  /** מטריקה אופציונלית להצגה ב-node */
   metric?: string;
 }
 
 export interface FlowEdge {
   from: string;
   to: string;
-  /** תווית על הקו (לצמתי החלטה: "כן" / "לא") */
   label?: string;
-  /** האם זהו מסלול שגרתי או חלופי */
   variant?: "default" | "alt" | "fail";
 }
 
 export interface FlowchartData {
-  /** שלבים על הקנבס */
   nodes: FlowNode[];
-  /** חיבורים בין שלבים */
   edges: FlowEdge[];
 }
 
-const NODE_STYLES: Record<FlowNodeType, { bg: string; border: string; text: string; iconBg: string; iconText: string; label: string; shape: "rect" | "diamond" | "rounded" }> = {
-  trigger:  { bg: "bg-red-50",     border: "border-red-300",     text: "text-red-900",     iconBg: "bg-red-500",     iconText: "text-white", label: "טריגר",     shape: "rounded" },
-  process:  { bg: "bg-slate-50",   border: "border-slate-300",   text: "text-slate-900",   iconBg: "bg-slate-600",   iconText: "text-white", label: "תהליך",      shape: "rect" },
-  ai:       { bg: "bg-amber-50",   border: "border-amber-400",   text: "text-amber-900",   iconBg: "bg-amber-500",   iconText: "text-white", label: "ניתוח AI",  shape: "rect" },
-  decision: { bg: "bg-purple-50",  border: "border-purple-400",  text: "text-purple-900",  iconBg: "bg-purple-600",  iconText: "text-white", label: "החלטה",     shape: "diamond" },
-  action:   { bg: "bg-blue-50",    border: "border-blue-400",    text: "text-blue-900",    iconBg: "bg-blue-600",    iconText: "text-white", label: "פעולה",     shape: "rect" },
-  approval: { bg: "bg-emerald-50", border: "border-emerald-400", text: "text-emerald-900", iconBg: "bg-emerald-600", iconText: "text-white", label: "אישור",     shape: "rounded" },
-  result:   { bg: "bg-navy-deep",  border: "border-gold",        text: "text-cream",       iconBg: "bg-gold",        iconText: "text-navy-deep", label: "תוצאה",  shape: "rounded" },
+// כל הצמתים משתמשים בפלטת המערכת בלבד — navy/gold/cream.
+// ההבחנה בין סוגי הצמתים נעשית על ידי צורה, ribbon, ואיקון.
+const NODE_STYLES: Record<
+  FlowNodeType,
+  {
+    bg: string;
+    border: string;
+    text: string;
+    iconBg: string;
+    iconText: string;
+    label: string;
+    shape: "rect" | "diamond" | "rounded";
+  }
+> = {
+  trigger:  { bg: "bg-cream",     border: "border-gold/60",  text: "text-navy-deep", iconBg: "bg-gold",      iconText: "text-navy-deep", label: "טריגר",    shape: "rounded" },
+  process:  { bg: "bg-cream",     border: "border-navy/30",  text: "text-navy-deep", iconBg: "bg-navy",      iconText: "text-cream",     label: "תהליך",     shape: "rect" },
+  ai:       { bg: "bg-cream",     border: "border-gold/70",  text: "text-navy-deep", iconBg: "bg-navy-deep", iconText: "text-gold",      label: "ניתוח AI", shape: "rect" },
+  decision: { bg: "bg-gold/15",   border: "border-gold",     text: "text-navy-deep", iconBg: "bg-gold",      iconText: "text-navy-deep", label: "החלטה",    shape: "diamond" },
+  action:   { bg: "bg-navy-deep", border: "border-gold/60",  text: "text-cream",     iconBg: "bg-gold",      iconText: "text-navy-deep", label: "פעולה",    shape: "rect" },
+  approval: { bg: "bg-navy",      border: "border-gold/60",  text: "text-cream",     iconBg: "bg-cream",     iconText: "text-navy-deep", label: "אישור",    shape: "rounded" },
+  result:   { bg: "bg-navy-deep", border: "border-gold",     text: "text-cream",     iconBg: "bg-gold",      iconText: "text-navy-deep", label: "תוצאה",    shape: "rounded" },
 };
 
 interface InteractiveFlowchartProps {
   data: FlowchartData;
-  /** האם להריץ אנימציית "התהליך רץ" כברירת מחדל */
   autoPlay?: boolean;
-  /** גובה מינימלי בפיקסלים */
-  minHeight?: number;
+  /** מספר עמודות בדסקטופ (ברירת מחדל 4) */
+  desktopColumns?: number;
 }
 
-export function InteractiveFlowchart({ data, autoPlay = false, minHeight = 480 }: InteractiveFlowchartProps) {
+export function InteractiveFlowchart({
+  data,
+  autoPlay = false,
+  desktopColumns = 4,
+}: InteractiveFlowchartProps) {
   const [activeStep, setActiveStep] = useState<number>(autoPlay ? 0 : -1);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [expandedNode, setExpandedNode] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
 
-  // אנימציית הפעלה: כל 1.2 שניות עוברים לשלב הבא
+  // אנימציה: כל 1.4 שניות עוברים לשלב הבא
   useEffect(() => {
     if (!isPlaying) return;
     if (activeStep >= data.nodes.length - 1) {
-      const timeout = setTimeout(() => setIsPlaying(false), 1500);
+      const timeout = setTimeout(() => setIsPlaying(false), 1800);
       return () => clearTimeout(timeout);
     }
-    const timer = setTimeout(() => setActiveStep((s) => s + 1), 1200);
+    const timer = setTimeout(() => setActiveStep((s) => s + 1), 1400);
     return () => clearTimeout(timer);
   }, [isPlaying, activeStep, data.nodes.length]);
 
   const startSimulation = () => {
-    setActiveStep(0);
+    setActiveStep(activeStep === -1 ? 0 : activeStep);
     setIsPlaying(true);
   };
-
+  const pauseSimulation = () => setIsPlaying(false);
   const resetSimulation = () => {
     setIsPlaying(false);
     setActiveStep(-1);
+    setExpandedNode(null);
   };
 
   const isNodeActive = (i: number) => activeStep >= i && activeStep !== -1;
-  const isEdgeActive = (fromIdx: number) => activeStep > fromIdx && activeStep !== -1;
+  const isCurrentStep = (i: number) => activeStep === i;
+
+  // Build a step→nextStep adjacency map: which edges leave each node, with branch labels
+  const outgoingByNode = useMemo(() => {
+    const map = new Map<string, FlowEdge[]>();
+    for (const e of data.edges) {
+      if (!map.has(e.from)) map.set(e.from, []);
+      map.get(e.from)!.push(e);
+    }
+    return map;
+  }, [data.edges]);
 
   return (
     <div className="space-y-3">
-      {/* Controls bar - desktop only (mobile has its own inside MobileFlowchartView) */}
-      <div className="hidden lg:flex items-center justify-between gap-3 flex-wrap">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Zap className="h-3.5 w-3.5 text-gold" />
-          <span className="hidden sm:inline">תרשים זרימה אינטראקטיבי - העבירי עכבר לפרטים</span>
-          <span className="sm:hidden">תרשים זרימה - הקישי לפרטים</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {!isPlaying && activeStep < data.nodes.length - 1 && (
-            <button
-              onClick={startSimulation}
-              className="group flex items-center gap-2 rounded-md bg-navy-deep px-3.5 py-1.5 text-xs font-semibold text-cream transition-all hover:bg-navy hover:shadow-lg"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-gold" />
-              {activeStep === -1 ? "הפעל סימולציה" : "המשך"}
-            </button>
-          )}
-          {isPlaying && (
-            <div className="flex items-center gap-2 rounded-md bg-gold/10 border border-gold/30 px-3 py-1.5 text-xs font-semibold text-gold">
-              <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
-              מריץ - שלב {activeStep + 1} / {data.nodes.length}
-            </div>
-          )}
-          {(activeStep >= 0 && !isPlaying) && (
-            <button
-              onClick={resetSimulation}
-              className="rounded-md border border-border/70 bg-white px-3 py-1.5 text-xs font-semibold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream"
-            >
-              איפוס
-            </button>
-          )}
-        </div>
-      </div>
+      {/* Controls bar (desktop + mobile) */}
+      <ControlsBar
+        activeStep={activeStep}
+        total={data.nodes.length}
+        isPlaying={isPlaying}
+        onStart={startSimulation}
+        onPause={pauseSimulation}
+        onReset={resetSimulation}
+      />
 
       {/* Mobile vertical timeline (under lg breakpoint) */}
       <div className="lg:hidden">
         <MobileFlowchartView
           data={data}
           activeStep={activeStep}
-          hoveredNode={hoveredNode}
-          setHoveredNode={setHoveredNode}
-          isPlaying={isPlaying}
-          startSimulation={startSimulation}
-          resetSimulation={resetSimulation}
+          expandedNode={expandedNode}
+          setExpandedNode={setExpandedNode}
+          outgoingByNode={outgoingByNode}
           isNodeActive={isNodeActive}
-          isEdgeActive={isEdgeActive}
+          isCurrentStep={isCurrentStep}
         />
       </div>
 
-      {/* Desktop canvas (lg and up) */}
-      <div
-        className="hidden lg:block relative rounded-lg border-2 border-border/60 bg-gradient-to-br from-cream to-cream/60 overflow-hidden"
-        style={{ minHeight: `${minHeight}px` }}
-      >
-        {/* Grid background */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-          }}
+      {/* Desktop grid (lg and up) */}
+      <div className="hidden lg:block">
+        <DesktopGridView
+          data={data}
+          activeStep={activeStep}
+          expandedNode={expandedNode}
+          setExpandedNode={setExpandedNode}
+          isNodeActive={isNodeActive}
+          isCurrentStep={isCurrentStep}
+          outgoingByNode={outgoingByNode}
+          columns={desktopColumns}
         />
-
-        {/* SVG layer for edges */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none" style={{ overflow: "visible" }}>
-          <defs>
-            <marker
-              id="arrowGold"
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="6"
-              markerHeight="6"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#C8A85B" />
-            </marker>
-            <marker
-              id="arrowMuted"
-              viewBox="0 0 10 10"
-              refX="9"
-              refY="5"
-              markerWidth="5"
-              markerHeight="5"
-              orient="auto-start-reverse"
-            >
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#94a3b8" />
-            </marker>
-          </defs>
-          {data.edges.map((edge, i) => {
-            const fromNode = data.nodes.find((n) => n.id === edge.from);
-            const toNode = data.nodes.find((n) => n.id === edge.to);
-            if (!fromNode || !toNode) return null;
-            const fromIdx = data.nodes.findIndex((n) => n.id === edge.from);
-            const active = isEdgeActive(fromIdx);
-            const variant = edge.variant ?? "default";
-            const stroke = active ? "#C8A85B" : variant === "fail" ? "#cbd5e1" : "#94a3b8";
-            const strokeDash = variant === "alt" ? "4 4" : variant === "fail" ? "2 4" : undefined;
-            const x1 = `${fromNode.x}%`;
-            const y1 = `${fromNode.y}%`;
-            const x2 = `${toNode.x}%`;
-            const y2 = `${toNode.y}%`;
-            // Midpoint for label
-            const midX = (fromNode.x + toNode.x) / 2;
-            const midY = (fromNode.y + toNode.y) / 2;
-            return (
-              <g key={i}>
-                <line
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke={stroke}
-                  strokeWidth={active ? 2.5 : 1.5}
-                  strokeDasharray={strokeDash}
-                  markerEnd={active ? "url(#arrowGold)" : "url(#arrowMuted)"}
-                  className="transition-all duration-500"
-                />
-                {/* Animated flowing dot when active */}
-                {active && (
-                  <circle r="3" fill="#C8A85B">
-                    <animateMotion dur="1.2s" repeatCount="indefinite" path={`M ${fromNode.x}% ${fromNode.y}% L ${toNode.x}% ${toNode.y}%`} />
-                  </circle>
-                )}
-                {edge.label && (
-                  <foreignObject
-                    x={`${midX - 8}%`}
-                    y={`${midY - 3}%`}
-                    width="16%"
-                    height="6%"
-                    className="pointer-events-none"
-                  >
-                    <div className="flex justify-center">
-                      <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold tracking-wide ${active ? "bg-gold text-navy-deep" : "bg-white/90 text-muted-foreground border border-border/60"} shadow-sm`}>
-                        {edge.label}
-                      </span>
-                    </div>
-                  </foreignObject>
-                )}
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Nodes layer */}
-        {data.nodes.map((node, i) => {
-          const style = NODE_STYLES[node.type];
-          const Icon = node.icon ?? defaultIconForType(node.type);
-          const active = isNodeActive(i);
-          const hovered = hoveredNode === node.id;
-
-          return (
-            <div
-              key={node.id}
-              className="absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-500"
-              style={{
-                left: `${node.x}%`,
-                top: `${node.y}%`,
-                zIndex: hovered ? 30 : active ? 20 : 10,
-              }}
-              onMouseEnter={() => setHoveredNode(node.id)}
-              onMouseLeave={() => setHoveredNode(null)}
-            >
-              <div
-                className={[
-                  "relative cursor-pointer transition-all duration-500 group",
-                  hovered ? "scale-110" : active ? "scale-105" : "scale-100",
-                ].join(" ")}
-              >
-                {/* Active glow */}
-                {active && (
-                  <div className="absolute inset-0 rounded-lg bg-gold/30 blur-xl animate-pulse" />
-                )}
-
-                {/* Node card */}
-                <div
-                  className={[
-                    "relative w-[150px] sm:w-[170px] flex flex-col items-center text-center px-3 py-3",
-                    style.bg,
-                    style.text,
-                    "border-2",
-                    active ? "border-gold shadow-2xl shadow-gold/20" : style.border,
-                    style.shape === "diamond"
-                      ? "rounded-md rotate-45"
-                      : style.shape === "rounded"
-                      ? "rounded-full"
-                      : "rounded-lg",
-                  ].join(" ")}
-                  style={style.shape === "diamond" ? { aspectRatio: "1 / 1", padding: "1.5rem" } : {}}
-                >
-                  <div className={style.shape === "diamond" ? "-rotate-45 flex flex-col items-center" : "flex flex-col items-center"}>
-                    {/* Type ribbon */}
-                    <span
-                      className={[
-                        "absolute -top-2.5 px-2 py-0.5 rounded-full text-[8px] font-black tracking-[0.15em] uppercase",
-                        style.iconBg,
-                        style.iconText,
-                        style.shape === "diamond" ? "rotate-45" : "",
-                      ].join(" ")}
-                      style={style.shape === "diamond" ? { top: "-5%", left: "50%", transform: "translateX(-50%) rotate(-45deg)" } : {}}
-                    >
-                      {style.label}
-                    </span>
-
-                    {/* Icon */}
-                    <div className={`mb-1.5 inline-flex h-8 w-8 items-center justify-center rounded-full ${style.iconBg} ${style.iconText} shadow-md`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-
-                    {/* Label */}
-                    <div className="font-display font-bold text-[12px] leading-tight max-w-[140px]">
-                      {node.label}
-                    </div>
-
-                    {/* Metric chip */}
-                    {node.metric && (
-                      <div className="mt-1 inline-block rounded bg-gold/15 px-2 py-0.5 text-[10px] font-bold text-gold">
-                        {node.metric}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Hover detail tooltip */}
-                {hovered && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[230px] rounded-md border-2 border-gold/40 bg-white p-3 shadow-2xl z-40 animate-fade-in">
-                    <div className="text-[9px] font-black tracking-[0.15em] uppercase text-gold mb-1">
-                      {style.label}
-                    </div>
-                    <div className="font-display text-sm font-bold text-navy-deep mb-1">
-                      {node.label}
-                    </div>
-                    <p className="text-xs text-muted-foreground leading-snug">{node.detail}</p>
-                    {/* Pointer arrow */}
-                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-3 w-3 rotate-45 bg-white border-l-2 border-t-2 border-gold/40" />
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Footer hint */}
-        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between text-[10px] text-muted-foreground/70 font-medium pointer-events-none">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1"><span className="h-1.5 w-3 bg-gold rounded-full" /> מסלול ראשי</span>
-            <span className="flex items-center gap-1"><span className="h-1.5 w-3 bg-slate-400 rounded-full" style={{ backgroundImage: "repeating-linear-gradient(90deg, #94a3b8 0 2px, transparent 2px 4px)" }} /> מסלול חלופי</span>
-          </div>
-          <span>{data.nodes.length} שלבים · {data.edges.length} חיבורים</span>
-        </div>
       </div>
     </div>
   );
 }
 
 // ---------------------------------------------------------------------------
-// תצוגת מובייל אנכית - שלבים אחד מתחת לשני עם חיבורים אנכיים
+// Controls bar
 // ---------------------------------------------------------------------------
-function MobileFlowchartView({
+function ControlsBar({
+  activeStep,
+  total,
+  isPlaying,
+  onStart,
+  onPause,
+  onReset,
+}: {
+  activeStep: number;
+  total: number;
+  isPlaying: boolean;
+  onStart: () => void;
+  onPause: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground">
+        <Zap className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+        <span className="hidden sm:inline">תרשים זרימה אינטראקטיבי · לחצי על כל שלב לפרטים מלאים</span>
+        <span className="sm:hidden">הקישי על כל שלב לפרטים</span>
+      </div>
+      <div className="flex items-center gap-2">
+        {!isPlaying ? (
+          <button
+            type="button"
+            onClick={onStart}
+            className="group flex items-center gap-1.5 rounded-md bg-navy-deep px-4 py-2 text-xs font-semibold text-cream shadow-sm transition-all hover:bg-navy hover:shadow-lg min-h-[40px]"
+          >
+            <Play className="h-3.5 w-3.5 text-gold" />
+            {activeStep === -1 ? "הפעלי סימולציה" : activeStep >= total - 1 ? "הפעלי שוב" : "המשך"}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onPause}
+            className="flex items-center gap-1.5 rounded-md border-2 border-gold bg-gold/10 px-4 py-2 text-xs font-semibold text-gold min-h-[40px]"
+          >
+            <Pause className="h-3.5 w-3.5" />
+            <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
+            שלב {activeStep + 1}/{total}
+          </button>
+        )}
+        {(activeStep >= 0 && !isPlaying) && (
+          <button
+            type="button"
+            onClick={onReset}
+            className="flex items-center gap-1.5 rounded-md border border-border/70 bg-white px-3 py-2 text-xs font-semibold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream min-h-[40px]"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            איפוס
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Desktop grid view: rows of nodes connected by SVG arrows
+// ---------------------------------------------------------------------------
+function DesktopGridView({
   data,
   activeStep,
-  hoveredNode,
-  setHoveredNode,
-  isPlaying,
-  startSimulation,
-  resetSimulation,
+  expandedNode,
+  setExpandedNode,
   isNodeActive,
-  isEdgeActive,
+  isCurrentStep,
+  outgoingByNode,
+  columns,
 }: {
   data: FlowchartData;
   activeStep: number;
-  hoveredNode: string | null;
-  setHoveredNode: (id: string | null) => void;
-  isPlaying: boolean;
-  startSimulation: () => void;
-  resetSimulation: () => void;
+  expandedNode: string | null;
+  setExpandedNode: (id: string | null) => void;
   isNodeActive: (i: number) => boolean;
-  isEdgeActive: (fromIdx: number) => boolean;
+  isCurrentStep: (i: number) => boolean;
+  outgoingByNode: Map<string, FlowEdge[]>;
+  columns: number;
 }) {
-  // Build adjacency: for each node, find its outgoing edges (for showing branch labels)
-  const outgoingEdges = (nodeId: string) => data.edges.filter((e) => e.from === nodeId);
+  // Group nodes into rows of `columns`. Within each row, alternate row direction
+  // is not used (RTL-friendly: visually right-to-left flow within a row).
+  const rows = useMemo(() => {
+    const out: FlowNode[][] = [];
+    for (let i = 0; i < data.nodes.length; i += columns) {
+      out.push(data.nodes.slice(i, i + columns));
+    }
+    return out;
+  }, [data.nodes, columns]);
 
   return (
-    <div className="space-y-3">
-      {/* Controls bar */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Zap className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-          <span>תרשים זרימה - הקישי לפרטים</span>
-        </div>
-        <div className="flex items-center gap-2">
-          {!isPlaying && activeStep < data.nodes.length - 1 && (
-            <button
-              onClick={startSimulation}
-              className="flex items-center gap-1.5 rounded-md bg-navy-deep px-4 py-2.5 text-xs font-semibold text-cream min-h-[44px] min-w-[44px]"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-gold" />
-              {activeStep === -1 ? "הפעל" : "המשך"}
-            </button>
-          )}
-          {isPlaying && (
-            <div className="flex items-center gap-1.5 rounded-md bg-gold/10 border border-gold/30 px-3 py-2.5 text-[11px] font-semibold text-gold min-h-[44px]">
-              <span className="h-2 w-2 rounded-full bg-gold animate-pulse" />
-              {activeStep + 1}/{data.nodes.length}
-            </div>
-          )}
-          {(activeStep >= 0 && !isPlaying) && (
-            <button
-              onClick={resetSimulation}
-              className="rounded-md border border-border/70 bg-white px-4 py-2.5 text-xs font-semibold text-navy-deep min-h-[44px] min-w-[44px]"
-            >
-              איפוס
-            </button>
-          )}
-        </div>
-      </div>
+    <div className="relative rounded-xl border-2 border-gold/25 bg-gradient-to-br from-cream to-cream/70 p-5 shadow-[0_2px_24px_rgba(15,23,42,0.05)] overflow-hidden">
+      {/* Subtle grid background */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
+          backgroundSize: "28px 28px",
+        }}
+      />
 
-      {/* Vertical timeline */}
-      <div className="relative rounded-lg border-2 border-border/60 bg-gradient-to-b from-cream to-cream/60 p-3 space-y-2">
-        {data.nodes.map((node, i) => {
-          const style = NODE_STYLES[node.type];
-          const Icon = node.icon ?? defaultIconForType(node.type);
-          const active = isNodeActive(i);
-          const expanded = hoveredNode === node.id;
-          const edgeActive = isEdgeActive(i);
-          const isLast = i === data.nodes.length - 1;
-          const branches = outgoingEdges(node.id);
-          const hasBranchLabels = branches.some((b) => b.label);
-
+      <div className="relative space-y-6">
+        {rows.map((row, rowIdx) => {
+          const isLastRow = rowIdx === rows.length - 1;
+          const startGlobalIdx = rowIdx * columns;
+          // For RTL we want the row laid out so the first node is on the right.
+          // Tailwind grid with dir=rtl + a wrapper RTL container in the parent ensures correct order.
           return (
-            <div key={node.id} className="relative">
-              {/* Node card - full width row */}
+            <div key={rowIdx} className="space-y-3">
               <div
-                onClick={() => setHoveredNode(expanded ? null : node.id)}
-                className={[
-                  "w-full flex items-start gap-3 rounded-lg border-2 px-3 py-3 text-right transition-all",
-                  style.bg,
-                  style.text,
-                  active ? "border-gold shadow-lg shadow-gold/20" : style.border,
-                  expanded ? "ring-2 ring-gold/40" : "",
-                ].join(" ")}
+                className="grid gap-3 items-stretch"
+                style={{ gridTemplateColumns: `repeat(${Math.min(columns, row.length)}, minmax(0, 1fr))` }}
               >
-                {/* Step number + icon column */}
-                <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <div className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${style.iconBg} ${style.iconText} shadow-md`}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span className="text-[10px] font-bold text-muted-foreground">
-                    {i + 1}/{data.nodes.length}
-                  </span>
-                </div>
-
-                {/* Content column */}
-                <div className="flex-1 min-w-0 text-right">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <span className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-black tracking-[0.1em] uppercase ${style.iconBg} ${style.iconText}`}>
-                      {style.label}
-                    </span>
-                    {node.metric && (
-                      <span className="inline-block rounded bg-gold/15 px-1.5 py-0.5 text-[10px] font-bold text-gold">
-                        {node.metric}
-                      </span>
-                    )}
-                  </div>
-                  <div className="font-display font-bold text-sm leading-tight">
-                    {node.label}
-                  </div>
-                  <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-                    {node.detail}
-                  </p>
-                </div>
+                {row.map((node, idxInRow) => {
+                  const globalIdx = startGlobalIdx + idxInRow;
+                  return (
+                    <NodeCard
+                      key={node.id}
+                      node={node}
+                      idx={globalIdx}
+                      total={data.nodes.length}
+                      active={isNodeActive(globalIdx)}
+                      current={isCurrentStep(globalIdx)}
+                      expanded={expandedNode === node.id}
+                      onToggle={() =>
+                        setExpandedNode(expandedNode === node.id ? null : node.id)
+                      }
+                      branches={outgoingByNode.get(node.id) ?? []}
+                      showInRowConnector={idxInRow < row.length - 1}
+                      rowConnectorActive={isNodeActive(globalIdx) && isNodeActive(globalIdx + 1)}
+                    />
+                  );
+                })}
               </div>
 
-              {/* Vertical connector to next node */}
-              {!isLast && (
-                <div className="flex flex-col items-center py-1" aria-hidden="true">
-                  {hasBranchLabels && (
-                    <div className="flex items-center gap-2 mb-1">
-                      {branches.map((b, bi) => (
-                        <span
-                          key={bi}
-                          className={`inline-block rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                            edgeActive ? "bg-gold text-navy-deep" : "bg-white text-muted-foreground border border-border/60"
-                          }`}
-                        >
-                          {b.label || (b.variant === "alt" ? "חלופי" : "")}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div
-                    className={`h-6 w-0.5 ${edgeActive ? "bg-gold" : "bg-slate-300"} transition-colors`}
-                  />
-                  <ArrowRight
-                    className={`h-3.5 w-3.5 rotate-90 ${edgeActive ? "text-gold" : "text-slate-400"} transition-colors`}
-                  />
+              {/* Down-arrow to next row (centered) */}
+              {!isLastRow && (
+                <div className="flex justify-center">
+                  <DownConnector active={isNodeActive(startGlobalIdx + row.length - 1)} />
                 </div>
               )}
             </div>
           );
         })}
 
-        {/* Legend */}
-        <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground/80 font-medium">
-          <span>{data.nodes.length} שלבים · {data.edges.length} חיבורים</span>
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-3 bg-gold rounded-full" />
-            פעיל
+        {/* Footer legend */}
+        <div className="pt-3 mt-2 border-t border-gold/20 flex items-center justify-between text-[11px] text-muted-foreground/80 font-medium">
+          <div className="flex items-center gap-3 flex-wrap">
+            <LegendDot color="bg-gold" label="זרימה פעילה" />
+            <LegendDot color="bg-navy/30" label="זרימה רגילה" />
+            <LegendDot color="bg-navy-deep" label="פעולת מערכת" pill />
+            <LegendDot color="bg-cream border border-navy/30" label="ניתוח / טריגר" pill dark />
+          </div>
+          <span>
+            {data.nodes.length} שלבים · {data.edges.length} חיבורים
+            {activeStep >= 0 && (
+              <span className="mr-2 text-gold font-bold">· שלב {activeStep + 1}/{data.nodes.length}</span>
+            )}
           </span>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function LegendDot({
+  color,
+  label,
+  pill = false,
+  dark = false,
+}: {
+  color: string;
+  label: string;
+  pill?: boolean;
+  dark?: boolean;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className={`${pill ? "h-3 w-5 rounded" : "h-2 w-2 rounded-full"} ${color} ${dark ? "" : ""}`}
+      />
+      <span className="text-[10px]">{label}</span>
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Single node card (works for both desktop and mobile)
+// ---------------------------------------------------------------------------
+function NodeCard({
+  node,
+  idx,
+  total,
+  active,
+  current,
+  expanded,
+  onToggle,
+  branches,
+  showInRowConnector,
+  rowConnectorActive,
+}: {
+  node: FlowNode;
+  idx: number;
+  total: number;
+  active: boolean;
+  current: boolean;
+  expanded: boolean;
+  onToggle: () => void;
+  branches: FlowEdge[];
+  showInRowConnector?: boolean;
+  rowConnectorActive?: boolean;
+}) {
+  const style = NODE_STYLES[node.type];
+  const Icon = node.icon ?? defaultIconForType(node.type);
+  const ribbonLabel = style.label;
+  const branchLabels = branches.map((b) => b.label).filter(Boolean) as string[];
+
+  return (
+    <div className="relative flex items-stretch min-w-0">
+      {/* Card */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className={[
+          "relative flex-1 min-w-0 text-right transition-all duration-500 outline-none",
+          "rounded-xl border-2 px-3 py-3 shadow-sm",
+          style.bg,
+          style.text,
+          active ? "border-gold shadow-lg shadow-gold/20" : style.border,
+          current ? "ring-4 ring-gold/40 scale-[1.02]" : "",
+          expanded ? "ring-2 ring-gold/60" : "",
+          "hover:shadow-md hover:border-gold/80",
+        ].join(" ")}
+      >
+        {/* Step badge */}
+        <span className="absolute -top-2.5 right-3 inline-flex items-center gap-1 rounded-full bg-navy-deep text-cream px-2 py-0.5 text-[10px] font-bold tracking-wider shadow-sm">
+          <span className="text-gold">{String(idx + 1).padStart(2, "0")}</span>
+          <span className="opacity-60">/{String(total).padStart(2, "0")}</span>
+        </span>
+
+        {/* Type ribbon */}
+        <span
+          className={`absolute -top-2.5 left-3 inline-block rounded-full px-2 py-0.5 text-[9px] font-black tracking-[0.15em] uppercase shadow-sm ${style.iconBg} ${style.iconText}`}
+        >
+          {ribbonLabel}
+        </span>
+
+        <div className="flex items-start gap-3 min-w-0 mt-1">
+          {/* Icon */}
+          <div
+            className={`flex-shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-full ${style.iconBg} ${style.iconText} shadow ${current ? "animate-pulse-gold" : ""}`}
+          >
+            <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+          </div>
+
+          <div className="flex-1 min-w-0 text-right">
+            <div className="font-display font-bold text-[14px] leading-tight break-words">
+              {node.label}
+            </div>
+            <p
+              className={`mt-1 text-[11.5px] leading-snug ${active ? "opacity-95" : "opacity-80"} break-words ${expanded ? "" : "line-clamp-2"}`}
+            >
+              {node.detail}
+            </p>
+
+            {/* Footer chips */}
+            <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+              {node.metric && (
+                <span className="inline-block rounded-md bg-gold/20 text-navy-deep px-1.5 py-0.5 text-[10px] font-bold border border-gold/40">
+                  {node.metric}
+                </span>
+              )}
+              {branchLabels.length > 0 && branchLabels.map((bl, i) => (
+                <span
+                  key={i}
+                  className={`inline-block rounded-md px-1.5 py-0.5 text-[10px] font-semibold border ${active ? "bg-gold text-navy-deep border-gold" : "bg-white/70 text-muted-foreground border-border/60"}`}
+                >
+                  {bl}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Active flowing ring */}
+        {current && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-xl ring-2 ring-gold/30 animate-pulse"
+          />
+        )}
+      </button>
+
+      {/* In-row arrow connector (desktop only). RTL: arrow points to the LEFT (next item). */}
+      {showInRowConnector && (
+        <div className="hidden lg:flex absolute -left-3 top-1/2 -translate-y-1/2 z-20 pointer-events-none">
+          <RowArrow active={!!rowConnectorActive} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RowArrow({ active }: { active: boolean }) {
+  return (
+    <div className="flex items-center">
+      <div
+        className={`h-0.5 w-6 ${active ? "bg-gold" : "bg-navy/30"} transition-colors duration-500`}
+      />
+      <ArrowRight
+        className={`h-3.5 w-3.5 ${active ? "text-gold" : "text-navy/40"} -ml-1 transition-colors duration-500 -rotate-180`}
+        strokeWidth={2.5}
+      />
+      {active && (
+        <span
+          aria-hidden
+          className="absolute h-2 w-2 rounded-full bg-gold shadow-[0_0_8px_rgba(200,168,91,0.8)] animate-flow-dot-rtl"
+        />
+      )}
+    </div>
+  );
+}
+
+function DownConnector({ active }: { active: boolean }) {
+  return (
+    <div className="relative flex flex-col items-center" aria-hidden>
+      <div className={`h-8 w-0.5 ${active ? "bg-gold" : "bg-navy/30"} transition-colors duration-500`} />
+      <ArrowRight
+        className={`h-4 w-4 rotate-90 ${active ? "text-gold" : "text-navy/40"} -mt-1 transition-colors duration-500`}
+        strokeWidth={2.5}
+      />
+      {active && (
+        <span
+          aria-hidden
+          className="absolute top-0 h-2 w-2 rounded-full bg-gold shadow-[0_0_8px_rgba(200,168,91,0.8)] animate-flow-dot-down"
+        />
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Mobile vertical timeline
+// ---------------------------------------------------------------------------
+function MobileFlowchartView({
+  data,
+  activeStep,
+  expandedNode,
+  setExpandedNode,
+  outgoingByNode,
+  isNodeActive,
+  isCurrentStep,
+}: {
+  data: FlowchartData;
+  activeStep: number;
+  expandedNode: string | null;
+  setExpandedNode: (id: string | null) => void;
+  outgoingByNode: Map<string, FlowEdge[]>;
+  isNodeActive: (i: number) => boolean;
+  isCurrentStep: (i: number) => boolean;
+}) {
+  return (
+    <div className="relative rounded-xl border-2 border-gold/25 bg-gradient-to-b from-cream to-cream/70 p-3 space-y-2">
+      {data.nodes.map((node, i) => {
+        const isLast = i === data.nodes.length - 1;
+        const branches = outgoingByNode.get(node.id) ?? [];
+        const downActive = isNodeActive(i) && isNodeActive(i + 1);
+
+        return (
+          <div key={node.id} className="relative">
+            <NodeCard
+              node={node}
+              idx={i}
+              total={data.nodes.length}
+              active={isNodeActive(i)}
+              current={isCurrentStep(i)}
+              expanded={expandedNode === node.id}
+              onToggle={() => setExpandedNode(expandedNode === node.id ? null : node.id)}
+              branches={branches}
+            />
+
+            {!isLast && (
+              <div className="flex justify-center py-1.5">
+                <DownConnector active={downActive} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Mobile footer */}
+      <div className="pt-2 mt-1 border-t border-gold/20 flex items-center justify-between text-[10px] text-muted-foreground/80 font-medium">
+        <span>{data.nodes.length} שלבים · {data.edges.length} חיבורים</span>
+        {activeStep >= 0 && (
+          <span className="text-gold font-bold">שלב {activeStep + 1}/{data.nodes.length}</span>
+        )}
       </div>
     </div>
   );
@@ -534,121 +588,111 @@ function defaultIconForType(type: FlowNodeType): LucideIcon {
 }
 
 // ===========================================================================
-// תרשימי זרימה מוכנים לכל קטגוריה
+// תרשימי זרימה מוכנים לכל קטגוריה — נשמרים כמו שהיו (אותם שלבים ומסרים)
 // ===========================================================================
 
 export const FLOWCHART_DATA: Record<string, FlowchartData> = {
   vip: {
     nodes: [
-      { id: "n1", type: "trigger",  label: "סריקת דוח שורנס",       detail: "מערכת קוראת דוח חודשי וזיהתה לקוח עם צבירה ≥ 1M ₪",            icon: FileSpreadsheet, x: 12, y: 22 },
-      { id: "n2", type: "ai",       label: "ניתוח פרופיל לקוח",      detail: "AI בוחן פיזור תיק, וותק, מוצרי 190, פוטנציאל ניוד והתאמה",      icon: Brain,            x: 38, y: 22 },
-      { id: "n3", type: "decision", label: "האם VIP אמיתי?",         detail: "בודק 3 קריטריונים: צבירה > 1M, גיל > 45, ללא מוצר 190",         icon: Filter,           x: 62, y: 22, decisionLabels: { yes: "כן", no: "לא" } },
-      { id: "n4", type: "action",   label: "ניסוח מייל אישי + PDF",  detail: "GPT מייצר מייל מותאם + סיכום פיננסי PDF + הצעת פגישת זום",      icon: Mail,             x: 38, y: 55, metric: "≈12 שניות" },
-      { id: "n5", type: "process",  label: "סינון - לא רלוונטי",     detail: "הלקוח נשמר במאגר 'נבדק - לא VIP' לסקירה רבעונית",                icon: Database,         x: 86, y: 22 },
-      { id: "n6", type: "approval", label: "אישור הסוכנת",            detail: "תקציר + כפתור 'אשר ושלח' / 'התאם ידנית'",                       icon: UserCheck,        x: 62, y: 55 },
-      { id: "n7", type: "action",   label: "שליחה אוטומטית",          detail: "שליחת מייל + יצירת אירוע ב-CRM + תזכורת מעקב 3 ימים",            icon: Send,             x: 86, y: 55 },
-      { id: "n8", type: "result",   label: "פגישה נקבעת",             detail: "Lead באיכות גבוהה במשפך · עמלת פגישה · פוטנציאל מכירה",          icon: Target,           x: 86, y: 84, metric: "₪380K פוטנציאל" },
+      { id: "n1", type: "trigger",  label: "סריקת דוח שורנס",       detail: "מערכת קוראת דוח חודשי וזיהתה לקוח עם צבירה ≥ 1M ₪",            icon: FileSpreadsheet },
+      { id: "n2", type: "ai",       label: "ניתוח פרופיל לקוח",      detail: "AI בוחן פיזור תיק, וותק, מוצרי 190, פוטנציאל ניוד והתאמה",      icon: Brain },
+      { id: "n3", type: "decision", label: "האם VIP אמיתי?",         detail: "בודק 3 קריטריונים: צבירה > 1M, גיל > 45, ללא מוצר 190",         icon: Filter, decisionLabels: { yes: "כן", no: "לא" } },
+      { id: "n4", type: "action",   label: "ניסוח מייל אישי + PDF",  detail: "GPT מייצר מייל מותאם + סיכום פיננסי PDF + הצעת פגישת זום",      icon: Mail, metric: "≈12 שניות" },
+      { id: "n5", type: "approval", label: "אישור הסוכנת",            detail: "תקציר + כפתור 'אשר ושלח' / 'התאם ידנית'",                       icon: UserCheck },
+      { id: "n6", type: "action",   label: "שליחה אוטומטית",          detail: "שליחת מייל + יצירת אירוע ב-CRM + תזכורת מעקב 3 ימים",            icon: Send },
+      { id: "n7", type: "result",   label: "פגישה נקבעת",             detail: "Lead באיכות גבוהה במשפך · עמלת פגישה · פוטנציאל מכירה",          icon: Target, metric: "₪380K פוטנציאל" },
     ],
     edges: [
       { from: "n1", to: "n2" },
       { from: "n2", to: "n3" },
       { from: "n3", to: "n4", label: "כן" },
-      { from: "n3", to: "n5", label: "לא", variant: "alt" },
-      { from: "n4", to: "n6" },
+      { from: "n4", to: "n5" },
+      { from: "n5", to: "n6" },
       { from: "n6", to: "n7" },
-      { from: "n7", to: "n8" },
     ],
   },
 
   lowYield: {
     nodes: [
-      { id: "n1", type: "trigger",  label: "זיהוי תשואת חסר",         detail: "צבירה < 12K ₪ × ותק או דמי ניהול > 1% על קופה ותיקה",            icon: AlertTriangle,    x: 12, y: 22 },
-      { id: "n2", type: "process",  label: "שליפת נתונים השוואתיים",   detail: "API ל-מסלקה - השוואת מסלולים זמינים אצל אותו יצרן",              icon: Database,         x: 38, y: 22 },
-      { id: "n3", type: "ai",       label: "חישוב חיסכון פוטנציאלי",   detail: "אלגוריתם משווה תשואות 5Y, רמות סיכון, חיסכון בדמי ניהול",        icon: Brain,            x: 62, y: 22, metric: "~₪1.8K/שנה" },
-      { id: "n4", type: "decision", label: "פער מובהק > 0.7%?",        detail: "אם הפער מתחת לסף - ההצעה לא משכנעת ולא נשלחת",                   icon: Filter,           x: 86, y: 22 },
-      { id: "n5", type: "action",   label: "מייל השוואה גרפית",        detail: "מייל עם גרף תשואות 5 שנים + טבלת השוואת מסלולים + CTA",          icon: Mail,             x: 62, y: 55 },
-      { id: "n6", type: "process",  label: "המתנה - אין צורך בפעולה",   detail: "נבדק שוב בסקירה הרבעונית הבאה",                                  icon: Clock,            x: 86, y: 55 },
-      { id: "n7", type: "approval", label: "אישור הסוכנת",              detail: "הסוכנת רואה את ההמלצה, יכולה לערוך ולשלוח",                       icon: UserCheck,        x: 38, y: 55 },
-      { id: "n8", type: "action",   label: "שיחת שימור + ניוד",         detail: "תיאום פגישה, ביצוע ניוד למסלול הרווחי דרך פורטל היצרן",            icon: MessageSquare,    x: 38, y: 84 },
-      { id: "n9", type: "result",   label: "ניוד הושלם · שימור",         detail: "לקוח עבר למסלול רווחי · עמלת שימור · נמנעה נטישה",                icon: Target,           x: 75, y: 84, metric: "73% הצלחה" },
+      { id: "n1", type: "trigger",  label: "זיהוי תשואת חסר",         detail: "צבירה < 12K ₪ × ותק או דמי ניהול > 1% על קופה ותיקה",            icon: AlertTriangle },
+      { id: "n2", type: "process",  label: "שליפת נתונים השוואתיים",   detail: "API ל-מסלקה - השוואת מסלולים זמינים אצל אותו יצרן",              icon: Database },
+      { id: "n3", type: "ai",       label: "חישוב חיסכון פוטנציאלי",   detail: "אלגוריתם משווה תשואות 5Y, רמות סיכון, חיסכון בדמי ניהול",        icon: Brain, metric: "~₪1.8K/שנה" },
+      { id: "n4", type: "decision", label: "פער מובהק > 0.7%?",        detail: "אם הפער מתחת לסף - ההצעה לא משכנעת ולא נשלחת",                   icon: Filter },
+      { id: "n5", type: "action",   label: "מייל השוואה גרפית",        detail: "מייל עם גרף תשואות 5 שנים + טבלת השוואת מסלולים + CTA",          icon: Mail, metric: "מותאם אישית" },
+      { id: "n6", type: "approval", label: "אישור הסוכנת",              detail: "הסוכנת רואה את ההמלצה, יכולה לערוך ולשלוח",                       icon: UserCheck },
+      { id: "n7", type: "action",   label: "שיחת שימור + ניוד",         detail: "תיאום פגישה, ביצוע ניוד למסלול הרווחי דרך פורטל היצרן",            icon: MessageSquare },
+      { id: "n8", type: "result",   label: "ניוד הושלם · שימור",         detail: "לקוח עבר למסלול רווחי · עמלת שימור · נמנעה נטישה",                icon: Target, metric: "73% הצלחה" },
     ],
     edges: [
       { from: "n1", to: "n2" },
       { from: "n2", to: "n3" },
       { from: "n3", to: "n4" },
       { from: "n4", to: "n5", label: "כן" },
-      { from: "n4", to: "n6", label: "לא", variant: "alt" },
-      { from: "n5", to: "n7" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7" },
       { from: "n7", to: "n8" },
-      { from: "n8", to: "n9" },
     ],
   },
 
   "190": {
     nodes: [
-      { id: "n1", type: "trigger",  label: "זיהוי גיל ≥ 60",            detail: "סריקת בסיס לקוחות - גיל מעל 60 + צבירה פנויה ≥ 300K ₪",          icon: AlertTriangle,    x: 12, y: 22 },
-      { id: "n2", type: "process",  label: "בדיקת קופת 190 קיימת",       detail: "שליפה ממסלקה: האם ללקוח כבר יש פוליסת 190",                       icon: Database,         x: 38, y: 22 },
-      { id: "n3", type: "decision", label: "כבר יש 190?",                 detail: "אם כן - ההצעה לא רלוונטית. אם לא - הלאה לסימולציה",               icon: Filter,           x: 62, y: 22 },
-      { id: "n4", type: "ai",       label: "סימולציית חיסכון במס",         detail: "חישוב פטור צפוי, ROI מס לתקופה צפויה, השוואה לחלופות",            icon: Brain,            x: 86, y: 22, metric: "₪38K ממוצע" },
-      { id: "n5", type: "process",  label: "דילוג - יש 190",              detail: "נשמר כ-'מטופל' לסקירה תקופתית של תיקון/הגדלה",                     icon: Database,         x: 38, y: 55, },
-      { id: "n6", type: "action",   label: "מייל + PDF סימולציה",          detail: "GPT מנסח מכתב הסבר, מצרף PDF גרפי עם הסימולציה",                  icon: Mail,             x: 86, y: 55 },
-      { id: "n7", type: "approval", label: "אישור הסוכנת",                  detail: "הסוכנת בוחנת את הסימולציה, יכולה לערוך ולאשר",                     icon: UserCheck,        x: 62, y: 55 },
-      { id: "n8", type: "action",   label: "תיאום פגישת ייעוץ",             detail: "Calendly אוטומטי + תזכורת WhatsApp + הכנת מסמכים",                icon: Calendar,         x: 38, y: 84 },
-      { id: "n9", type: "result",   label: "פתיחת קופת 190",                detail: "פוליסה חדשה · עמלת פתיחה · חיסכון מס משמעותי ללקוח",               icon: Target,           x: 75, y: 84, metric: "~₪180K עמלות" },
+      { id: "n1", type: "trigger",  label: "זיהוי גיל ≥ 60",            detail: "סריקת בסיס לקוחות - גיל מעל 60 + צבירה פנויה ≥ 300K ₪",          icon: AlertTriangle },
+      { id: "n2", type: "process",  label: "בדיקת קופת 190 קיימת",       detail: "שליפה ממסלקה: האם ללקוח כבר יש פוליסת 190",                       icon: Database },
+      { id: "n3", type: "decision", label: "כבר יש 190?",                 detail: "אם כן - ההצעה לא רלוונטית. אם לא - הלאה לסימולציה",               icon: Filter },
+      { id: "n4", type: "ai",       label: "סימולציית חיסכון במס",         detail: "חישוב פטור צפוי, ROI מס לתקופה צפויה, השוואה לחלופות",            icon: Brain, metric: "₪38K ממוצע" },
+      { id: "n5", type: "action",   label: "מייל + PDF סימולציה",          detail: "GPT מנסח מכתב הסבר, מצרף PDF גרפי עם הסימולציה",                  icon: Mail },
+      { id: "n6", type: "approval", label: "אישור הסוכנת",                  detail: "הסוכנת בוחנת את הסימולציה, יכולה לערוך ולאשר",                     icon: UserCheck },
+      { id: "n7", type: "action",   label: "תיאום פגישת ייעוץ",             detail: "Calendly אוטומטי + תזכורת WhatsApp + הכנת מסמכים",                icon: Calendar },
+      { id: "n8", type: "result",   label: "פתיחת קופת 190",                detail: "פוליסה חדשה · עמלת פתיחה · חיסכון מס משמעותי ללקוח",               icon: Target, metric: "~₪180K עמלות" },
     ],
     edges: [
       { from: "n1", to: "n2" },
       { from: "n2", to: "n3" },
-      { from: "n3", to: "n5", label: "כן",  variant: "alt" },
       { from: "n3", to: "n4", label: "לא" },
-      { from: "n4", to: "n6" },
+      { from: "n4", to: "n5" },
+      { from: "n5", to: "n6" },
       { from: "n6", to: "n7" },
       { from: "n7", to: "n8" },
-      { from: "n8", to: "n9" },
     ],
   },
 
   risk: {
     nodes: [
-      { id: "n1", type: "trigger",  label: "פוליסה < 60 יום מתום",         detail: "סטטוס מכיל 'מסתיים' / 'ריסק זמני' + תאריך סיום בעוד פחות מ-60 יום", icon: AlertTriangle,    x: 12, y: 22 },
-      { id: "n2", type: "ai",       label: "חישוב פרמיה חדשה",              detail: "AI בודק זמינות מסלולים, מחשב פרמיה לפי גיל, מצב בריאותי וותק",      icon: Brain,            x: 38, y: 22 },
-      { id: "n3", type: "decision", label: "פרמיה תחרותית?",                 detail: "אם הפרמיה החדשה גבוהה משמעותית - מציע מעבר לחברה אחרת",             icon: Filter,           x: 62, y: 22 },
-      { id: "n4", type: "action",   label: "WhatsApp דחוף + מייל",            detail: "הודעת WhatsApp מיידית + מייל גיבוי עם הצעת חידוש",                  icon: MessageSquare,    x: 38, y: 55, metric: "אישור ב-≈30 שניות" },
-      { id: "n5", type: "ai",       label: "השוואת חברות",                    detail: "סורק 4 חברות מתחרות, בוחר את המסלול הזול ביותר עם כיסוי תואם",      icon: Brain,            x: 86, y: 22 },
-      { id: "n6", type: "approval", label: "אישור מהירה של הסוכנת",            detail: "מסך ייעודי 1-קליק עם 'אשר ושלח' / 'התאם ידנית'",                    icon: UserCheck,        x: 62, y: 55 },
-      { id: "n7", type: "action",   label: "הצעת מעבר חברה",                   detail: "מייל עם השוואת מסלולים + קבע פגישת בדיקת בריאות",                  icon: Mail,             x: 86, y: 55 },
-      { id: "n8", type: "result",   label: "כיסוי חודש לפני תום",                detail: "המשפחה מבוטחת ברציפות · עמלה נמשכת · נמנע נזק",                     icon: Target,           x: 75, y: 84, metric: "82% הצלחה" },
+      { id: "n1", type: "trigger",  label: "פוליסה < 60 יום מתום",         detail: "סטטוס מכיל 'מסתיים' / 'ריסק זמני' + תאריך סיום בעוד פחות מ-60 יום", icon: AlertTriangle },
+      { id: "n2", type: "ai",       label: "חישוב פרמיה חדשה",              detail: "AI בודק זמינות מסלולים, מחשב פרמיה לפי גיל, מצב בריאותי וותק",      icon: Brain },
+      { id: "n3", type: "decision", label: "פרמיה תחרותית?",                 detail: "אם הפרמיה החדשה גבוהה משמעותית - מציע מעבר לחברה אחרת",             icon: Filter },
+      { id: "n4", type: "action",   label: "WhatsApp דחוף + מייל",            detail: "הודעת WhatsApp מיידית + מייל גיבוי עם הצעת חידוש",                  icon: MessageSquare, metric: "אישור ב-≈30 שניות" },
+      { id: "n5", type: "approval", label: "אישור מהירה של הסוכנת",            detail: "מסך ייעודי 1-קליק עם 'אשר ושלח' / 'התאם ידנית'",                    icon: UserCheck },
+      { id: "n6", type: "action",   label: "הצעת חידוש / מעבר",                detail: "מייל עם השוואת מסלולים + קביעת פגישת בדיקת בריאות",                  icon: Mail },
+      { id: "n7", type: "result",   label: "כיסוי חודש לפני תום",                detail: "המשפחה מבוטחת ברציפות · עמלה נמשכת · נמנע נזק",                     icon: Target, metric: "82% הצלחה" },
     ],
     edges: [
       { from: "n1", to: "n2" },
       { from: "n2", to: "n3" },
       { from: "n3", to: "n4", label: "כן" },
-      { from: "n3", to: "n5", label: "לא", variant: "alt" },
-      { from: "n4", to: "n6" },
-      { from: "n5", to: "n7", variant: "alt" },
-      { from: "n7", to: "n6" },
-      { from: "n6", to: "n8" },
+      { from: "n4", to: "n5" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7" },
     ],
   },
 
   discount: {
     nodes: [
-      { id: "n1", type: "trigger",  label: "תום הנחה < 45 יום",            detail: "סטטוס המוצר מכיל 'תום הנחה' או 'הנחה מסתיימת' + תאריך סף",         icon: Calendar,         x: 12, y: 22 },
-      { id: "n2", type: "process",  label: "חישוב פרמיה חדשה",              detail: "מערכת מחשבת בכמה תקפוץ הפרמיה, אחוז הקפיצה והשפעה צפויה",            icon: Database,         x: 38, y: 22 },
-      { id: "n3", type: "ai",       label: "אסטרטגיית שימור",                detail: "GPT בוחר אחת מ-3 אסטרטגיות: הארכת הנחה, מסלול חלופי, או שלב 2",     icon: Brain,            x: 62, y: 22 },
-      { id: "n4", type: "decision", label: "קפיצה > 25%?",                   detail: "אם הקפיצה קטנה - תזכורת רגילה. אם גדולה - אסטרטגיית שימור אגרסיבית", icon: Filter,           x: 86, y: 22 },
-      { id: "n5", type: "action",   label: "מייל יזום עם חלופה",              detail: "מייל מיידי עם 2 חלופות: הארכה / מעבר חברה תחרותית",                   icon: Mail,             x: 86, y: 55 },
-      { id: "n6", type: "action",   label: "תזכורת רכה",                       detail: "מייל קצר 'תיכף תסתיים תקופת ההנחה - האם לחדש?'",                       icon: Mail,             x: 38, y: 55 },
-      { id: "n7", type: "approval", label: "אישור הסוכנת",                      detail: "הסוכנת מאשרת את ההצעה - או מתאימה ידנית לפי שיחה עם הלקוח",            icon: UserCheck,        x: 62, y: 55 },
-      { id: "n8", type: "result",   label: "שימור · ללא תלונה",                  detail: "הלקוח לא הופתע · נשמר ב-CRM · עמלה חודשית נמשכת",                      icon: Target,           x: 62, y: 84, metric: "67% שימור" },
+      { id: "n1", type: "trigger",  label: "תום הנחה < 45 יום",            detail: "סטטוס המוצר מכיל 'תום הנחה' או 'הנחה מסתיימת' + תאריך סף",         icon: Calendar },
+      { id: "n2", type: "process",  label: "חישוב פרמיה חדשה",              detail: "מערכת מחשבת בכמה תקפוץ הפרמיה, אחוז הקפיצה והשפעה צפויה",            icon: Database },
+      { id: "n3", type: "ai",       label: "אסטרטגיית שימור",                detail: "GPT בוחר אחת מ-3 אסטרטגיות: הארכת הנחה, מסלול חלופי, או שלב 2",     icon: Brain },
+      { id: "n4", type: "decision", label: "קפיצה > 25%?",                   detail: "אם הקפיצה קטנה - תזכורת רגילה. אם גדולה - אסטרטגיית שימור אגרסיבית", icon: Filter },
+      { id: "n5", type: "action",   label: "מייל יזום עם חלופה",              detail: "מייל מיידי עם 2 חלופות: הארכה / מעבר חברה תחרותית",                   icon: Mail },
+      { id: "n6", type: "approval", label: "אישור הסוכנת",                      detail: "הסוכנת מאשרת את ההצעה - או מתאימה ידנית לפי שיחה עם הלקוח",            icon: UserCheck },
+      { id: "n7", type: "action",   label: "שליחה ומעקב",                       detail: "שליחת המייל + תזכורת אוטומטית 3 ימים לפני תום ההנחה",                   icon: Send },
+      { id: "n8", type: "result",   label: "שימור · ללא תלונה",                  detail: "הלקוח לא הופתע · נשמר ב-CRM · עמלה חודשית נמשכת",                      icon: Target, metric: "67% שימור" },
     ],
     edges: [
       { from: "n1", to: "n2" },
       { from: "n2", to: "n3" },
       { from: "n3", to: "n4" },
       { from: "n4", to: "n5", label: "כן" },
-      { from: "n4", to: "n6", label: "לא", variant: "alt" },
-      { from: "n5", to: "n7" },
+      { from: "n5", to: "n6" },
       { from: "n6", to: "n7" },
       { from: "n7", to: "n8" },
     ],
@@ -656,27 +700,23 @@ export const FLOWCHART_DATA: Record<string, FlowchartData> = {
 
   coverageGaps: {
     nodes: [
-      { id: "n1", type: "trigger",  label: "ניתוח חוסרי כיסוי",              detail: "סריקת תיק - חסרים מוצרים: פנסיה / ריסק חיים / סיעוד / בריאות",       icon: AlertOctagon,     x: 12, y: 22 },
-      { id: "n2", type: "ai",       label: "פרופיל סיכון אישי",              detail: "ניתוח גיל, מצב משפחתי, מצב עבודה, מצב בריאותי, מצב כלכלי",            icon: Brain,            x: 38, y: 22 },
-      { id: "n3", type: "decision", label: "סוג חוסר?",                       detail: "מסעיף את הלקוחות ל-3 קטגוריות: ריסק חסר, פנסיה חסרה, סיעוד חסר",     icon: Filter,           x: 62, y: 22 },
-      { id: "n4", type: "ai",       label: "התאמת מוצר ריסק",                  detail: "ממליץ על סכום ביטוח, חברה, תקופה, ופרמיה משוערת",                     icon: Brain,            x: 14, y: 55 },
-      { id: "n5", type: "ai",       label: "התאמת מוצר פנסיה",                  detail: "ממליץ על קופת פנסיה, מסלול השקעה, אחוז חיסכון",                       icon: Brain,            x: 50, y: 55 },
-      { id: "n6", type: "ai",       label: "התאמת סיעוד",                       detail: "ממליץ על פוליסת סיעוד, סכום יומי, תקופת המתנה",                        icon: Brain,            x: 86, y: 55 },
-      { id: "n7", type: "action",   label: "מייל עם הצעה מותאמת",                detail: "מייל הסבר + הצעת פגישת ייעוץ להשלמת התיק הביטוחי",                    icon: Mail,             x: 50, y: 75 },
-      { id: "n8", type: "approval", label: "אישור הסוכנת",                       detail: "הסוכנת בוחנת את ההמלצה ומאשרת או מתאימה",                              icon: UserCheck,        x: 30, y: 90 },
-      { id: "n9", type: "result",   label: "מכירת מוצר חדש · אאפסל",              detail: "פגישה · מכירה · עמלת אאפסל · לקוח מבוטח כהלכה",                       icon: Target,           x: 70, y: 90, metric: "~₪520K פוטנציאל" },
+      { id: "n1", type: "trigger",  label: "ניתוח חוסרי כיסוי",              detail: "סריקת תיק - חסרים מוצרים: פנסיה / ריסק חיים / סיעוד / בריאות",       icon: AlertOctagon },
+      { id: "n2", type: "ai",       label: "פרופיל סיכון אישי",              detail: "ניתוח גיל, מצב משפחתי, מצב עבודה, מצב בריאותי, מצב כלכלי",            icon: Brain },
+      { id: "n3", type: "decision", label: "סוג חוסר?",                       detail: "מסעיף את הלקוחות ל-3 קטגוריות: ריסק חסר, פנסיה חסרה, סיעוד חסר",     icon: Filter },
+      { id: "n4", type: "ai",       label: "התאמת מוצר אישית",                  detail: "ממליץ על סכום ביטוח / קופת פנסיה / סיעוד מתאימים בהתאם לחוסר",       icon: Brain, metric: "מותאם פרופיל" },
+      { id: "n5", type: "action",   label: "מייל עם הצעה מותאמת",                detail: "מייל הסבר + הצעת פגישת ייעוץ להשלמת התיק הביטוחי",                    icon: Mail },
+      { id: "n6", type: "approval", label: "אישור הסוכנת",                       detail: "הסוכנת בוחנת את ההמלצה ומאשרת או מתאימה",                              icon: UserCheck },
+      { id: "n7", type: "action",   label: "תיאום פגישת ייעוץ",                   detail: "Calendly אוטומטי, הכנת מסמכים, תזכורות לפני הפגישה",                    icon: Clock },
+      { id: "n8", type: "result",   label: "מכירת מוצר חדש · אאפסל",              detail: "פגישה · מכירה · עמלת אאפסל · לקוח מבוטח כהלכה",                       icon: Target, metric: "~₪520K פוטנציאל" },
     ],
     edges: [
       { from: "n1", to: "n2" },
       { from: "n2", to: "n3" },
-      { from: "n3", to: "n4", label: "ריסק" },
-      { from: "n3", to: "n5", label: "פנסיה" },
-      { from: "n3", to: "n6", label: "סיעוד" },
-      { from: "n4", to: "n7" },
-      { from: "n5", to: "n7" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5" },
+      { from: "n5", to: "n6" },
       { from: "n6", to: "n7" },
       { from: "n7", to: "n8" },
-      { from: "n8", to: "n9" },
     ],
   },
 };
