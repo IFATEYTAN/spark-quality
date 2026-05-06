@@ -90,3 +90,8 @@
 - [x] להסיר את הבאנר הירוק "זהו המסך הראשי..." מ-Dashboard.tsx (לא מתאים לעיצוב)
 - [x] לתקן רספונסיביות של מסכי הדמו (במיוחד IntroStage) - תוכן גולש מעל ה-shell, לא ממורכז כראוי
 - [x] לבדוק את כל מסכי הדמו (Splash, Intro, Upload, Analyzing, Dashboard, Actions, Summary) ולוודא שאין overflow / חיתוך / קטנים מדי
+
+## 🪟 Round 11 - תיקון חיתוך כפתורי ניווט בתחתית הדמו (2026-05-06)
+- [x] שינוי main מ-overflow-hidden ל-overflow-y-auto ב-DemoExperience כדי שתוכן ארוך לא יחתוך
+- [x] צמצום שלב promise ב-IntroStage כדי שיתאים ל-viewport קטן
+- [x] שמירת floating nav (back/forward/fullscreen) ב-fixed bottom-6 left-6 - תמיד נגיש
