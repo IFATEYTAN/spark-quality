@@ -76,4 +76,42 @@ describe("parseReport · קטגוריות פיננסיות", () => {
     const result = await parseShorensReport(file);
     expect(result.customers[0].status).toBe("תיקון 190");
   });
+
+  it("מזהה תשואה חלשה / דמי ניהול גבוהים (צבירה נמוכה ביחס לוותק)", async () => {
+    const file = makeExcel([
+      {
+        "תעודת זהות": "304444444",
+        "שם": "לקוח תשואה חלשה",
+        "גיל": 40,
+        "אימייל": "test@test.co.il",
+        "מוצר": "מגדל - חיסכון פרט",
+        "חברה": "מגדל",
+        "פרמיה": 0,
+        "צבירה": 50000, // 50K אחרי 10 שנים זה מעט מאוד
+        "תאריך הצטרפות": "01/01/2016", // 10 שנים
+        "סטטוס": "פעיל",
+      },
+    ]);
+    const result = await parseShorensReport(file);
+    expect(result.customers[0].status).toBe("תשואה חלשה");
+  });
+
+  it("מזהה תשואה חזקה (צבירה גבוהה ביחס לוותק)", async () => {
+    const file = makeExcel([
+      {
+        "תעודת זהות": "305555555",
+        "שם": "לקוח תשואה חזקה",
+        "גיל": 40,
+        "אימייל": "test@test.co.il",
+        "מוצר": "מגדל - חיסכון פרט",
+        "חברה": "מגדל",
+        "פרמיה": 0,
+        "צבירה": 200000, // 200K אחרי 4 שנים זה מצוין
+        "תאריך הצטרפות": "01/01/2022", // 4 שנים
+        "סטטוס": "פעיל",
+      },
+    ]);
+    const result = await parseShorensReport(file);
+    expect(result.customers[0].status).toBe("תשואה חזקה");
+  });
 });

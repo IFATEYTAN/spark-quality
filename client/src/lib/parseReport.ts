@@ -140,13 +140,26 @@ function classify(row: Record<string, any>): {
     };
   }
 
-  // 4. דמי ניהול גבוהים - צבירה משמעותית ללא הטבה (היוריסטיקה)
-  if (accumulation >= 500000 && status.includes("פעיל") && !status.includes("הנחה")) {
+  // 4. תשואה חלשה / דמי ניהול גבוהים (היוריסטיקה משולבת)
+  // זיהוי לקוחות עם צבירה גבוהה ללא הטבה, או קופות ותיקות עם צבירה נמוכה יחסית לוותק
+  const isLowYield = yearsActive >= 5 && accumulation < (yearsActive * 12000); // אומדן: פחות מ-1000 ש"ח הפקדה בחודש + תשואה
+  if ((accumulation >= 500000 && status.includes("פעיל") && !status.includes("הנחה")) || isLowYield) {
     return {
-      status: "דמי ניהול גבוהים",
+      status: "תשואה חלשה",
       priority: "בינונית",
-      flag: "צבירה גבוהה ללא הטבת דמי ניהול",
-      recommendation: "פגישת שימור - הוזלת דמי ניהול למניעת ניוד",
+      flag: "תשואת חסר / דמי ניהול גבוהים",
+      recommendation: "פגישת שימור - הוזלת דמי ניהול או ניוד למסלול רווחי",
+    };
+  }
+
+  // 5. תשואה חזקה (לקוח מרוצה)
+  const isHighYield = yearsActive >= 3 && accumulation > (yearsActive * 30000); // אומדן: צבירה גבוהה מאוד ביחס לוותק
+  if (isHighYield && accumulation < 1000000) { // לא VIP עדיין
+    return {
+      status: "תשואה חזקה",
+      priority: "נמוכה",
+      flag: "תשואה עודפת - לקוח מרוצה",
+      recommendation: "הזדמנות אאפסל - הצעת מוצרים נוספים (גמל להשקעה)",
     };
   }
 

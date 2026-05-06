@@ -34,12 +34,13 @@
 ### תשתית ובדיקות
 - [x] שדרוג ל-web-db-user (drizzle/schema.ts, drizzle/relations.ts)
 - [x] tRPC routers — workspaces/reports/clients
-- [x] vitest — 11 טסטים עוברים (auth, workspaces, parseReport, financial)
+- [x] vitest — 13 טסטים עוברים (auth, workspaces, parseReport, financial)
 
 ---
 
 ## 🔲 פתוח להמשך
 
-- [ ] זיהוי תשואות חלשות / חזקות לפי השוואה לבנצ'מרק (דורש חיבור API למסלקה / שורנס)
+- [x] זיהוי תשואות חלשות / חזקות (היוריסטיקה משולבת ב-parseReport)
+- [ ] זיהוי תשואות מדויק לפי השוואה לבנצ'מרק (דורש חיבור API למסלקה / שורנס)
 - [ ] בדיקה ויזואלית מקיפה של כל המסכים בתצוגות מובייל/דסקטופ עם screenshots מסודרים
 - [ ] אינטגרציית Stripe לתשלומים בפועל (לפי תוכניות ה-Pricing)
