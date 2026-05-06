@@ -21,6 +21,7 @@ import {
   UserCheck,
   Target,
 } from "lucide-react";
+import { InteractiveFlowchart, FLOWCHART_DATA } from "./InteractiveFlowchart";
 
 interface ScenarioStep {
   icon: any;
@@ -240,11 +241,22 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
             </div>
           </div>
 
-          {/* Flow diagram - 5 steps */}
+          {/* Interactive Flowchart - תרשים זרימה ויזואלי אינטראקטיבי */}
+          {FLOWCHART_DATA[scenario.id] && (
+            <div>
+              <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
+                <div className="h-px w-6 bg-gold" />
+                תרשים זרימה אינטראקטיבי
+              </h3>
+              <InteractiveFlowchart data={FLOWCHART_DATA[scenario.id]} minHeight={520} />
+            </div>
+          )}
+
+          {/* Compact step list - גיבוי טקסטואלי לסיכום */}
           <div>
             <h3 className="font-display text-base font-bold text-navy-deep mb-4 tracking-tight flex items-center gap-2">
               <div className="h-px w-6 bg-gold" />
-              זרימת התהליך האוטומטי
+              שלבי התהליך - סיכום
             </h3>
 
             {/* Desktop: horizontal flow with arrows */}
