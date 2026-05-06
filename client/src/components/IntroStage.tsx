@@ -76,7 +76,7 @@ export function IntroStage({ onContinue }: IntroStageProps) {
       </div>
 
       {/* Content - centered, max width for projector proportions */}
-      <div className="relative h-full w-full flex items-center justify-center px-8">
+      <div className="relative h-full w-full flex items-center justify-center px-8 py-16">
         <div className="w-full max-w-[1200px]">
           {/* PHASE 1: HOOK - the question */}
           {phase === "hook" && (
@@ -167,14 +167,14 @@ export function IntroStage({ onContinue }: IntroStageProps) {
           {phase === "promise" && (
             <div className="animate-fade-up">
               {/* Tagline only (Logo removed) */}
-              <div className="text-center mb-10">
-                <p className="font-display-light text-white/85 text-3xl">
+              <div className="text-center mb-6">
+                <p className="font-display-light text-white/85 text-2xl lg:text-3xl">
                   הקסם של ה-AI. <span className="text-gold font-semibold">בעוצמה של הסוכן.</span>
                 </p>
               </div>
 
               {/* Three promises */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto mb-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto mb-6">
                 {[
                   {
                     icon: Zap,
@@ -194,16 +194,16 @@ export function IntroStage({ onContinue }: IntroStageProps) {
                 ].map((item, i) => (
                   <div
                     key={i}
-                    className="rounded-md border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent backdrop-blur-md p-6 text-right animate-fade-up"
+                    className="rounded-md border border-gold/30 bg-gradient-to-br from-gold/10 to-transparent backdrop-blur-md p-5 text-right animate-fade-up"
                     style={{ animationDelay: `${0.2 * (i + 1)}s` }}
                   >
-                    <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-md bg-gold/20 text-gold">
+                    <div className="mb-2 inline-flex h-10 w-10 items-center justify-center rounded-md bg-gold/20 text-gold">
                       <item.icon className="h-5 w-5" strokeWidth={1.5} />
                     </div>
-                    <h3 className="font-display font-black text-2xl text-[#F4D87C] mb-1 tracking-tight">
+                    <h3 className="font-display font-black text-xl lg:text-2xl text-[#F4D87C] mb-1 tracking-tight">
                       {item.title}
                     </h3>
-                    <p className="text-sm text-white/80 leading-relaxed">{item.desc}</p>
+                    <p className="text-xs lg:text-sm text-white/80 leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
@@ -212,12 +212,12 @@ export function IntroStage({ onContinue }: IntroStageProps) {
               <div className="text-center">
                 <button
                   onClick={onContinue}
-                  className="group inline-flex items-center gap-3 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-10 py-5 font-display font-bold text-navy-deep text-lg tracking-tight shadow-2xl shadow-gold/30 transition-all hover:scale-105 hover:shadow-gold/50"
+                  className="group inline-flex items-center gap-3 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-8 py-4 font-display font-bold text-navy-deep text-base lg:text-lg tracking-tight shadow-2xl shadow-gold/30 transition-all hover:scale-105 hover:shadow-gold/50"
                 >
                   בואו נראה את זה בפעולה
                   <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-1" />
                 </button>
-                <p className="mt-4 label-tag text-white/50 text-[10px]">
+                <p className="mt-3 label-tag text-white/50 text-[10px]">
                   לחצו כדי להתחיל את הדמו · משך הדמו 4 דקות
                 </p>
               </div>

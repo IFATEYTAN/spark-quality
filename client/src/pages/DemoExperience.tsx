@@ -131,7 +131,7 @@ export default function DemoExperience() {
     <div className="h-screen flex flex-col overflow-hidden bg-navy-deep">
       {!cleanMode && <Header stage={STAGE_LABELS[stage]} onReset={reset} />}
 
-      <main className="flex-1 overflow-hidden relative">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
         {stage === "intro" && (
           <IntroStage onContinue={() => setStage("upload")} />
         )}
