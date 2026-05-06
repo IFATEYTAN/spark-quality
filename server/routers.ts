@@ -6,6 +6,7 @@ import * as db from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
+import { adminRouter } from "./adminRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 /**
@@ -64,6 +65,18 @@ export const appRouter = router({
         const title = `✨ בקשת פגישה חדשה — ${input.name}`;
         const content = `מילוא טופס צור קשר בדמו של SPARK Quality:\n\nשם: ${input.name}\nמייל: ${input.email}\n${phoneLine}${sourceLine}\n---\n${input.message}`;
         const delivered = await notifyOwner({ title, content });
+        try {
+          await db.createContactSubmission({
+            name: input.name,
+            email: input.email,
+            phone: input.phone || null,
+            message: input.message,
+            source: input.source || "SPARK Quality Demo",
+            notified: !!delivered,
+          });
+        } catch (err) {
+          console.error("[contact.send] failed to persist submission", err);
+        }
         return { ok: true, delivered } as const;
       }),
   }),
@@ -316,6 +329,8 @@ export const appRouter = router({
         return { id: reportId, importedCount };
       }),
   }),
+
+  admin: adminRouter,
 });
 
 export type AppRouter = typeof appRouter;

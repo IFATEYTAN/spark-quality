@@ -43,3 +43,23 @@ export const adminProcedure = t.procedure.use(
     });
   }),
 );
+
+/**
+ * Super-admin procedure for SPARK AI staff (cross-workspace).
+ * Gated by the `isSuperAdmin` boolean on the user record.
+ */
+export const superAdminProcedure = t.procedure.use(
+  t.middleware(async opts => {
+    const { ctx, next } = opts;
+    if (!ctx.user) {
+      throw new TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+    }
+    if (!ctx.user.isSuperAdmin) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "אזור זה מיועד ל-Super-Admin של SPARK AI בלבד.",
+      });
+    }
+    return next({ ctx: { ...ctx, user: ctx.user } });
+  }),
+);

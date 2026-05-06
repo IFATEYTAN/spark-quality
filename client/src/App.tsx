@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import AdminPanel from "./pages/AdminPanel";
 import Clients from "./pages/Clients";
 import Dashboard from "./pages/Dashboard";
 import DemoExperience from "./pages/DemoExperience";
@@ -25,6 +26,7 @@ function Router() {
       <Route path={"/team"} component={Team} />
       <Route path={"/upload"} component={UploadReport} />
       <Route path={"/clients"} component={Clients} />
+      <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/pricing"} component={Pricing} />
       <Route path={"/legal/terms"}>{() => <Legal kind="terms" />}</Route>
       <Route path={"/legal/privacy"}>{() => <Legal kind="privacy" />}</Route>

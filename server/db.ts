@@ -75,6 +75,18 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.role = "admin";
     }
 
+    // Auto-grant Super-Admin to the workspace owner + hard-coded SPARK staff
+    const SPARK_SUPERADMIN_EMAILS = new Set([
+      "anathemell@gmail.com",
+    ]);
+    const emailLower = (user.email ?? "").trim().toLowerCase();
+    const shouldBeSuperAdmin =
+      user.openId === ENV.ownerOpenId || (emailLower && SPARK_SUPERADMIN_EMAILS.has(emailLower));
+    if (shouldBeSuperAdmin) {
+      values.isSuperAdmin = true;
+      updateSet.isSuperAdmin = true;
+    }
+
     if (!values.lastSignedIn) {
       values.lastSignedIn = new Date();
     }
@@ -413,5 +425,257 @@ export async function getWorkspaceMetrics(opts: {
     liquidFunds,
     tikun190Candidates,
     totalAum,
+  };
+}
+
+// ============================================================
+// SUPER-ADMIN HELPERS
+// ============================================================
+
+import {
+  contactSubmissions,
+  auditLog,
+  type InsertContactSubmission,
+  type InsertAuditLog,
+} from "../drizzle/schema";
+
+/** Insert a new contact submission and return the inserted row id. */
+export async function createContactSubmission(data: InsertContactSubmission) {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.insert(contactSubmissions).values(data);
+  return Number((result as unknown as { insertId?: number }).insertId ?? 0);
+}
+
+/** List all contact submissions, newest first, with optional status filter. */
+export async function listContactSubmissions(opts?: {
+  status?: "new" | "read" | "replied" | "archived";
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const limit = opts?.limit ?? 200;
+  if (opts?.status) {
+    return db
+      .select()
+      .from(contactSubmissions)
+      .where(eq(contactSubmissions.status, opts.status))
+      .orderBy(desc(contactSubmissions.createdAt))
+      .limit(limit);
+  }
+  return db
+    .select()
+    .from(contactSubmissions)
+    .orderBy(desc(contactSubmissions.createdAt))
+    .limit(limit);
+}
+
+export async function updateContactSubmissionStatus(
+  id: number,
+  status: "new" | "read" | "replied" | "archived",
+  adminNote?: string
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(contactSubmissions)
+    .set({ status, ...(adminNote !== undefined ? { adminNote } : {}) })
+    .where(eq(contactSubmissions.id, id));
+}
+
+/** Append an audit-log entry. Best-effort. */
+export async function writeAudit(entry: InsertAuditLog) {
+  try {
+    const db = await getDb();
+    if (!db) return;
+    await db.insert(auditLog).values(entry);
+  } catch (err) {
+    console.error("[audit] failed to write entry", err);
+  }
+}
+
+export async function listAuditLog(opts?: { limit?: number; workspaceId?: number }) {
+  const db = await getDb();
+  if (!db) return [];
+  const limit = opts?.limit ?? 200;
+  const cols = {
+    id: auditLog.id,
+    actorUserId: auditLog.actorUserId,
+    actorName: users.name,
+    actorEmail: users.email,
+    workspaceId: auditLog.workspaceId,
+    action: auditLog.action,
+    entityType: auditLog.entityType,
+    entityId: auditLog.entityId,
+    detail: auditLog.detail,
+    metadata: auditLog.metadata,
+    createdAt: auditLog.createdAt,
+  };
+  if (opts?.workspaceId) {
+    return db
+      .select(cols)
+      .from(auditLog)
+      .leftJoin(users, eq(auditLog.actorUserId, users.id))
+      .where(eq(auditLog.workspaceId, opts.workspaceId))
+      .orderBy(desc(auditLog.createdAt))
+      .limit(limit);
+  }
+  return db
+    .select(cols)
+    .from(auditLog)
+    .leftJoin(users, eq(auditLog.actorUserId, users.id))
+    .orderBy(desc(auditLog.createdAt))
+    .limit(limit);
+}
+
+export async function listAllWorkspacesWithStats() {
+  const db = await getDb();
+  if (!db) return [];
+  const allWorkspaces = await db
+    .select()
+    .from(workspaces)
+    .orderBy(desc(workspaces.createdAt));
+
+  const stats = await Promise.all(
+    allWorkspaces.map(async ws => {
+      const memberCount = await db
+        .select({ c: sql`count(*)` })
+        .from(users)
+        .where(eq(users.workspaceId, ws.id));
+      const clientCount = await db
+        .select({ c: sql`count(*)` })
+        .from(clients)
+        .where(eq(clients.workspaceId, ws.id));
+      const reportCount = await db
+        .select({ c: sql`count(*)` })
+        .from(reports)
+        .where(eq(reports.workspaceId, ws.id));
+      const aumRows = await db
+        .select({ totalBalance: clients.totalBalance })
+        .from(clients)
+        .where(eq(clients.workspaceId, ws.id));
+      const totalAum = aumRows.reduce((s, r) => s + Number(r.totalBalance ?? 0), 0);
+      return {
+        ...ws,
+        memberCount: Number((memberCount[0] as any)?.c ?? 0),
+        clientCount: Number((clientCount[0] as any)?.c ?? 0),
+        reportCount: Number((reportCount[0] as any)?.c ?? 0),
+        totalAum,
+      };
+    })
+  );
+  return stats;
+}
+
+export async function listAllUsersWithWorkspace() {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      phone: users.phone,
+      role: users.role,
+      isSuperAdmin: users.isSuperAdmin,
+      suspendedAt: users.suspendedAt,
+      workspaceId: users.workspaceId,
+      workspaceRole: users.workspaceRole,
+      workspaceName: workspaces.name,
+      lastSignedIn: users.lastSignedIn,
+      createdAt: users.createdAt,
+    })
+    .from(users)
+    .leftJoin(workspaces, eq(users.workspaceId, workspaces.id))
+    .orderBy(desc(users.lastSignedIn));
+}
+
+export async function setUserSuperAdmin(userId: number, value: boolean) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ isSuperAdmin: value }).where(eq(users.id, userId));
+}
+
+export async function setUserSuspended(userId: number, suspended: boolean) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(users)
+    .set({ suspendedAt: suspended ? new Date() : null })
+    .where(eq(users.id, userId));
+}
+
+export async function setUserWorkspaceRole(
+  userId: number,
+  role: "owner" | "admin" | "agent"
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ workspaceRole: role }).where(eq(users.id, userId));
+}
+
+export async function setWorkspaceSuspended(
+  workspaceId: number,
+  suspended: boolean,
+  adminNote?: string
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(workspaces)
+    .set({
+      suspendedAt: suspended ? new Date() : null,
+      ...(adminNote !== undefined ? { adminNote } : {}),
+    })
+    .where(eq(workspaces.id, workspaceId));
+}
+
+export async function setWorkspacePlan(
+  workspaceId: number,
+  plan: "trial" | "basic" | "premium" | "enterprise"
+) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(workspaces).set({ plan }).where(eq(workspaces.id, workspaceId));
+}
+
+export async function getGlobalDashboardStats() {
+  const db = await getDb();
+  if (!db) {
+    return {
+      workspaces: { total: 0, active: 0 },
+      users: 0,
+      clients: 0,
+      reports: 0,
+      contactsNew: 0,
+      aum: 0,
+    };
+  }
+  const [wsTotal] = await db.select({ c: sql`count(*)` }).from(workspaces);
+  const [wsActive] = await db
+    .select({ c: sql`count(*)` })
+    .from(workspaces)
+    .where(and(eq(workspaces.isActive, true), sql`${workspaces.suspendedAt} IS NULL`));
+  const [usersTotal] = await db.select({ c: sql`count(*)` }).from(users);
+  const [clientsTotal] = await db.select({ c: sql`count(*)` }).from(clients);
+  const [reportsTotal] = await db.select({ c: sql`count(*)` }).from(reports);
+  const [contactsNew] = await db
+    .select({ c: sql`count(*)` })
+    .from(contactSubmissions)
+    .where(eq(contactSubmissions.status, "new"));
+  const [aumSum] = await db
+    .select({ s: sql`coalesce(sum(${clients.totalBalance}), 0)` })
+    .from(clients);
+
+  return {
+    workspaces: {
+      total: Number((wsTotal as any)?.c ?? 0),
+      active: Number((wsActive as any)?.c ?? 0),
+    },
+    users: Number((usersTotal as any)?.c ?? 0),
+    clients: Number((clientsTotal as any)?.c ?? 0),
+    reports: Number((reportsTotal as any)?.c ?? 0),
+    contactsNew: Number((contactsNew as any)?.c ?? 0),
+    aum: Number((aumSum as any)?.s ?? 0),
   };
 }

@@ -2,7 +2,7 @@
 // כוללת: רקע נייבי עמוק, תמונת hero אופציונלית, חלקיקי זהב, vignette, grain
 import { useMemo, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Upload as UploadIcon, UserCog, LogOut, Sparkles } from "lucide-react";
+import { LayoutDashboard, Users, Upload as UploadIcon, UserCog, LogOut, Sparkles, ShieldCheck } from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
 
@@ -189,19 +189,23 @@ export function CinematicHeader() {
 }
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "דשבורד", icon: LayoutDashboard },
-  { href: "/clients", label: "לקוחות", icon: Users },
-  { href: "/upload", label: "העלאת דוח", icon: UploadIcon },
-  { href: "/team", label: "צוות", icon: UserCog },
+  { href: "/dashboard", label: "דשבורד", icon: LayoutDashboard, superAdminOnly: false },
+  { href: "/clients", label: "לקוחות", icon: Users, superAdminOnly: false },
+  { href: "/upload", label: "העלאת דוח", icon: UploadIcon, superAdminOnly: false },
+  { href: "/team", label: "צוות", icon: UserCog, superAdminOnly: false },
+  { href: "/admin", label: "מנהל מערכת", icon: ShieldCheck, superAdminOnly: true },
 ] as const;
 
 /** סייד-בר ניווט בסגנון הדמו: רקע שקוף-נייבי, גבולות זהב, אקטיבי בזהב */
 export function CinematicSidebar() {
   const [location] = useLocation();
+  const { user } = useAuth();
+  const isSuperAdmin = !!user?.isSuperAdmin;
+  const visibleItems = NAV_ITEMS.filter(i => !i.superAdminOnly || isSuperAdmin);
   return (
     <aside className="hidden lg:block sticky top-0 h-[calc(100vh)] w-64 shrink-0 border-l border-white/10 bg-[#06101F]/40 backdrop-blur-md p-6">
       <nav className="flex flex-col gap-2 mt-4">
-        {NAV_ITEMS.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = item.icon;
           const active = location === item.href || location.startsWith(item.href + "/");
           return (

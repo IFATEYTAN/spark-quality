@@ -48,6 +48,10 @@ export const workspaces = mysqlTable("workspaces", {
   subscriptionEndsAt: timestamp("subscriptionEndsAt"),
   /** Soft delete */
   isActive: boolean("isActive").default(true).notNull(),
+  /** When set, the workspace is suspended (super-admin action). */
+  suspendedAt: timestamp("suspendedAt"),
+  /** Free-form note from super-admin (e.g. reason for suspension). */
+  adminNote: text("adminNote"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -75,6 +79,10 @@ export const users = mysqlTable(
      * Most users will be "user" here; their *workspace* role is in workspaceRole.
      */
     role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+    /** Cross-workspace super-admin (SPARK AI staff). Bypasses all workspace scoping. */
+    isSuperAdmin: boolean("isSuperAdmin").default(false).notNull(),
+    /** When set, user cannot login (set by super-admin). */
+    suspendedAt: timestamp("suspendedAt"),
     /**
      * Role inside the workspace:
      * - owner: created the workspace, full control + billing
@@ -300,3 +308,63 @@ export const actionItems = mysqlTable(
 
 export type ActionItem = typeof actionItems.$inferSelect;
 export type InsertActionItem = typeof actionItems.$inferInsert;
+// ============================================================
+// CONTACT SUBMISSIONS - פניות מטופס צור קשר ב- Landing
+// ============================================================
+export const contactSubmissions = mysqlTable(
+  "contact_submissions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    name: varchar("name", { length: 200 }).notNull(),
+    email: varchar("email", { length: 320 }).notNull(),
+    phone: varchar("phone", { length: 40 }),
+    message: text("message").notNull(),
+    /** Where the submission came from (e.g. "SPARK Quality Demo · ContactModal") */
+    source: varchar("source", { length: 120 }),
+    /** new | read | replied | archived */
+    status: mysqlEnum("status", ["new", "read", "replied", "archived"]).default("new").notNull(),
+    /** Whether notifyOwner reported successful delivery */
+    notified: boolean("notified").default(false).notNull(),
+    /** Optional internal note added by an admin while triaging */
+    adminNote: text("adminNote"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    statusIdx: index("contact_status_idx").on(table.status),
+    createdIdx: index("contact_created_idx").on(table.createdAt),
+  })
+);
+export type ContactSubmission = typeof contactSubmissions.$inferSelect;
+export type InsertContactSubmission = typeof contactSubmissions.$inferInsert;
+// ============================================================
+// AUDIT LOG - תיעוד פעולות super-admin / אדמין סוכנות
+// ============================================================
+export const auditLog = mysqlTable(
+  "audit_log",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** User who performed the action (NULL for system events) */
+    actorUserId: int("actorUserId").references(() => users.id),
+    /** Workspace context (NULL for super-admin / cross-tenant actions) */
+    workspaceId: int("workspaceId").references(() => workspaces.id),
+    /** Short machine-readable action key (e.g. "workspace.suspend", "user.role.change") */
+    action: varchar("action", { length: 100 }).notNull(),
+    /** Affected entity type, e.g. "workspace" | "user" | "contact_submission" */
+    entityType: varchar("entityType", { length: 50 }),
+    entityId: int("entityId"),
+    /** Optional human-readable detail in Hebrew */
+    detail: text("detail"),
+    /** Free-form metadata (before/after values, etc.) */
+    metadata: json("metadata"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    actorIdx: index("audit_actor_idx").on(table.actorUserId),
+    workspaceIdx: index("audit_workspace_idx").on(table.workspaceId),
+    actionIdx: index("audit_action_idx").on(table.action),
+    createdIdx: index("audit_created_idx").on(table.createdAt),
+  })
+);
+export type AuditLog = typeof auditLog.$inferSelect;
+export type InsertAuditLog = typeof auditLog.$inferInsert;
