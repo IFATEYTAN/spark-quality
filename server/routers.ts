@@ -5,9 +5,19 @@ import { z } from "zod";
 import * as db from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
+import { sendEmail } from "./email";
 import { systemRouter } from "./_core/systemRouter";
 import { adminRouter } from "./adminRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 /**
  * workspaceProcedure: Ensures the current user belongs to a workspace.
@@ -65,6 +75,28 @@ export const appRouter = router({
         const title = `✨ בקשת פגישה חדשה — ${input.name}`;
         const content = `מילוא טופס צור קשר בדמו של SPARK Quality:\n\nשם: ${input.name}\nמייל: ${input.email}\n${phoneLine}${sourceLine}\n---\n${input.message}`;
         const delivered = await notifyOwner({ title, content });
+
+        // Real email to Anat via Resend (best-effort, do not block on failure).
+        const html = `<div dir="rtl" style="font-family:Heebo,Arial,sans-serif;line-height:1.7;color:#1f2233">
+          <h2 style="margin:0 0 12px 0;color:#1f2233">✨ בקשת פגישה חדשה — SPARK Quality</h2>
+          <p><strong>שם:</strong> ${escapeHtml(input.name)}</p>
+          <p><strong>מייל:</strong> <a href="mailto:${encodeURIComponent(input.email)}">${escapeHtml(input.email)}</a></p>
+          ${input.phone ? `<p><strong>טלפון:</strong> ${escapeHtml(input.phone)}</p>` : ""}
+          ${input.source ? `<p><strong>מקור:</strong> ${escapeHtml(input.source)}</p>` : ""}
+          <hr style="border:none;border-top:1px solid #c8a96a33;margin:16px 0"/>
+          <p style="white-space:pre-wrap">${escapeHtml(input.message)}</p>
+          <p style="margin-top:24px;font-size:12px;color:#6b6f80">נשלח אוטומטית מ-SPARK Quality Demo</p>
+        </div>`;
+        const emailResult = await sendEmail({
+          to: "anathemell@gmail.com",
+          subject: title,
+          html,
+          replyTo: input.email,
+        });
+        if (!emailResult.ok) {
+          console.warn("[contact.send] Resend failed:", emailResult.error);
+        }
+
         try {
           await db.createContactSubmission({
             name: input.name,
@@ -77,7 +109,7 @@ export const appRouter = router({
         } catch (err) {
           console.error("[contact.send] failed to persist submission", err);
         }
-        return { ok: true, delivered } as const;
+        return { ok: true, delivered, emailed: emailResult.ok } as const;
       }),
   }),
 

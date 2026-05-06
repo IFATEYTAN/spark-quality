@@ -207,9 +207,28 @@
 - [x] vitest 13/13 + checkpoint 7b92e1b9 + push GitHub (מתבצע אוטומטי דרך ה-checkpoint)
 
 
-## Round 23 - טופס צור קשר אמיתי (2026-05-06)
-- [ ] tRPC procedure `contact.send` שמקבלת name/email/phone/message ושולחת notifyOwner + מייל לענת
-- [ ] ContactModal - להחליף mailto ב-trpc.contact.send.useMutation עם success/error states
-- [ ] להסיר את קישור LinkedIn הלא-מאומת זמנית
-- [ ] vitest לכיסוי contact.send (input validation, success path)
+## Round 23 - טופס צור קשר אמיתי + אימות מפתח Claude (2026-05-06)
+- [x] tRPC procedure `contact.send` — מקבל שם/מייל/טלפון/הודעה → notifyOwner + שמירה ל-DB (contactSubmissions)
+- [x] ContactModal — trpc.contact.send.useMutation עם toast success/error
+- [x] LinkedIn הוסר מה-ContactModal עד לאישור URL
+- [x] vitest contact.send (4 בדיקות — validation + happy path)
+- [x] ANTHROPIC_API_KEY אומת live מול Anthropic API (claude-haiku-4-5) — smoke test עובר
+
+## Round 24 - Super-Admin Panel מלא (2026-05-06)
+- [x] Schema: הוסף `isSuperAdmin` + `suspendedAt` ל-users, `suspendedAt` ל-workspaces, טבלאות חדשות: contactSubmissions + auditLog
+- [x] Backend: superAdminProcedure middleware (server/_core/trpc.ts) הבודק isSuperAdmin
+- [x] adminRouter.ts (220+ שורות): dashboard, listWorkspaces/Users/Contacts/Audit, setUserSuperAdmin, setUserSuspended, setUserWorkspaceRole, setWorkspaceSuspended/Plan, updateContactStatus — כל פעולה משתמשת ב-writeAudit
+- [x] DB helpers: 13 פונקציות חדשות ב- server/db.ts (cross-workspace queries)
+- [x] Auto-bootstrap הרשאות Super-Admin ל-OWNER_OPEN_ID + אימייל anathemell@gmail.com (בתוך upsertUser)
+- [x] Frontend: עמוד /admin (350+ שורות) עם 4 לשוניות (Dashboard ל-stats גלובליים, Workspaces עם השעיה/תכנית, Users עם Super-Admin/תפקיד/השעיה, Contacts עם Inbox + שינוי סטטוס, Audit Log)
+- [x] Sidebar (CinematicShell): קישור "מנהל מערכת" מוצג רק ל-super-admins
+- [x] vitest 26/26 (7 בדיקות חדשות ל-admin: gating + flows)
+- [x] checkpoint 28cc692f + push ל-IFATEYTAN/spark-quality (commit 28cc692)
+
+
+## Round 25 - שליחת מייל אמיתית לענת דרך Resend (2026-05-06)
+- [ ] לבקש RESEND_API_KEY במאובטח + לאמת מול Resend API
+- [ ] server/email.ts — wrapper דק ל-Resend (sendEmail מ-noreply@ ל-anathemell@gmail.com)
+- [ ] חיבור contact.send לשליחה לענת בנוסף ל-notifyOwner; בלי לחסום אם Resend נכשל
+- [ ] vitest שמוודא ש-contact.send מפעיל את שליחת המייל לענת (mock Resend)
 - [ ] checkpoint + push GitHub
