@@ -8,6 +8,7 @@ import Clients from "./pages/Clients";
 import Dashboard from "./pages/Dashboard";
 import DemoExperience from "./pages/DemoExperience";
 import Home from "./pages/Home";
+import Legal from "./pages/Legal";
 import Onboarding from "./pages/Onboarding";
 import Pricing from "./pages/Pricing";
 import Team from "./pages/Team";
@@ -25,6 +26,9 @@ function Router() {
       <Route path={"/upload"} component={UploadReport} />
       <Route path={"/clients"} component={Clients} />
       <Route path={"/pricing"} component={Pricing} />
+      <Route path={"/legal/terms"}>{() => <Legal kind="terms" />}</Route>
+      <Route path={"/legal/privacy"}>{() => <Legal kind="privacy" />}</Route>
+      <Route path={"/legal/accessibility"}>{() => <Legal kind="accessibility" />}</Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

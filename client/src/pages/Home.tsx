@@ -478,6 +478,15 @@ export default function Home() {
               <span className="text-white/80">ענת גרינברג</span>
             </div>
           </div>
+          <div className="mt-5 pt-5 border-t border-white/10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-white/55">
+            <a href="/legal/terms" className="hover:text-gold transition-colors">תנאי שימוש</a>
+            <span className="text-white/20">·</span>
+            <a href="/legal/privacy" className="hover:text-gold transition-colors">מדיניות פרטיות</a>
+            <span className="text-white/20">·</span>
+            <a href="/legal/accessibility" className="hover:text-gold transition-colors">הצהרת נגישות</a>
+            <span className="text-white/20">·</span>
+            <a href="/pricing" className="hover:text-gold transition-colors">תמחור</a>
+          </div>
         </div>
       </footer>
     </div>

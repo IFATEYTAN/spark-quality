@@ -292,3 +292,21 @@
   animation: splash-zoom 6s ease-out forwards;
   transform-origin: center 65%;
 }
+
+
+/* Fairy mascot — slow gentle hover */
+@keyframes fairy-float {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-12px) rotate(1deg); }
+}
+.animate-fairy-float {
+  animation: fairy-float 4.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+/* Fairy dust particles */
+@keyframes fairy-dust {
+  0% { opacity: 0; transform: translate(0,0) scale(0.4); }
+  20% { opacity: 1; transform: translate(-6px,-8px) scale(1); }
+  100% { opacity: 0; transform: translate(-40px,40px) scale(0.2); }
+}

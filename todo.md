@@ -110,3 +110,36 @@
 - [x] להמיר את PRESENTATION_GUIDE לפורמט הדפסה (PDF)
 - [x] ליצור Repository פרטי חדש ב-GitHub עבור הפרויקט (IFATEYTAN/spark-quality, פרטי)
 - [x] לאתחל git, לדחוף את כל הקוד ל-Repository (כולל המסמכים)
+
+
+## 🚨 Round 14 - בעיות דחופות מהמובייל (2026-05-06)
+- [x] לתקן לולאת ניתוב/ריצוד בין עמודים במובייל (תוקן: useAuth localStorage הוצא מ-useMemo)
+- [x] לאתר היכן שהכותרת בדפדפן עדיין מציגה "קוואליטי" (תוקן ב-client/index.html)
+- [x] ליצור תמונת רקע חדשה: ספר קסמים ריאליסטי, הייטקיסטי
+- [x] להגדיר את התמונה כרקע קבוע של מסך הבית הראשי
+- [x] לתקן ניגודיות של "SPARK Quality" ו"מבית SPARK AI" + שמות צוות
+- [x] להבטיח רספונסיביות מלאה במובייל
+- [x] לאמת בדפדפן
+- [ ] לוודא שהמשתמשת לוחצת Publish כדי לראות את השינויים
+
+
+## 🪄 Round 15 - Onboarding מלא + פיה אשפית (2026-05-06)
+- [x] לתקן באג: createWorkspace mutation - שילוב refetch + window.location.assign('/dashboard')
+- [x] להוסיף ל-Onboarding: צ'קבוקס תנאי שימוש (חובה)
+- [x] להוסיף ל-Onboarding: צ'קבוקס הצהרת נגישות
+- [x] להוסיף ל-Onboarding: צ'קבוקס חוק הגנת הפרטיות סעיף 13
+- [x] לכתוב דפי /legal/terms, /legal/privacy, /legal/accessibility (הושלם ב-Round 16)
+- [x] לקבל מהמשתמשת את התמונה של הפיה
+- [x] אנימציות CSS לפיה (fairy-float + sparkle-drift) במקום Lottie - קל יותר ומספיק
+- [x] לשלב את הפיה כ-Wizard באונבורדינג
+- [x] בדיקה במובייל + דסקטופ + שמירת checkpoint + push ל-GitHub
+
+## 📜 Round 16 - השלמת ציות חוקי + פוטר משפטי (2026-05-06)
+- [x] יצירת `client/src/pages/Legal.tsx` - דפי תנאי שימוש, פרטיות (סעיף 13), הצהרת נגישות (תקנות שוויון זכויות), בעברית RTL ובעיצוב CinematicShell
+- [x] רישום routes: /legal/terms, /legal/privacy, /legal/accessibility ב-App.tsx
+- [x] הוספת קישורים משפטיים + תמחור ב-footer של Home.tsx (hover-gold)
+- [x] אימות שזרימת ה-Onboarding מנווטת לדשבורד (window.location.assign + refetch)
+- [x] FairyMascot ניתן לטעינה מ-/manus-storage/spark-fairy-clean_*.png
+- [x] כל 13 vitest tests עוברים
+- [x] LSP/TypeScript ללא שגיאות
+- [x] שמירת checkpoint + push ל-GitHub
