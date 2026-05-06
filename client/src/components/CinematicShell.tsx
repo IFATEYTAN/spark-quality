@@ -147,8 +147,17 @@ export function CinematicHeader() {
             />
           </Link>
 
-          {/* Left - user state */}
-          <div className="flex items-center gap-4">
+          {/* Left - user state + cinematic demo link */}
+          <div className="flex items-center gap-3">
+            {/* קישור דמו - תמיד מוצג */}
+            <Link
+              href="/demo"
+              className="group flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold transition-all hover:bg-gold/20 hover:border-gold/70 hover:scale-[1.03]"
+              aria-label="צפייה בדמו האינטראקטיבי"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <span className="tracking-wider">דמו הדרכה</span>
+            </Link>
             {isAuthenticated && user ? (
               <>
                 <div className="hidden md:flex flex-col items-end leading-tight">
@@ -168,14 +177,7 @@ export function CinematicHeader() {
                   יציאה
                 </button>
               </>
-            ) : (
-              <div className="flex items-center gap-2 rounded-full bg-gold/10 px-3 py-1.5 border border-gold/20">
-                <Sparkles className="h-3 w-3 text-gold" />
-                <span className="text-[10px] tracking-[0.3em] uppercase text-gold-soft">
-                  SPARK AI
-                </span>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
