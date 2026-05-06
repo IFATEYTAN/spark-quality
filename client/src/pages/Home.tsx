@@ -114,6 +114,12 @@ export default function Home() {
                 <Play className="h-3.5 w-3.5" />
                 צפייה בדמו
               </Link>
+              <Link
+                href="/pricing"
+                className="hidden sm:block px-3 py-2 text-sm text-white/80 hover:text-gold transition-colors"
+              >
+                תמחור
+              </Link>
               <a
                 href={loginHref}
                 className="flex items-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-4 py-2 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30 transition-all hover:scale-105"

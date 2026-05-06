@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import DemoExperience from "./pages/DemoExperience";
 import Home from "./pages/Home";
 import Onboarding from "./pages/Onboarding";
+import Pricing from "./pages/Pricing";
 import Team from "./pages/Team";
 import UploadReport from "./pages/UploadReport";
 
@@ -23,6 +24,7 @@ function Router() {
       <Route path={"/team"} component={Team} />
       <Route path={"/upload"} component={UploadReport} />
       <Route path={"/clients"} component={Clients} />
+      <Route path={"/pricing"} component={Pricing} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
