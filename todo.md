@@ -246,13 +246,13 @@
 - [x] checkpoint f56d944a + push ל-IFATEYTAN/spark-quality (commit f56d944) | 30/30 vitest עוברים
 
 ## Round 28 - Action Center במערכת האמיתית אחרי ייבוא (2026-05-07)
-- [ ] להוסיף ל-/upload מסך תוצאה מורחב אחרי העלאה (כמה לקוחות זוהו, כמה דגלים, לאיזו קטגוריות יש לפעול, CTA לדשבורד)
-- [ ] להוסיף ל-Dashboard סקציה "Action Center" שמציגה 6 כרטיסי קטגוריה עם מספר הלקוחות המתויגים ותיאור הצעד הבא
-- [ ] כל כרטיס פותח את CategoryScenarioModal (זהה לדמו)
-- [ ] CTA ראשי "הפעל את האוטומציה הראשונה" מצביע על הקטגוריה החזקה ביותר
-- [ ] מקומות דומים מהדמו (התקדמות בדהלו → SummaryStage) משוקעים גם בדף ה-/upload הרגיל
-- [ ] vitest ל-financial.metrics ממשיך להחזיר את המספרים לכל קטגוריה — לתקף את התצוגה בהתאם לשינוי ה-merge
-- [ ] checkpoint + push GitHub
+- [x] להוסיף ל-/upload מסך תוצאה מורחב אחרי העלאה (ActionCenter בתחתית מצב done עם 6 קטגוריות, ספירה מקומית מ-parsed.customers)
+- [x] להוסיף ל-Dashboard סקציה "Action Center" שמציגה 6 כרטיסי קטגוריה עם מספר הלקוחות המתויגים ותיאור הצעד הבא
+- [x] כל כרטיס פותח את CategoryScenarioModal (זהה לדמו)
+- [x] CTA ראשי "הפעל את האוטומציה הראשונה" מצביע על הקטגוריה החזקה ביותר (top-ranked count > 0)
+- [x] מקומות דומים מהדמו (התקדמות בדמו → SummaryStage) משוקעים גם בדף ה-/upload הרגיל
+- [x] vitest ל-financial.metrics ממשיך להחזיר את המספרים לכל קטגוריה — נוסף test "metrics shape includes all 6 ActionCenter categories" (31/31 passing)
+- [x] checkpoint + push GitHub
 
 
 ## Round 28 - מרכז פעולות (Action Center) פוסט-העלאה (2026-05-07)

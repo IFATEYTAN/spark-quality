@@ -213,6 +213,13 @@ export default function UploadReport() {
                 העלאת דוח נוסף
               </Button>
               <Button
+                variant="outline"
+                onClick={() => navigate("/dashboard")}
+                className="border-gold/40 bg-transparent text-gold hover:bg-gold/10"
+              >
+                דשבורד
+              </Button>
+              <Button
                 onClick={() => navigate("/clients")}
                 className="bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] hover:shadow-lg hover:shadow-gold/30 flex-1 font-bold"
               >

@@ -70,10 +70,33 @@ describe("financial procedures", () => {
       vipClients: expect.any(Number),
       liquidFunds: expect.any(Number),
       tikun190Candidates: expect.any(Number),
+      highFees: expect.any(Number),
+      riskEnding: expect.any(Number),
+      coverageGaps: expect.any(Number),
       totalAum: expect.any(Number),
     });
     // For a non-existent workspace, all counters should be zero.
     expect(metrics.vipClients).toBe(0);
     expect(metrics.totalClients).toBe(0);
+    expect(metrics.highFees).toBe(0);
+    expect(metrics.riskEnding).toBe(0);
+    expect(metrics.coverageGaps).toBe(0);
+  });
+
+  it("metrics shape includes all 6 ActionCenter categories", async () => {
+    const ctx = makeCtx({ workspaceId: 999, workspaceRole: "owner" });
+    const caller = appRouter.createCaller(ctx);
+    const metrics = await caller.workspaces.metrics();
+    // Every category surfaced on Dashboard ActionCenter must exist on the metrics payload
+    expect(Object.keys(metrics)).toEqual(
+      expect.arrayContaining([
+        "vipClients",
+        "liquidFunds",
+        "tikun190Candidates",
+        "highFees",
+        "riskEnding",
+        "coverageGaps",
+      ])
+    );
   });
 });
