@@ -276,6 +276,9 @@ export async function bulkUpsertClients(opts: {
     email?: string | null;
     phone?: string | null;
     notes?: string | null;
+    flagStatus?: "vip" | "liquid_fund" | "tikun_190" | "high_fees" | "risk_ending" | "coverage_gaps" | "regular";
+    isVip?: boolean;
+    totalBalance?: number;
   }>;
 }) {
   const db = await getDb();
@@ -292,6 +295,9 @@ export async function bulkUpsertClients(opts: {
     phone: row.phone ?? null,
     notes: row.notes ?? null,
     sourceReportId: opts.reportId,
+    flagStatus: row.flagStatus ?? "regular",
+    isVip: row.isVip ?? false,
+    totalBalance: row.totalBalance != null ? row.totalBalance.toString() : "0",
   }));
 
   // Insert in batches of 500 to avoid query size limits
@@ -304,6 +310,9 @@ export async function bulkUpsertClients(opts: {
         fullName: sql`COALESCE(VALUES(\`fullName\`), \`fullName\`)`,
         email: sql`COALESCE(VALUES(\`email\`), \`email\`)`,
         phone: sql`COALESCE(VALUES(\`phone\`), \`phone\`)`,
+        flagStatus: sql`VALUES(\`flagStatus\`)`,
+        isVip: sql`VALUES(\`isVip\`)`,
+        totalBalance: sql`VALUES(\`totalBalance\`)`,
       },
     });
     total += batch.length;

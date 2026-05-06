@@ -56,6 +56,9 @@ export default function UploadReport() {
           fullName: c.name ?? null,
           email: c.email ?? null,
           phone: c.phone ?? null,
+          flagStatus: (c as any).flagStatus ?? "regular",
+          isVip: !!(c as any).isVip,
+          totalBalance: Number(c.accumulation ?? 0),
         }))
         .filter((c) => c.idNumber.length > 0);
 

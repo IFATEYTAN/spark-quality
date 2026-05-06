@@ -93,6 +93,8 @@ function classify(row: Record<string, any>): {
   priority: Customer["priority"];
   flag: string;
   recommendation: string;
+  flagStatus: "vip" | "liquid_fund" | "tikun_190" | "high_fees" | "risk_ending" | "coverage_gaps" | "regular";
+  isVip: boolean;
 } {
   const status = HE(row.status);
   const email = HE(row.email);
@@ -120,6 +122,8 @@ function classify(row: Record<string, any>): {
       priority: "גבוהה",
       flag: "לקוח עתיר נכסים (מעל 1M ₪)",
       recommendation: "פגישת תכנון פיננסי מקיפה / ניהול עושר",
+      flagStatus: "vip",
+      isVip: true,
     };
   }
 
@@ -130,6 +134,8 @@ function classify(row: Record<string, any>): {
       priority: "גבוהה",
       flag: "פוטנציאל להפקדה לפי תיקון 190",
       recommendation: "בחינת כדאיות הפקדה לטובת פטור ממס רווחי הון",
+      flagStatus: "tikun_190",
+      isVip: false,
     };
   }
 
@@ -140,29 +146,34 @@ function classify(row: Record<string, any>): {
       priority: "גבוהה",
       flag: "קרן השתלמות נזילה",
       recommendation: "הזדמנות להשקעה / פתיחת פוליסת חיסכון / IRA",
+      flagStatus: "liquid_fund",
+      isVip: false,
     };
   }
 
   // 4. תשואה חלשה / דמי ניהול גבוהים (היוריסטיקה משולבת)
-  // זיהוי לקוחות עם צבירה גבוהה ללא הטבה, או קופות ותיקות עם צבירה נמוכה יחסית לוותק
-  const isLowYield = yearsActive >= 5 && accumulation < (yearsActive * 12000); // אומדן: פחות מ-1000 ש"ח הפקדה בחודש + תשואה
+  const isLowYield = yearsActive >= 5 && accumulation < (yearsActive * 12000);
   if ((accumulation >= 500000 && status.includes("פעיל") && !status.includes("הנחה")) || isLowYield) {
     return {
       status: "תשואה חלשה",
       priority: "בינונית",
       flag: "תשואת חסר / דמי ניהול גבוהים",
       recommendation: "פגישת שימור - הוזלת דמי ניהול או ניוד למסלול רווחי",
+      flagStatus: "high_fees",
+      isVip: false,
     };
   }
 
   // 5. תשואה חזקה (לקוח מרוצה)
-  const isHighYield = yearsActive >= 3 && accumulation > (yearsActive * 30000); // אומדן: צבירה גבוהה מאוד ביחס לוותק
-  if (isHighYield && accumulation < 1000000) { // לא VIP עדיין
+  const isHighYield = yearsActive >= 3 && accumulation > (yearsActive * 30000);
+  if (isHighYield && accumulation < 1000000) {
     return {
       status: "תשואה חזקה",
       priority: "נמוכה",
       flag: "תשואה עודפת - לקוח מרוצה",
       recommendation: "הזדמנות אאפסל - הצעת מוצרים נוספים (גמל להשקעה)",
+      flagStatus: "regular",
+      isVip: false,
     };
   }
 
@@ -174,6 +185,8 @@ function classify(row: Record<string, any>): {
       priority: "גבוהה",
       flag: "כיסוי מסתיים בקרוב",
       recommendation: "פנייה מיידית - הצעת חידוש כיסוי",
+      flagStatus: "risk_ending",
+      isVip: false,
     };
   }
   if (status.includes("הנחה")) {
@@ -182,6 +195,8 @@ function classify(row: Record<string, any>): {
       priority: "גבוהה",
       flag: "תום הנחת פרמיה",
       recommendation: "פגישת שימור · הצעת חידוש הטבה",
+      flagStatus: "regular",
+      isVip: false,
     };
   }
   if (!product.includes("פנסיה") && !product.includes("גמל") && !product.includes("השתלמות")) {
@@ -190,6 +205,8 @@ function classify(row: Record<string, any>): {
       priority: "בינונית",
       flag: "אין מוצר פנסיוני פעיל",
       recommendation: "הזדמנות אאפסל - הצעת קרן פנסיה מקיפה",
+      flagStatus: "coverage_gaps",
+      isVip: false,
     };
   }
   if (!email) {
@@ -198,6 +215,8 @@ function classify(row: Record<string, any>): {
       priority: "נמוכה",
       flag: "אין כתובת מייל בתיק",
       recommendation: "השלמת פרטי קשר לתקשורת שיווקית",
+      flagStatus: "regular",
+      isVip: false,
     };
   }
   return {
@@ -205,6 +224,8 @@ function classify(row: Record<string, any>): {
     priority: "נמוכה",
     flag: accumulation > 100000 ? "צבירה משמעותית - מעקב תקופתי" : "תיק פעיל תקין",
     recommendation: "סקירה תקופתית · ללא פעולה דחופה",
+    flagStatus: "regular",
+    isVip: false,
   };
 }
 
@@ -290,10 +311,12 @@ function buildCustomersFromSheet(
         priority: cls.priority,
         flag: cls.flag,
         recommendation: cls.recommendation,
-      });
+        flagStatus: cls.flagStatus,
+        isVip: cls.isVip,
+      } as Customer & { flagStatus: string; isVip: boolean });
     } else {
       // accumulate financial figures
-      const existing = map.get(id)!;
+      const existing = map.get(id)! as Customer & { flagStatus: string; isVip: boolean };
       existing.premium += r1.premium;
       existing.accumulation += r1.accumulation;
       // upgrade priority if a higher-flag row appears
@@ -302,6 +325,11 @@ function buildCustomersFromSheet(
         existing.status = cls.status;
         existing.flag = cls.flag;
         existing.recommendation = cls.recommendation;
+        existing.flagStatus = cls.flagStatus;
+        existing.isVip = cls.isVip || existing.isVip;
+      } else if (cls.isVip && !existing.isVip) {
+        existing.isVip = true;
+        existing.flagStatus = "vip";
       }
       // backfill missing email/phone
       if (!existing.email && r1.email) existing.email = r1.email;

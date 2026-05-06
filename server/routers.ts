@@ -254,6 +254,9 @@ export const appRouter = router({
                 fullName: z.string().nullable().optional(),
                 email: z.string().nullable().optional(),
                 phone: z.string().nullable().optional(),
+                flagStatus: z.enum(["vip", "liquid_fund", "tikun_190", "high_fees", "risk_ending", "coverage_gaps", "regular"]).optional(),
+                isVip: z.boolean().optional(),
+                totalBalance: z.number().optional(),
               })
             )
             .optional(),

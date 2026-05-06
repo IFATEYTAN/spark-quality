@@ -42,7 +42,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
   }, [onComplete]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-navy-deep">
+    <div className="relative min-h-full w-full overflow-y-auto overflow-x-hidden bg-navy-deep">
       {/* Background image with strong overlay */}
       <div className="absolute inset-0">
         <img src={ASSETS.brain} alt="" className="h-full w-full object-cover scale-110 animate-[fade-in_2s]" />
@@ -60,23 +60,23 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
         }}
       />
 
-      <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12">
+      <div className="relative grid min-h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12">
         {/* RIGHT (RTL primary): progress steps */}
-        <div className="lg:col-span-7 flex items-center px-6 py-6 lg:px-12 lg:py-8">
+        <div className="lg:col-span-7 flex items-start lg:items-center px-4 py-6 sm:px-6 lg:px-12 lg:py-8">
           <div className="w-full max-w-2xl animate-fade-in">
-            <div className="mb-8 flex items-center gap-3">
-              <div className="h-px w-16 bg-gold" />
-              <span className="label-tag text-gold text-shadow-sm">מנוע SPARK AI · פעיל</span>
+            <div className="mb-6 lg:mb-8 flex items-center gap-3 flex-wrap">
+              <div className="h-px w-10 sm:w-16 bg-gold" />
+              <span className="label-tag text-gold text-shadow-sm text-[10px] sm:text-xs">מנוע SPARK AI · פעיל</span>
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
             </div>
 
-            <h1 className="font-display text-5xl font-black leading-[0.95] text-white lg:text-[4rem] tracking-tighter text-shadow-lg">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-[4rem] font-black leading-[1.05] lg:leading-[0.95] text-white tracking-tighter text-shadow-lg">
               מנתח את התיק<br />
               <span className="bg-gradient-to-l from-gold to-gold-soft bg-clip-text text-transparent">
                 שלכם.
               </span>
             </h1>
-            <p className="mt-6 text-lg text-white/90 max-w-xl font-light text-shadow-md">
+            <p className="mt-4 lg:mt-6 text-sm sm:text-base lg:text-lg text-white/90 max-w-xl font-light text-shadow-md">
               המערכת קוראת את כל הגיליונות, מצליבה נתונים, ומזהה הזדמנויות עסקיות בזמן אמת.
             </p>
 

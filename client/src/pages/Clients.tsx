@@ -16,9 +16,13 @@ import {
   Sparkles,
   Wallet,
   TrendingUp,
+  Shield,
+  FileWarning,
+  PlayCircle,
 } from "lucide-react";
+import { CategoryScenarioModal } from "@/components/CategoryScenarioModal";
 
-type FlagKind = "all" | "vip" | "liquid_fund" | "tikun_190" | "high_fees";
+type FlagKind = "all" | "vip" | "liquid_fund" | "tikun_190" | "high_fees" | "risk_ending" | "coverage_gaps";
 
 const FLAG_META: Record<
   Exclude<FlagKind, "all" | "vip">,
@@ -27,6 +31,18 @@ const FLAG_META: Record<
   liquid_fund: { label: "השתלמות נזילה", icon: Sparkles, color: "emerald" },
   tikun_190: { label: "תיקון 190", icon: Wallet, color: "sky" },
   high_fees: { label: "דמי ניהול גבוהים", icon: TrendingUp, color: "amber" },
+  risk_ending: { label: "ריסק מסתיים", icon: Shield, color: "rose" },
+  coverage_gaps: { label: "חוסרי כיסוי", icon: FileWarning, color: "orange" },
+};
+
+type DashboardCategory = "vip" | "lowYield" | "190" | "discount" | "risk" | "coverageGaps";
+const FLAG_TO_CATEGORY: Record<Exclude<FlagKind, "all">, DashboardCategory> = {
+  vip: "vip",
+  liquid_fund: "lowYield",
+  tikun_190: "190",
+  high_fees: "discount",
+  risk_ending: "risk",
+  coverage_gaps: "coverageGaps",
 };
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
@@ -72,8 +88,12 @@ export default function Clients() {
       liquid_fund: list.filter((c) => flagOf(c) === "liquid_fund").length,
       tikun_190: list.filter((c) => flagOf(c) === "tikun_190").length,
       high_fees: list.filter((c) => flagOf(c) === "high_fees").length,
+      risk_ending: list.filter((c) => flagOf(c) === "risk_ending").length,
+      coverage_gaps: list.filter((c) => flagOf(c) === "coverage_gaps").length,
     };
   }, [clientsQuery.data]);
+
+  const [flowCategory, setFlowCategory] = useState<DashboardCategory | null>(null);
 
   if (loading) {
     return (
@@ -136,6 +156,8 @@ export default function Clients() {
               { key: "liquid_fund" as const, label: "השתלמות נזילה", icon: Sparkles, count: counts.liquid_fund },
               { key: "tikun_190" as const, label: "תיקון 190", icon: Wallet, count: counts.tikun_190 },
               { key: "high_fees" as const, label: "דמי ניהול גבוהים", icon: TrendingUp, count: counts.high_fees },
+              { key: "risk_ending" as const, label: "ריסק מסתיים", icon: Shield, count: counts.risk_ending },
+              { key: "coverage_gaps" as const, label: "חוסרי כיסוי", icon: FileWarning, count: counts.coverage_gaps },
             ]
           ).map(({ key, label, icon: Icon, count }) => {
             const active = activeFilter === key;
@@ -162,6 +184,33 @@ export default function Clients() {
             );
           })}
         </div>
+
+        {/* Flowchart trigger - visible when a category is active */}
+        {activeFilter !== "all" && (
+          <div className="mb-6">
+            <button
+              onClick={() => setFlowCategory(FLAG_TO_CATEGORY[activeFilter])}
+              className="w-full group rounded-lg border border-gold/30 bg-gradient-to-l from-gold/10 via-gold/5 to-transparent hover:from-gold/20 hover:border-gold/60 transition-all p-4 flex items-center justify-between gap-3"
+            >
+              <div className="flex items-center gap-3 text-right">
+                <div className="h-10 w-10 rounded-md bg-gold/20 border border-gold/40 flex items-center justify-center group-hover:scale-110 transition-transform">
+                  <PlayCircle className="h-5 w-5 text-gold" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-white">ראי תרשים זרימה אינטראקטיבי</div>
+                  <div className="text-xs text-white/55">צפי בתרשים הזרימה של התהליך האוטומטי לקטגוריה זו</div>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-gold whitespace-nowrap">לצפיה ←</span>
+            </button>
+          </div>
+        )}
+
+        <CategoryScenarioModal
+          categoryId={flowCategory}
+          onClose={() => setFlowCategory(null)}
+          onActivate={() => setFlowCategory(null)}
+        />
 
         {/* Body */}
         {clientsQuery.isLoading ? (
