@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { trpc } from "@/lib/trpc";
 import {
+  Crown,
   Loader2,
   Mail,
   Phone,
@@ -19,6 +20,7 @@ import { Link } from "wouter";
 export default function Clients() {
   const { user, loading, isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
+  const [vipOnly, setVipOnly] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) window.location.href = "/";
@@ -29,7 +31,8 @@ export default function Clients() {
   });
 
   const filtered = useMemo(() => {
-    const list = clientsQuery.data ?? [];
+    let list = clientsQuery.data ?? [];
+    if (vipOnly) list = list.filter((c) => c.isVip);
     if (!search.trim()) return list;
     const q = search.trim().toLowerCase();
     return list.filter(
@@ -39,7 +42,12 @@ export default function Clients() {
         c.email?.toLowerCase().includes(q) ||
         c.phone?.includes(q)
     );
-  }, [clientsQuery.data, search]);
+  }, [clientsQuery.data, search, vipOnly]);
+
+  const vipCount = useMemo(
+    () => (clientsQuery.data ?? []).filter((c) => c.isVip).length,
+    [clientsQuery.data]
+  );
 
   if (loading) {
     return (
@@ -78,18 +86,38 @@ export default function Clients() {
           </Link>
         </div>
 
-        {/* Search bar */}
-        <GlassCard className="p-2 mb-6">
-          <div className="relative">
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
-            <Input
-              placeholder="חיפוש לפי שם, ת.ז, מייל או טלפון…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-12 bg-transparent border-0 text-white placeholder:text-white/35 h-12 text-base focus-visible:ring-0"
-            />
-          </div>
-        </GlassCard>
+        {/* Search bar + VIP filter */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <GlassCard className="p-2 flex-1">
+            <div className="relative">
+              <Search className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 pointer-events-none" />
+              <Input
+                placeholder="חיפוש לפי שם, ת.ז, מייל או טלפון…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pr-12 bg-transparent border-0 text-white placeholder:text-white/35 h-12 text-base focus-visible:ring-0"
+              />
+            </div>
+          </GlassCard>
+          <button
+            onClick={() => setVipOnly((v) => !v)}
+            className={`group flex items-center gap-2 rounded-md px-5 h-[60px] font-semibold text-sm transition-all border ${
+              vipOnly
+                ? "bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] border-gold shadow-lg shadow-gold/30"
+                : "bg-white/[0.03] text-gold border-gold/30 hover:bg-gold/10"
+            }`}
+          >
+            <Crown className="h-4 w-4" />
+            רק VIP
+            <span
+              className={`mono-num text-xs px-2 py-0.5 rounded-full ${
+                vipOnly ? "bg-[#06101F]/20" : "bg-gold/15"
+              }`}
+            >
+              {vipCount.toLocaleString("he-IL")}
+            </span>
+          </button>
+        </div>
 
         {/* Body */}
         {clientsQuery.isLoading ? (
@@ -128,14 +156,31 @@ export default function Clients() {
               >
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-gold/30 to-gold/10 border border-gold/40 flex items-center justify-center text-gold shrink-0">
-                      <User className="h-5 w-5" />
+                    <div
+                      className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${
+                        client.isVip
+                          ? "bg-gradient-to-br from-gold to-[#B89346] border-gold text-[#06101F] shadow-md shadow-gold/40"
+                          : "bg-gradient-to-br from-gold/30 to-gold/10 border-gold/40 text-gold"
+                      }`}
+                    >
+                      {client.isVip ? (
+                        <Crown className="h-5 w-5" />
+                      ) : (
+                        <User className="h-5 w-5" />
+                      )}
                     </div>
                     <div>
-                      <h3 className="font-display text-base font-bold text-white tracking-tight">
-                        {client.fullName ||
-                          `לקוח ${client.idNumber.slice(-4)}`}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-display text-base font-bold text-white tracking-tight">
+                          {client.fullName ||
+                            `לקוח ${client.idNumber.slice(-4)}`}
+                        </h3>
+                        {client.isVip && (
+                          <span className="text-[10px] font-bold tracking-wider bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] px-2 py-0.5 rounded-sm">
+                            VIP
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11px] text-white/45 font-mono tracking-wider mt-0.5">
                         ת&quot;ז · {client.idNumber}
                       </p>
