@@ -24,7 +24,7 @@ export function IntroStage({ onContinue }: IntroStageProps) {
   }, []);
 
   return (
-    <div className="relative h-[calc(100vh-7rem)] w-full overflow-hidden bg-navy-deep">
+    <div className="relative h-full w-full overflow-hidden bg-navy-deep">
       {/* Background gradient layers */}
       <div className="absolute inset-0">
         <div

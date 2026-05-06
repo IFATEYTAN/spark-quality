@@ -77,7 +77,7 @@ export function ActionsStage({ onComplete }: ActionsStageProps) {
   }, []);
 
   return (
-    <div className="h-[calc(100vh-7rem)] w-full overflow-y-auto animate-fade-in bg-background">
+    <div className="h-full w-full overflow-y-auto animate-fade-in bg-background">
       {/* Header */}
       <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
         <div className="container py-8">

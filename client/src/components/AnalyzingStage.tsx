@@ -42,7 +42,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
   }, [onComplete]);
 
   return (
-    <div className="relative h-[calc(100vh-7rem)] w-full overflow-hidden bg-navy-deep">
+    <div className="relative h-full w-full overflow-hidden bg-navy-deep">
       {/* Background image with strong overlay */}
       <div className="absolute inset-0">
         <img src={ASSETS.brain} alt="" className="h-full w-full object-cover scale-110 animate-[fade-in_2s]" />

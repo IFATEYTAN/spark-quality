@@ -49,7 +49,7 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
   };
 
   return (
-    <div data-pdf-target className="h-[calc(100vh-7rem)] w-full overflow-y-auto animate-fade-in bg-background">
+    <div data-pdf-target className="h-full w-full overflow-y-auto animate-fade-in bg-background">
       {/* Page header */}
       <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
         <div className="container py-8">

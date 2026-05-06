@@ -106,10 +106,6 @@ export default function Dashboard() {
               ? "מבט-על על כל הסוכנות והפעילות של הצוות."
               : "הלקוחות שלך, הדוחות והמשימות שלך — במקום אחד."}
           </p>
-          <div className="mt-6 inline-flex items-center gap-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 text-sm text-emerald-400">
-            <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            זהו המסך הראשי של המערכת האמיתית. להדרכה, לחצי על "דמו הדרכה" למעלה.
-          </div>
         </div>
 
         {/* Trial banner */}

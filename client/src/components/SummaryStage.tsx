@@ -7,7 +7,7 @@ interface SummaryStageProps {
 
 export function SummaryStage({ onReset }: SummaryStageProps) {
   return (
-    <div className="relative h-[calc(100vh-7rem)] w-full animate-fade-in overflow-hidden">
+    <div className="relative h-full w-full animate-fade-in overflow-hidden">
       {/* Subtle background */}
       <div className="absolute inset-0 bg-gradient-to-bl from-cream via-ivory to-white" />
       <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
