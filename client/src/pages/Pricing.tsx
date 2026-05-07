@@ -27,7 +27,7 @@ const PLANS: PlanCard[] = [
     name: "Base Plan",
     description: "לסוכן עצמאי שמתחיל לעבוד חכם עם תיק לקוחות מצומצם",
     monthlyPrice: 150,
-    annualPrice: 150,
+    annualPrice: 126, // 150 * 0.84 ≈ 126 (~16% discount, billed yearly = 1,512₪)
     flagsQuota: "עד 50 דגלים פעילים בו-זמנית",
     clientLimit: "עד 300 לקוחות בתיק",
     features: [
@@ -51,7 +51,7 @@ const PLANS: PlanCard[] = [
     name: "Pro Plan",
     description: "לסוכן צומח שרוצה לנהל תיק בינוני עם אוטומציה",
     monthlyPrice: 249,
-    annualPrice: 249,
+    annualPrice: 209, // 249 * 0.84 ≈ 209 (~16% discount, billed yearly = 2,508₪)
     flagsQuota: "עד 200 דגלים פעילים בו-זמנית",
     clientLimit: "עד 1,000 לקוחות בתיק",
     features: [
@@ -71,7 +71,7 @@ const PLANS: PlanCard[] = [
     name: "Premium Plan",
     description: "לסוכנות שמנהלת תיק גדול ודורשת כלים ללא הגבלה",
     monthlyPrice: 389,
-    annualPrice: 389,
+    annualPrice: 327, // 389 * 0.84 ≈ 327 (~16% discount, billed yearly = 3,924₪)
     flagsQuota: "דגלים ללא הגבלה",
     clientLimit: "לקוחות ללא הגבלה",
     features: [
