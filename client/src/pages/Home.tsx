@@ -1,7 +1,7 @@
 // Home — Landing שיווקי בסגנון הסינמטי של הדמו
 // רקע נייבי עמוק, חלקיקי זהב, טיפוגרפיה Rubik, כפתורי זהב
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { ContactModal } from "@/components/ContactModal";
 import { SiteNav } from "@/components/SiteNav";
 import {
@@ -21,19 +21,19 @@ import { getLoginUrl } from "@/const";
 
 export default function Home() {
   const { isAuthenticated, user, loading } = useAuth();
+  const [, setLocation] = useLocation();
 
   // אם המשתמש כבר מחובר — נתב אותו למסך הנכון לפי מצב הסוכנות.
   // יוצא מן הכלל: אם הגענו עם ?contact=1 (סריקת QR מהדמו) — נישאר על דף הבית כדי להציג את טופס יצירת הקשר.
+  // משתמשים ב-setLocation (ניווט פנימי ללא טעינה מחדש) במקום window.location.replace שגרם לטעינת עמוד כפול.
+  const isContactMode = typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("contact") === "1";
+  const willRedirect = !loading && isAuthenticated && Boolean(user) && !isContactMode;
   useEffect(() => {
-    if (loading) return;
-    if (!isAuthenticated || !user) return;
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("contact") === "1") return;
-    }
-    const hasWorkspace = Boolean((user as { workspaceId?: number | null }).workspaceId);
-    window.location.replace(hasWorkspace ? "/dashboard" : "/onboarding");
-  }, [loading, isAuthenticated, user]);
+    if (!willRedirect) return;
+    const hasWorkspace = Boolean((user as { workspaceId?: number | null } | null)?.workspaceId);
+    setLocation(hasWorkspace ? "/dashboard" : "/onboarding", { replace: true });
+  }, [willRedirect, user, setLocation]);
 
   // חלקיקי זהב מאנימציה
   const particles = useMemo(
@@ -60,6 +60,9 @@ export default function Home() {
       setContactOpen(true);
     }
   }, []);
+
+  // אם עומדים להפנות משתמש מחובר — לא מציירים את דף הבית כלל כדי למנוע הבזק המטעה הכפול.
+  if (willRedirect) return null;
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-[#06101F] text-white">
