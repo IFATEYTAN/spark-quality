@@ -268,3 +268,13 @@
 - [x] להוסיף כפתור "יציאה מהדמו" ב-SummaryStage שמחזיר ל-/ (מתנהג גם ב-clean mode כי מוצג בתוך SummaryStage)
 - [x] להוסיף QR-code בעמוד הסיכום (qrcode.react) — מוביל ל-`/?contact=1`, ה-Home מזהה את ה-query ופותח ContactModal אוטומטית
 - [x] vitest 37/37 עוברים, אין שגיאות TypeScript
+
+
+## Round 31 — Mini-site landing + top navigation (2026-05-07)
+- [x] לבנות SiteNav עליון sticky (RTL, רספונזיבי) עם לשוניות: בית · איך זה עובד · קטגוריות · אבטחה · תמחור · צוות · צור קשר
+- [x] להציג שני כפתורי-CTA קבועים: "כניסה למערכת / לאזור האישי" ו"לדמו האינטראקטיבי"
+- [x] תפריט המבורגר נסגר אוטומטית בלחיצה על קישור (mobile)
+- [x] Home.tsx להפוך ל-mini-site עם anchors: #hero #how #categories #security #pricing #team #contact, וגלילה חלקה דרך scrollIntoView({behavior:'smooth'})
+- [x] נוספו sections חדשים Categories (6 כרטיסים) ו-Team (יפעת + ענת); תמחור על מקומו ב-Home כשונית לדף עצמאי
+- [x] רספונסיב: nav מתכווץ להמבורגר מתחת ל-lg breakpoint, לוגו מתמקד בימין, CTAs לא נגלשים
+- [x] vitest 37/37 עוברים, אין שגיאות TypeScript
