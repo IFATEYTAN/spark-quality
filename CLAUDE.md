@@ -4,9 +4,61 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**SPARK Quality** — a Hebrew-language, RTL multi-tenant SaaS for Israeli insurance agencies. Agents upload Excel reports (primarily Shorens "products in management"), the app parses and classifies clients into financial categories (VIP, liquid funds, Tikun 190, low yield, ending risk, coverage gaps), surfaces opportunities on a dashboard, and queues outreach actions.
+**SPARK Quality** (by SPARK AI — Yifat Eitan & Anat Greenberg) is a Hebrew-language, RTL multi-tenant SaaS for Israeli insurance agencies. Agents upload Excel reports (primarily Shorens "products in management" / pension-clearinghouse exports), the app parses and classifies clients into financial categories, surfaces opportunities on a dashboard, and queues AI-drafted outreach.
 
-The product is a 2026 demo project — not a generic template. `docs/PRODUCT_SPEC.md` is the canonical spec; `todo.md` and `ideas.md` log historical decisions.
+The product is a 2026 MVP / live-demo project — not a generic template. `docs/PRODUCT_SPEC.md` is the canonical spec, `docs/PRESENTATION_GUIDE.md` is the live-demo script, and `todo.md` / `ideas.md` log historical decisions and design rationale ("Editorial Fintech": deep navy + warm gold, Hebrew serif + Heebo).
+
+### Product surface (routes → purpose)
+
+Wired in `client/src/App.tsx`. All copy is Hebrew/RTL.
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Marketing landing (`Home.tsx`) — cinematic hero, CTAs to login and to `/demo` |
+| `/demo` | Full guided demo flow (`DemoExperience.tsx` orchestrating Splash → Intro → Upload → Analyzing → Dashboard → Actions → Summary stages). Append `?clean=true` to hide the shell for live presentation on a projector |
+| `/onboarding` | Workspace setup: name → invite teammates → set VIP threshold (default 1,000,000 ₪) |
+| `/upload` | Drag-and-drop Excel upload; client-side parser + persistence via `reports.save` |
+| `/dashboard` | Daily snapshot: KPIs (clients, VIPs, liquid funds, Tikun 190 candidates, AUM) + Action Center (6 category cards) + clients table |
+| `/clients` | Full client list with search, financial flags, VIP filter |
+| `/team` | Admin/owner only — invitations + member roles |
+| `/admin` | Super-admin only (`isSuperAdmin`) — cross-workspace dashboard, contact-form inbox, audit log |
+| `/pricing` | Plans: Base (150/180 ₪) and Premium (350/420 ₪) |
+| `/legal/{terms,privacy,accessibility}` | Static legal pages |
+
+### Roles
+
+- `owner` — created the workspace, full control + billing
+- `admin` — agency manager, sees all workspace clients + manages team
+- `agent` — sees only their own clients (rows where `ownerUserId = ctx.user.id`)
+- `isSuperAdmin` (boolean, orthogonal) — SPARK AI staff, cross-workspace access via `adminRouter`. Auto-granted to `OWNER_OPEN_ID` and to hard-coded emails in `db.upsertUser` (currently `anathemell@gmail.com`)
+
+### Six business categories (the core product logic)
+
+Classification lives in `client/src/lib/parseReport.ts` (`classify()`); the dashboard's Action Center surfaces each as a card. Severity ranking (used when a client matches multiple): `vip > tikun_190 > liquid_fund > high_fees > risk_ending > coverage_gaps > regular`. **VIP is sticky** — once true, never demoted during merge.
+
+| `flagStatus` | Trigger | Suggested action |
+| --- | --- | --- |
+| `vip` | `accumulation ≥ workspace.vipThreshold` (default 1M ₪) | Wealth-management meeting, premium products |
+| `tikun_190` | `age ≥ 60` AND `accumulation ≥ 300K` AND product isn't pension | Tax-exempt withdrawal simulation (תיקון 190) |
+| `liquid_fund` | Product name contains "השתלמות" AND ≥ 6 years active | Pitch IRA / savings policy |
+| `high_fees` | `accumulation ≥ 500K` active without discount, OR low-yield heuristic (`accumulation < yearsActive × 12K`) | Retention call, lower management fees |
+| `risk_ending` | Status mentions "ריסק" or "מסתיים" | Urgent renewal outreach |
+| `coverage_gaps` | No pension/savings product on file | Cross-sell pension |
+
+VIP threshold is workspace-scoped; `workspaces.updateVipThreshold` re-runs `db.reclassifyClientVipStatus` to flip `clients.isVip` for all rows in that workspace.
+
+### AI Composer
+
+A modal that drafts personalized email/WhatsApp messages per client based on `flagStatus`. Currently template-based on the client; the LLM hook (`server/_core/llm.ts`) is wired and ready to take over. When changing the template logic, keep the per-category CTA aligned with the table above.
+
+### Known gaps / blocked work
+
+Treat these as out-of-scope unless the user explicitly unblocks them — they are documented as blocked, not forgotten:
+
+1. **Live Shorens / pension-clearinghouse API** — blocked on commercial contract. Workaround is the manual Excel upload. Don't fabricate a stub API.
+2. **Accurate yield benchmarking** — blocked downstream of (1). Current low-yield detection is the heuristic in `classify()`; do not claim it's market-comparison data.
+3. **Billing (iCount)** — pending; user prefers iCount over Stripe. Pricing page is presentational only — there is no checkout flow.
+4. **External automations (Webhooks for Make/Zapier, CRM sync)** — roadmap only.
 
 ## Commands
 
