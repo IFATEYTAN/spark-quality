@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { ContactModal } from "@/components/ContactModal";
+import { SiteNav } from "@/components/SiteNav";
 import {
   ArrowLeft,
   Play,
@@ -108,8 +109,8 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Top nav */}
-      <header className="relative z-20 border-b border-white/10 bg-[#06101F]/85 backdrop-blur-md">
+      {/* Top nav (legacy) — kept inside a hidden div so its links/SEO anchors still resolve, but visually replaced by <SiteNav/>. */}
+      <header hidden aria-hidden="true" className="hidden">
         <div className="container">
           <div className="flex h-20 items-center justify-between gap-6">
             <Link href="/" className="flex items-center gap-3">
@@ -158,8 +159,11 @@ export default function Home() {
         <div className="h-px bg-gradient-to-l from-transparent via-gold/60 to-transparent" />
       </header>
 
+      {/* Sticky top navigation (mini-site) */}
+      <SiteNav available={["hero", "how", "categories", "security", "pricing", "team", "contact"]} />
+
       {/* HERO */}
-      <section className="relative z-10 pt-20 pb-24 lg:pt-32 lg:pb-40">
+      <section id="hero" className="relative z-10 pt-28 pb-24 lg:pt-36 lg:pb-40">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center">
             {/* Eyebrow */}
@@ -258,8 +262,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FEATURES */}
-      <section className="relative z-10 py-24 border-t border-white/5 bg-[#06101F]/40 backdrop-blur-sm">
+      {/* HOW IT WORKS / FEATURES */}
+      <section id="how" className="relative z-10 py-24 border-t border-white/5 bg-[#06101F]/40 backdrop-blur-sm">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-4">
@@ -315,7 +319,7 @@ export default function Home() {
       </section>
 
       {/* PRIVACY / SECURITY */}
-      <section className="relative z-10 py-24 border-t border-white/5">
+      <section id="security" className="relative z-10 py-24 border-t border-white/5">
         <div className="container">
           <div className="max-w-4xl mx-auto">
             <div className="rounded-lg border border-gold/20 bg-gradient-to-br from-[#06101F]/80 to-[#0B1A2D]/80 backdrop-blur-md p-10 lg:p-14 text-center">
@@ -349,7 +353,7 @@ export default function Home() {
       </section>
 
       {/* PRICING */}
-      <section className="relative z-10 py-24 border-t border-white/5 bg-[#06101F]/40 backdrop-blur-sm">
+      <section id="pricing" className="relative z-10 py-24 border-t border-white/5 bg-[#06101F]/40 backdrop-blur-sm">
         <div className="container">
           <div className="max-w-3xl mx-auto text-center mb-16">
             <div className="flex items-center justify-center gap-3 mb-4">
@@ -448,8 +452,93 @@ export default function Home() {
         </div>
       </section>
 
+      {/* CATEGORIES — 6 קטגוריות ההזדמנויות שהמנוע מזהה אוטומטית */}
+      <section id="categories" className="relative z-10 py-24 border-t border-white/5">
+        <div className="container">
+          <div className="max-w-3xl mx-auto text-center mb-14">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-12 bg-gold" />
+              <span className="text-[11px] tracking-[0.35em] uppercase text-gold font-medium">
+                המנוע מזהה
+              </span>
+              <div className="h-px w-12 bg-gold" />
+            </div>
+            <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight">
+              שש קטגוריות שמעלות לך את ההכנסות
+            </h2>
+            <p className="mt-4 text-base text-white/70 max-w-2xl mx-auto leading-relaxed">
+              המערכת סורקת את תיק הלקוחות שלך ומסמנת כל הזדמנות לאחת משש קטגוריות קבועות — כל אחת עם תרחיש מדויק ותסריט פעולה מוכן למשלוח.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
+            {[
+              { tag: "VIP", title: "הזדמנויות VIP", desc: "לקוחות עם צבירה גבוהה — סלקט אישי והרחבת מוצרים." },
+              { tag: "תיקון 190", title: "תיקון 190 — הטבה מיסויית", desc: "זיהוי לקוחות שזכאים ל-30% פטור ממס על המשיכה." },
+              { tag: "השתלמות", title: "השתלמות נזילה", desc: "לקוחות שצברו זמן ומוכנים למשיכה אלטרנטיבית." },
+              { tag: "דמי ניהול", title: "דמי ניהול גבוהים", desc: "זיהוי תמהילים חריגים ממוצע ההנפקה — הזדמנות להטבת תנאים." },
+              { tag: "ריסק", title: "ריסק מסתיים", desc: "תזכורות אוטומטיות טרם תפוגה לחידוש והמשך כיסוי." },
+              { tag: "כיסוי", title: "חוסרי כיסוי", desc: "לקוחות עם פערי כיסוי בטיחות לימיים / אובדן כושר עבודה." },
+            ].map((cat, i) => (
+              <div
+                key={i}
+                className="rounded-md border border-gold/15 bg-white/[0.03] p-5 backdrop-blur-sm hover:border-gold/40 hover:bg-white/[0.06] transition-colors"
+              >
+                <div className="label-tag text-[10px] text-gold tracking-[0.3em] mb-2">
+                  {cat.tag}
+                </div>
+                <h3 className="font-display text-lg font-black text-white mb-2">{cat.title}</h3>
+                <p className="text-sm text-white/65 leading-relaxed">{cat.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* TEAM */}
+      <section id="team" className="relative z-10 py-24 border-t border-white/5 bg-[#06101F]/40 backdrop-blur-sm">
+        <div className="container">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="h-px w-12 bg-gold" />
+              <span className="text-[11px] tracking-[0.35em] uppercase text-gold font-medium">
+                הצוות
+              </span>
+              <div className="h-px w-12 bg-gold" />
+            </div>
+            <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight">
+              מי מאחורי SPARK AI
+            </h2>
+            <p className="mt-4 text-base text-white/70 leading-relaxed">
+              שתי מומחות משוק הסוכנות שזיהו את הצורך — ובנו את המערכת מתוך שלו.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {[
+              { initials: "יא", name: "יפעת איתן", role: "מייסדת ומנהלת מוצר", bio: "מגיעה מעולם סוכנות הביטוח וזיהתה את הפער — זמן יקר שמתבזבז על תיוק תיקי לקוחות ומעקב אחר הזדמנויות שמתפספסות." },
+              { initials: "עג", name: "ענת גרינברג", role: "מייסדת ושותפה למוצר", bio: "ממירה תרחישי מכר לתהליכי עבודה חכמים, בשילוב אוטומציה ו-AI שמשחררים זמן לסוכנים ומגדילים את טיוב ההצעה ללקוח." },
+            ].map((m, i) => (
+              <div
+                key={i}
+                className="rounded-md border border-gold/15 bg-white/[0.04] p-6 backdrop-blur-sm hover:border-gold/40 transition-colors"
+              >
+                <div className="flex items-center gap-4 mb-3">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-gold to-[#B89346] flex items-center justify-center text-[#06101F] font-display font-black text-lg">
+                    {m.initials}
+                  </div>
+                  <div>
+                    <div className="font-display text-lg font-black text-white leading-tight">{m.name}</div>
+                    <div className="text-xs text-gold-soft tracking-wide">{m.role}</div>
+                  </div>
+                </div>
+                <p className="text-sm text-white/70 leading-relaxed">{m.bio}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FINAL CTA */}
-      <section className="relative z-10 py-24 border-t border-white/5">
+      <section id="contact" className="relative z-10 py-24 border-t border-white/5">
         <div className="container">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight mb-6">
