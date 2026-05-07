@@ -302,6 +302,19 @@ export const billingRouter = router({
    *  - full-screen blocker         → status="blocked" / "cancelled"
    */
   myAccessStatus: protectedProcedure.query(async ({ ctx }) => {
+    // SPARK staff (admin role) are NEVER blocked by the payment gate.
+    // This includes the owner and any agency manager promoted to admin.
+    if (ctx.user.role === "admin") {
+      return {
+        status: "active" as const,
+        graceEndsAt: null,
+        daysRemaining: 0,
+        plan: "premium" as const,
+        billingPeriod: "yearly" as const,
+        paymentMethod: "manual" as const,
+        hasNeverPaid: false,
+      };
+    }
     if (!ctx.user.workspaceId) {
       return {
         status: "active" as const,
