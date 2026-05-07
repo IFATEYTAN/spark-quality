@@ -14,4 +14,18 @@ export const ENV = {
   iCountCompanyId: process.env.ICOUNT_COMPANY_ID ?? "",
   // Public host iCount uses for Hosted Checkout. The official URL is api.icount.co.il for prod and demo.icount.co.il for sandbox.
   iCountBaseUrl: process.env.ICOUNT_BASE_URL ?? "https://api.icount.co.il/api/v3.php",
+  // Make.com webhook URL — the user (SPARK) controls a Make scenario that
+  // receives the JSON checkout payload, opens the iCount payment page, and
+  // POSTs back to /api/billing/activate when the payment is confirmed. This is
+  // the *production* path for taking payments. The legacy direct-iCount
+  // integration is kept only as a fallback / debug tool.
+  makePaymentWebhookUrl:
+    process.env.MAKE_PAYMENT_WEBHOOK_URL ??
+    "https://hook.eu1.make.com/35kisdafvvmvnm1dbezy2bg8wridh0hw",
+  // Shared secret used to (a) sign the JSON we POST to Make and (b) verify the
+  // activation callback Make POSTs back to us. The user can override it via
+  // the MAKE_WEBHOOK_SECRET env. Until they do, the default value is used so
+  // the integration works out of the box on staging.
+  makeWebhookSecret:
+    process.env.MAKE_WEBHOOK_SECRET ?? "spark-quality-make-shared-secret",
 };

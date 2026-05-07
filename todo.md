@@ -355,3 +355,15 @@
 - [ ] איפוס דוגמאות: workspaces 60002 ("בדיקה") + 30001 + 1 ("יפעת") → pending_payment כדי לאמת מחדש
 - [ ] בדיקת זרם מקצה לקצה: הרשמה → onboarding → pricing → iCount → callback → גישה נפתחת
 - [ ] checkpoint + הוראות לבדיקה
+
+
+## Round 43 — אינטגרציית תשלום דרך Make Webhook (2026-05-07)
+- [ ] הוספת ENV `MAKE_PAYMENT_WEBHOOK_URL` בברירת מחדל לכתובת שסיפקה המשתמשת
+- [ ] tRPC `billing.startCheckoutViaMake` — שולח POST JSON ל-Make עם כל הפרמטרים הדרושים
+- [ ] payload: workspaceId, plan, billingPeriod, amount, currency=ILS, customer (name/email/phone), taxId, returnUrl, requestId
+- [ ] Express POST `/api/billing/activate` — Make מחזיר עם token+invoiceId, המערכת מפעילה את ה-workspace (subscriptionStatus=active, subscriptionEndsAt)
+- [ ] HMAC חתימה על callback (shared secret עם Make) למניעת spoofing
+- [ ] עדכון Pricing CTA לקרוא ל-startCheckoutViaMake במקום startStandingOrder; מסך "מעבירים אותך לתשלום…"
+- [ ] עדכון Onboarding באותה צורה
+- [ ] מסמך אינטגרציה (MAKE_INTEGRATION.md) למשתמשת — מבנה JSON, callback URL, HMAC, דוגמת Make scenario
+- [ ] checkpoint ושמירה

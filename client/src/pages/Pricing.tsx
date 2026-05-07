@@ -93,18 +93,20 @@ export default function Pricing() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
 
-  // Primary path — open iCount Standing Order capture page in a new tab.
-  const startStandingOrder = trpc.billing.startStandingOrder.useMutation({
+  // Primary path — POST to the Make webhook. Make orchestrates the iCount
+  // payment page and POSTs back to /api/billing/activate when payment is
+  // confirmed. We just take the user to /billing/waiting and let the activation
+  // callback flip the workspace to active.
+  const startCheckoutViaMake = trpc.billing.startCheckoutViaMake.useMutation({
     onSuccess: (res) => {
-      toast.success("מעבירים לעמוד הסליקה המאובטח של iCount", {
+      toast.success("הבקשה נשלחה — מעבירים אתכם למסך ההמתנה", {
         description:
-          "נפתח חלון חדש להזנת פרטי הכרטיס. המערכת תיפה אוטומטית ברגע שההוראת הקבע תאושר.",
+          "לינק לעמוד התשלום נשלח אליכם במייל. הגישה למערכת תיפתח אוטומטית מיד עם אישור התשלום.",
       });
-      window.open(res.url, "_blank", "noopener,noreferrer");
-      navigate("/billing/waiting");
+      navigate(`/billing/waiting?req=${res.requestId}`);
     },
     onError: (err) => {
-      toast.error("לא הצלחנו לפתוח עמוד תשלום", { description: err.message });
+      toast.error("לא הצלחנו לפתוח את הבקשה לתשלום", { description: err.message });
     },
   });
   // Fallback path — manual followup (notify owner). Kept for the
@@ -133,7 +135,7 @@ export default function Pricing() {
       navigate("/onboarding");
       return;
     }
-    startStandingOrder.mutate({
+    startCheckoutViaMake.mutate({
       plan: slug,
       period: isAnnual ? "yearly" : "monthly",
       origin: window.location.origin,
@@ -239,14 +241,14 @@ export default function Pricing() {
 
               <button
                 onClick={() => handleSelect(plan.slug)}
-                disabled={startStandingOrder.isPending || requestCheckout.isPending}
+                disabled={startCheckoutViaMake.isPending || requestCheckout.isPending}
                 className={`w-full py-3 rounded-lg font-medium transition-all mb-6 disabled:opacity-50 inline-flex items-center justify-center gap-2 ${
                   plan.popular
                     ? "bg-gold text-[#06101F] hover:bg-gold-light shadow-[0_0_20px_rgba(201,169,97,0.3)]"
                     : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
                 }`}
               >
-                {(startStandingOrder.isPending && startStandingOrder.variables?.plan === plan.slug) ||
+                {(startCheckoutViaMake.isPending && startCheckoutViaMake.variables?.plan === plan.slug) ||
                 (requestCheckout.isPending && requestCheckout.variables?.plan === plan.slug) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (

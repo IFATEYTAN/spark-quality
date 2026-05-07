@@ -1,0 +1,202 @@
+{
+  "query": "SHOW COLUMNS FROM workspaces;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SHOW COLUMNS FROM workspaces;",
+  "rows": [
+    {
+      "Field": "id",
+      "Type": "int",
+      "Null": "NO",
+      "Key": "PRI",
+      "Default": "NULL",
+      "Extra": "auto_increment"
+    },
+    {
+      "Field": "name",
+      "Type": "varchar(200)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "plan",
+      "Type": "enum('trial','basic','pro','premium','enterprise')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "basic",
+      "Extra": ""
+    },
+    {
+      "Field": "trialEndsAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "subscriptionEndsAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "isActive",
+      "Type": "tinyint(1)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1",
+      "Extra": ""
+    },
+    {
+      "Field": "createdAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": ""
+    },
+    {
+      "Field": "updatedAt",
+      "Type": "timestamp",
+      "Null": "NO",
+      "Key": "",
+      "Default": "CURRENT_TIMESTAMP",
+      "Extra": "DEFAULT_GENERATED on update CURRENT_TIMESTAMP"
+    },
+    {
+      "Field": "vipThreshold",
+      "Type": "decimal(14,2)",
+      "Null": "NO",
+      "Key": "",
+      "Default": "1000000.00",
+      "Extra": ""
+    },
+    {
+      "Field": "suspendedAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "adminNote",
+      "Type": "text",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "billingPeriod",
+      "Type": "enum('monthly','yearly')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "yearly",
+      "Extra": ""
+    },
+    {
+      "Field": "paymentMethod",
+      "Type": "enum('standing_order','manual')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "manual",
+      "Extra": ""
+    },
+    {
+      "Field": "subscriptionStatus",
+      "Type": "enum('pending_payment','active','past_due','suspended','cancelled')",
+      "Null": "NO",
+      "Key": "",
+      "Default": "pending_payment",
+      "Extra": ""
+    },
+    {
+      "Field": "lastPaymentAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "nextChargeAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "pastDueSince",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "suspensionEmailSentAt",
+      "Type": "timestamp",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "taxId",
+      "Type": "varchar(20)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "taxIdType",
+      "Type": "enum('company','individual')",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "contactPhone",
+      "Type": "varchar(32)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "iCountClientId",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "iCountSubscriptionId",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    },
+    {
+      "Field": "iCountLastInvoiceId",
+      "Type": "varchar(64)",
+      "Null": "YES",
+      "Key": "",
+      "Default": "NULL",
+      "Extra": ""
+    }
+  ],
+  "messages": [],
+  "stdout": "Field\tType\tNull\tKey\tDefault\tExtra\nid\tint\tNO\tPRI\tNULL\tauto_increment\nname\tvarchar(200)\tNO\t\tNULL\t\nplan\tenum('trial','basic','pro','premium','enterprise')\tNO\t\tbasic\t\ntrialEndsAt\ttimestamp\tYES\t\tNULL\t\nsubscriptionEndsAt\ttimestamp\tYES\t\tNULL\t\nisActive\ttinyint(1)\tNO\t\t1\t\ncreatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\t\nupdatedAt\ttimestamp\tNO\t\tCURRENT_TIMESTAMP\tDEFAULT_GENERATED on update CURRENT_TIMESTAMP\nvipThreshold\tdecimal(14,2)\tNO\t\t1000000.00\t\nsuspendedAt\ttimestamp\tYES\t\tNULL\t\nadminNote\ttext\tYES\t\tNULL\t\nbillingPeriod\tenum('monthly','yearly')\tNO\t\tyearly\t\npaymentMethod\tenum('standing_order','manual')\tNO\t\tmanual\t\nsubscriptionStatus\tenum('pending_payment','active','past_due','suspended','cancelled')\tNO\t\tpending_payment\t\nlastPaymentAt\ttimestamp\tYES\t\tNULL\t\nnextChargeAt\ttimestamp\tYES\t\tNULL\t\npastDueSince\ttimestamp\tYES\t\tNULL\t\nsuspensionEmailSentAt\ttimestamp\tYES\t\tNULL\t\ntaxId\tvarchar(20)\tYES\t\tNULL\t\ntaxIdType\tenum('company','individual')\tYES\t\tNULL\t\ncontactPhone\tvarchar(32)\tYES\t\tNULL\t\niCountClientId\tvarchar(64)\tYES\t\tNULL\t\niCountSubscriptionId\tvarchar(64)\tYES\t\tNULL\t\niCountLastInvoiceId\tvarchar(64)\tYES\t\tNULL\t\n",
+  "stderr": "",
+  "execution_time_ms": 1954
+}

@@ -8,6 +8,7 @@ import { renderBrandedEmail } from "./emailTemplates";
 import { getDb } from "./db";
 import { workspaces, users } from "../drizzle/schema";
 import { iCountSdk } from "./iCount";
+import { makeCheckoutSdk } from "./makeCheckout";
 
 async function requireDb() {
   const d = await getDb();
@@ -334,6 +335,7 @@ export const billingRouter = router({
           plan: workspaces.plan,
           billingPeriod: workspaces.billingPeriod,
           paymentMethod: workspaces.paymentMethod,
+          lastPaymentAt: workspaces.lastPaymentAt,
         })
         .from(workspaces)
         .where(eq(workspaces.id, ctx.user.workspaceId))
@@ -612,6 +614,142 @@ export const billingRouter = router({
         .where(eq(workspaces.id, input.workspaceId));
       return { ok: true as const };
     }),
+  /**
+   * Production payment path — POST a JSON payload to the user's Make.com
+   * webhook. Make orchestrates the iCount payment page, charges the customer,
+   * and POSTs back to /api/billing/activate when the standing order is set up.
+   *
+   * This procedure does NOT itself open a payment page or call iCount; that
+   * is the responsibility of the Make scenario the user controls. We just
+   * deliver a signed envelope with everything Make needs to act.
+   */
+  startCheckoutViaMake: protectedProcedure
+    .input(
+      z.object({
+        plan: z.enum(["basic", "pro", "premium"]),
+        period: z.enum(["monthly", "yearly"]),
+        origin: z.string().url(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.workspaceId) {
+        throw new Error("אין סוכנות משוייכת למשתמש");
+      }
+      const db = await requireDb();
+      const [ws] = await db
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.id, ctx.user.workspaceId))
+        .limit(1);
+      if (!ws) throw new Error("לא נמצאה סוכנות למשתמש");
+      if (!ws.taxId || !ws.contactPhone) {
+        throw new Error(
+          "למעבר לתשלום יש להשלים תחילה טלפון ומספר ח.פ/ת.ז בפרטי הסוכנות.",
+        );
+      }
+
+      // Persist the chosen plan/period so future retries (and the activation
+      // callback) know what to charge.
+      await db
+        .update(workspaces)
+        .set({
+          billingPeriod: input.period,
+          paymentMethod: "standing_order",
+        })
+        .where(eq(workspaces.id, ws.id));
+
+      const amount = PLAN_PRICES[input.plan][input.period];
+      const planLabel = PLAN_LABELS[input.plan];
+      const periodLabel = PERIOD_LABELS[input.period];
+      const requestId = makeCheckoutSdk.newRequestId();
+      const issuedAt = new Date().toISOString();
+      const cleanOrigin = input.origin.replace(/\/$/, "");
+      const returnUrl = `${cleanOrigin}/billing/waiting?ws=${ws.id}&req=${requestId}`;
+      const activationUrl = `${cleanOrigin}/api/billing/activate`;
+
+      const base = {
+        requestId,
+        workspaceId: ws.id,
+        workspaceName: ws.name,
+        plan: input.plan,
+        planLabel,
+        billingPeriod: input.period,
+        billingPeriodLabel: periodLabel,
+        amount,
+        currency: "ILS" as const,
+        customer: {
+          name: ctx.user.name ?? ws.name,
+          email: ctx.user.email ?? "",
+          phone: ws.contactPhone,
+          taxId: ws.taxId,
+          taxIdType: (ws.taxIdType ?? "company") as "company" | "individual",
+        },
+        returnUrl,
+        activationUrl,
+        issuedAt,
+      };
+      const signature = makeCheckoutSdk.signCheckout(base);
+      const payload = { ...base, signature };
+
+      try {
+        const res = await makeCheckoutSdk.postToMake(payload);
+        if (!res.ok) {
+          console.warn("[billing] Make webhook non-2xx", res.status, res.body);
+          throw new Error(
+            `מערכת התשלום (Make) החזירה שגיאה (${res.status}). אנא נסו שוב.`,
+          );
+        }
+      } catch (err) {
+        console.error("[billing] Make webhook failed", err);
+        throw new Error(
+          "לא הצלחנו לשגר את הבקשה למערכת התשלום. צוות SPARK קיבל התראה ויטפל בזה ידנית.",
+        );
+      }
+
+      // Best-effort customer confirmation: tell them a payment link is on the
+      // way. The actual link is generated and sent by the Make scenario.
+      if (ctx.user.email) {
+        const customerEmail = renderBrandedEmail({
+          subject: `מעבירים אותכם לתשלום — ${planLabel} ${periodLabel}`,
+          eyebrow: "אישור קליטת בקשה",
+          headline: "תודה! מכינים לכם לינק תשלום מאובטח",
+          greeting: ctx.user.name ? `שלום ${ctx.user.name},` : "שלום רב,",
+          body: [
+            "קיבלנו את הבקשה לתשלום והתהליך החל. בדקות הקרובות יגיע אליכם מייל נפרד עם לינק לעמוד התשלום המאובטח.",
+            {
+              type: "highlight",
+              label: "פרטי הבקשה",
+              value: `${planLabel} · ${periodLabel} · ₪${amount.toLocaleString("he-IL")}`,
+              note: "החיוב מתבצע בהוראת קבע (ללא תשלומים).",
+              tone: "success",
+            },
+            "ברגע שהתשלום יושלם — הגישה למערכת תיפתח אוטומטית, והחשבונית תעלה במייל מ-iCount.",
+          ],
+          cta: { label: "מעבר למסך המתנה", url: returnUrl },
+          footerNote:
+            "אם לא ביצעתם בקשה זו, נא להתעלם או ליצור קשר במייל anat@spark-ai.co.il.",
+        });
+        const result = await sendEmail({
+          to: ctx.user.email,
+          subject: customerEmail.subject,
+          html: customerEmail.html,
+          text: customerEmail.text,
+        });
+        if (!result.ok) {
+          console.warn("[billing] Make confirm email failed", result.error);
+        }
+      }
+
+      return {
+        ok: true as const,
+        requestId,
+        plan: input.plan,
+        period: input.period,
+        amount,
+        returnUrl,
+      };
+    }),
+
   /**
    * Internal procedure — called by an admin tool / scheduled job to mark a
    * workspace as past_due (charge failed). Not wired to a UI yet but exposed

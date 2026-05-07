@@ -70,18 +70,17 @@ export default function Onboarding() {
     },
   });
 
-  // מסלול ראשי — פתיחת הוראת קבע באשראי דרך iCount Hosted Page.
-  // זה מה שהמשתמש באמת לוחץ עליו בסוף ה-Onboarding.
-  const startStandingOrder = trpc.billing.startStandingOrder.useMutation({
+  // מסלול ראשי — POST ל-Make webhook. Make מתזמן עם iCount,
+  // שולח למשתמש לינק לתשלום, ומחזיר ל-/api/billing/activate לאחר מכן.
+  const startCheckoutViaMake = trpc.billing.startCheckoutViaMake.useMutation({
     onSuccess: (res) => {
-      toast.success("מעבירים לעמוד הסליקה של iCount", {
-        description: "נפתח חלון חדש להזנת פרטי הכרטיס.",
+      toast.success("הבקשה נשלחה — מעבירים אתכם למסך ההמתנה", {
+        description: "לינק לעמוד התשלום נשלח אליכם במייל.",
       });
-      window.open(res.url, "_blank", "noopener,noreferrer");
-      window.location.assign("/billing/waiting");
+      window.location.assign(`/billing/waiting?req=${res.requestId}`);
     },
     onError: (err) => {
-      toast.error("לא הצלחנו לפתוח עמוד תשלום", { description: err.message });
+      toast.error("לא הצלחנו לפתוח את הבקשה לתשלום", { description: err.message });
     },
   });
 
@@ -99,7 +98,7 @@ export default function Onboarding() {
   });
 
   const upgradeTo = (plan: PaidPlan) => {
-    startStandingOrder.mutate({
+    startCheckoutViaMake.mutate({
       plan,
       period: billingPeriod,
       origin: window.location.origin,
