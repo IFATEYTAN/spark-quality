@@ -347,6 +347,48 @@ export const appRouter = router({
         });
         return { id };
       }),
+
+    update: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number(),
+          isVip: z.boolean().optional(),
+          notes: z.string().max(2000).optional(),
+          flagStatus: z
+            .enum([
+              "regular",
+              "liquid_fund",
+              "tikun_190",
+              "high_fees",
+              "risk_ending",
+              "coverage_gaps",
+            ])
+            .optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        // Make sure caller can access this client (workspace + role check)
+        const target = await db.getClientById({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+        if (!target) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "הלקוח לא נמצא או לא שייך לסוכנות שלך.",
+          });
+        }
+        await db.updateClient({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          isVip: input.isVip,
+          notes: input.notes,
+          flagStatus: input.flagStatus,
+        });
+        return { ok: true as const };
+      }),
   }),
 
   // ========================================================
