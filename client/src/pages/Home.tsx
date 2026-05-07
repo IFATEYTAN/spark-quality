@@ -1,7 +1,8 @@
 // Home — Landing שיווקי בסגנון הסינמטי של הדמו
 // רקע נייבי עמוק, חלקיקי זהב, טיפוגרפיה Rubik, כפתורי זהב
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
+import { ContactModal } from "@/components/ContactModal";
 import {
   ArrowLeft,
   Play,
@@ -20,10 +21,15 @@ import { getLoginUrl } from "@/const";
 export default function Home() {
   const { isAuthenticated, user, loading } = useAuth();
 
-  // אם המשתמש כבר מחובר — נתב אותו למסך הנכון לפי מצב הסוכנות
+  // אם המשתמש כבר מחובר — נתב אותו למסך הנכון לפי מצב הסוכנות.
+  // יוצא מן הכלל: אם הגענו עם ?contact=1 (סריקת QR מהדמו) — נישאר על דף הבית כדי להציג את טופס יצירת הקשר.
   useEffect(() => {
     if (loading) return;
     if (!isAuthenticated || !user) return;
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("contact") === "1") return;
+    }
     const hasWorkspace = Boolean((user as { workspaceId?: number | null }).workspaceId);
     window.location.replace(hasWorkspace ? "/dashboard" : "/onboarding");
   }, [loading, isAuthenticated, user]);
@@ -44,6 +50,15 @@ export default function Home() {
   );
 
   const loginHref = getLoginUrl();
+  // Open ContactModal automatically when ?contact=1 is present (used by demo QR code)
+  const [contactOpen, setContactOpen] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("contact") === "1") {
+      setContactOpen(true);
+    }
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-[#06101F] text-white">
@@ -490,6 +505,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   );
 }

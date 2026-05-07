@@ -1,6 +1,8 @@
 // Editorial Fintech | מסך סיכום סופי — פריסה גלילה במלואו, ללא חיתוך פוטר/טקסטים
-import { useState } from "react";
-import { ArrowLeft, RotateCcw, Calendar } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowLeft, RotateCcw, Calendar, X, QrCode } from "lucide-react";
+import { Link } from "wouter";
+import { QRCodeSVG } from "qrcode.react";
 import { ContactModal } from "./ContactModal";
 
 interface SummaryStageProps {
@@ -9,6 +11,13 @@ interface SummaryStageProps {
 
 export function SummaryStage({ onReset }: SummaryStageProps) {
   const [contactOpen, setContactOpen] = useState(false);
+  // Build a QR target URL pointing to the public landing with auto-opened contact form.
+  // This works both when the demo is hosted on the deployed domain and on the dev preview,
+  // because we read window.location.origin at render-time on the client.
+  const contactQrUrl = useMemo(() => {
+    if (typeof window === "undefined") return "https://sparkquality-zqvpyevd.manus.space/?contact=1";
+    return `${window.location.origin}/?contact=1`;
+  }, []);
 
   return (
     <div className="relative h-full w-full animate-fade-in overflow-y-auto">
@@ -106,12 +115,12 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                   ].map((step, i) => (
                     <div
                       key={i}
-                      className="flex flex-col items-start gap-1.5 rounded-md border border-gold/25 bg-gold/5 p-3 transition-all hover:border-gold hover:bg-gold/10"
+                      className="flex flex-col items-start gap-2 rounded-md border border-gold/40 bg-white/95 p-3 shadow-sm transition-all hover:border-gold hover:shadow-md"
                     >
                       <span className="font-display text-xl font-black text-gold mono-num leading-none">
                         {step.num}
                       </span>
-                      <span className="text-xs text-navy-deep/85 leading-snug font-medium">
+                      <span className="text-sm text-navy-deep leading-snug font-semibold">
                         {step.text}
                       </span>
                     </div>
@@ -142,10 +151,40 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                   <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                 </button>
               </div>
+
+              {/* QR-code card — invites attendees to scan and open the contact form on their phones */}
+              <div
+                className="mt-6 flex flex-col sm:flex-row items-center gap-5 rounded-md border border-gold/40 bg-white/95 p-5 shadow-md animate-fade-up"
+                style={{ animationDelay: "0.55s" }}
+              >
+                <div className="flex-shrink-0 rounded-md bg-white p-3 shadow-inner">
+                  <QRCodeSVG
+                    value={contactQrUrl}
+                    size={128}
+                    level="M"
+                    bgColor="#ffffff"
+                    fgColor="#06101F"
+                    aria-label="QR ליצירת קשר עם SPARK AI"
+                  />
+                </div>
+                <div className="flex-1 text-center sm:text-right">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
+                    <QrCode className="h-4 w-4 text-gold" />
+                    <span className="label-tag text-[10px] text-gold tracking-[0.3em]">
+                      סרקו · השאירו פרטים
+                    </span>
+                  </div>
+                  <h4 className="font-display text-lg font-black text-navy-deep mb-1">
+                    רוצים שנחזור אליכם?
+                  </h4>
+                  <p className="text-xs text-navy-deep/75 leading-relaxed max-w-sm">
+                    סרקו את הקוד עם המצלמה של הטלפון — הטופס נפתח אצלכם ברקע, ויפעת או ענת יחזרו אליכם תוך יום עסקים.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/* LEFT: Editorial brand statement + testimonial */}
+          {/** LEFT: Editorial brand statement + testimonial */}
           <aside className="lg:col-span-5 lg:flex lg:flex-col gap-5">
             {/* Brand statement card */}
             <div className="relative overflow-hidden rounded-md shadow-2xl shadow-navy/30 min-h-[420px]">
@@ -257,6 +296,17 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
             </div>
           </aside>
         </div>
+
+        {/* Floating exit button — visible on every variant of /demo (including ?clean=true).
+           Uses a real anchor so users can also middle-click to open in a new tab if they want. */}
+        <Link
+          href="/"
+          className="fixed top-4 left-4 z-[80] inline-flex items-center gap-2 rounded-full border border-navy-deep/40 bg-white/95 px-4 py-2 text-xs font-bold text-navy-deep shadow-lg backdrop-blur-md transition-all hover:bg-navy-deep hover:text-white"
+          aria-label="יציאה מהדמו וחזרה לאתר"
+        >
+          <X className="h-3.5 w-3.5" />
+          יציאה מהדמו
+        </Link>
 
         {/* Footer (in flow now — never clipped, scrolls with the page) */}
         <div className="mt-10 pt-6 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-2">

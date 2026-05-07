@@ -261,3 +261,10 @@
 - [x] חיבור ActionCenter ל-Dashboard.tsx (כשיש לקוחות בתיק)
 - [x] חיבור ActionCenter ל-UploadReport.tsx במצב done (showWhenEmpty=true) עם ספירה מקומית מתוך parsed.customers
 - [x] vitest 30/30 עוברים, אין שגיאות TypeScript
+
+
+## Round 30 - תיקון ניגודיות + יציאה מהדמו + QR ליצירת קשר (2026-05-07)
+- [x] לתקן את הניגודיות של 3 הכרטיסיות "השלבים הבאים שלכם" — רקע לבן מלא + text-navy-deep + font-semibold
+- [x] להוסיף כפתור "יציאה מהדמו" ב-SummaryStage שמחזיר ל-/ (מתנהג גם ב-clean mode כי מוצג בתוך SummaryStage)
+- [x] להוסיף QR-code בעמוד הסיכום (qrcode.react) — מוביל ל-`/?contact=1`, ה-Home מזהה את ה-query ופותח ContactModal אוטומטית
+- [x] vitest 37/37 עוברים, אין שגיאות TypeScript
