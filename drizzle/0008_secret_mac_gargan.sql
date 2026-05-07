@@ -1,0 +1,1 @@
+ALTER TABLE `workspaces` MODIFY COLUMN `subscriptionStatus` enum('pending_payment','active','past_due','suspended','cancelled') NOT NULL DEFAULT 'pending_payment';

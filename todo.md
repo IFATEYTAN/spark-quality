@@ -344,3 +344,14 @@
 - [ ] לזהות user בלי workspaceId ולהפנות ל-/onboarding עם הודעה ברורה
 - [ ] להוסיף tRPC mutation `workspaces.completeBillingDetails` שמעדכן taxId+contactPhone+taxIdType
 - [ ] בדיקה ויזואלית של הזרם
+
+
+## Round 40 — אכיפת תשלום חובה לפני גישה (קריטי, 2026-05-07)
+- [ ] שינוי ברירת מחדל ב-schema: workspaces.subscriptionStatus = 'pending_payment' (לא 'active')
+- [ ] עדכון createWorkspace לקבוע pending_payment כברירת מחדל
+- [ ] AccessGuard בצד-לקוח: workspace ב-pending_payment → רידיירקט ל-/pricing עם הודעה
+- [ ] Server-side guard: כל procedure שמחזיר נתונים → לבדוק ws.subscriptionStatus === 'active', אחרת throw
+- [ ] callback של iCount → לעדכן subscriptionStatus ל-'active' רק אז
+- [ ] איפוס דוגמאות: workspaces 60002 ("בדיקה") + 30001 + 1 ("יפעת") → pending_payment כדי לאמת מחדש
+- [ ] בדיקת זרם מקצה לקצה: הרשמה → onboarding → pricing → iCount → callback → גישה נפתחת
+- [ ] checkpoint + הוראות לבדיקה

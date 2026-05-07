@@ -58,7 +58,7 @@ export const workspaces = mysqlTable("workspaces", {
    *  - cancelled     — cancelled by user / admin (no access)
    * Default "active" so existing tenants keep working until billing logic kicks in.
    */
-  subscriptionStatus: mysqlEnum("subscriptionStatus", ["active", "past_due", "suspended", "cancelled"]).default("active").notNull(),
+  subscriptionStatus: mysqlEnum("subscriptionStatus", ["pending_payment", "active", "past_due", "suspended", "cancelled"]).default("pending_payment").notNull(),
   /** Timestamp of the last successful charge (any period). NULL until first invoice. */
   lastPaymentAt: timestamp("lastPaymentAt"),
   /** When the next charge is due (renewal). Used to schedule the dunning job. */

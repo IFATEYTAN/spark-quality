@@ -118,7 +118,7 @@ function isICountConfigured(): boolean {
  * Pure function so it's easy to test and reuse client-side.
  */
 export function computeAccessStatus(ws: {
-  subscriptionStatus: "active" | "past_due" | "suspended" | "cancelled";
+  subscriptionStatus: "pending_payment" | "active" | "past_due" | "suspended" | "cancelled";
   pastDueSince: Date | null;
 }): {
   status: "active" | "grace" | "blocked" | "cancelled";
@@ -127,6 +127,10 @@ export function computeAccessStatus(ws: {
 } {
   if (ws.subscriptionStatus === "active") {
     return { status: "active", graceEndsAt: null, daysRemaining: 0 };
+  }
+  if (ws.subscriptionStatus === "pending_payment") {
+    // Brand-new workspace that has never paid — hard block until first charge.
+    return { status: "blocked", graceEndsAt: null, daysRemaining: 0 };
   }
   if (ws.subscriptionStatus === "cancelled") {
     return { status: "cancelled", graceEndsAt: null, daysRemaining: 0 };
@@ -306,6 +310,7 @@ export const billingRouter = router({
         plan: "basic" as const,
         billingPeriod: "yearly" as const,
         paymentMethod: "manual" as const,
+        hasNeverPaid: false,
       };
     }
       const db = await requireDb();
@@ -343,6 +348,7 @@ export const billingRouter = router({
         | "enterprise",
       billingPeriod: ws.billingPeriod,
       paymentMethod: ws.paymentMethod,
+      hasNeverPaid: ws.subscriptionStatus === "pending_payment" && !ws.lastPaymentAt,
     };
   }),
 

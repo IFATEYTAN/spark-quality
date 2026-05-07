@@ -1,0 +1,28 @@
+{
+  "query": "UPDATE workspaces SET subscriptionStatus='pending_payment', lastPaymentAt=NULL, pastDueSince=NULL WHERE subscriptionStatus='active' AND iCountSubscriptionId IS NULL; SELECT id, name, subscriptionStatus, lastPaymentAt FROM workspaces ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute UPDATE workspaces SET subscriptionStatus='pending_payment', lastPaymentAt=NULL, pastDueSince=NULL WHERE subscriptionStatus='active' AND iCountSubscriptionId IS NULL; SELECT id, name, subscriptionStatus, lastPaymentAt FROM workspaces ORDER BY id;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "יפעת",
+      "subscriptionStatus": "pending_payment",
+      "lastPaymentAt": "NULL"
+    },
+    {
+      "id": "30001",
+      "name": "יפעת spark-ai",
+      "subscriptionStatus": "pending_payment",
+      "lastPaymentAt": "NULL"
+    },
+    {
+      "id": "60002",
+      "name": "בדיקה",
+      "subscriptionStatus": "pending_payment",
+      "lastPaymentAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsubscriptionStatus\tlastPaymentAt\n1\tיפעת\tpending_payment\tNULL\n30001\tיפעת spark-ai\tpending_payment\tNULL\n60002\tבדיקה\tpending_payment\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 2038
+}

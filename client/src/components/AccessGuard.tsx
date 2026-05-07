@@ -19,6 +19,7 @@ type AccessData = {
   plan: "basic" | "pro" | "premium" | "enterprise";
   billingPeriod: "monthly" | "yearly";
   paymentMethod: "standing_order" | "manual";
+  hasNeverPaid?: boolean;
 };
 
 type AccessGuardProps = {
@@ -91,23 +92,31 @@ function GraceBanner({ access }: { access: AccessData }) {
 
 function BlockedScreen({ access }: { access: AccessData }) {
   const isCancelled = access.status === "cancelled";
+  const isFirstTime = !!access.hasNeverPaid;
+  const heading = isCancelled
+    ? "המנוי בוטל"
+    : isFirstTime
+      ? "רק רגע — נדרשת הפעלת מנוי כדי להיכנס למערכת"
+      : "הגישה למערכת SPARK Quality מושעית עד להסדרת התשלום";
+  const body = isCancelled
+    ? "המנוי שלכם בוטל. ניתן לחדש את המנוי בכל עת — הנתונים שלכם נשמרים במלואם."
+    : isFirstTime
+      ? "ההרשמה הושלמה בהצלחה. כדי להתחיל לעבוד עם SPARK Quality, יש להפעיל הוראת קבע באשראי בעמוד התמחור. בעת אישור התשלום הגישה תיפתח באופן מיידי."
+      : "ניסיון החיוב האחרון לא הושלם, ותקופת החסד של 3 ימים הסתיימה. הנתונים שלכם שמורים במלואם — מיד עם השלמת התשלום הגישה תיפתח אוטומטית.";
+  const eyebrow = isFirstTime ? "הפעלת מנוי" : "הגישה הושעתה";
   return (
     <div className="relative z-30 flex min-h-screen items-center justify-center bg-[#06101F] px-4 py-16">
-      <div className="absolute inset-0 bg-gradient-to-b from-red-950/30 via-[#06101F] to-[#06101F]" aria-hidden />
+      <div className={`absolute inset-0 ${isFirstTime ? "bg-gradient-to-b from-amber-950/30" : "bg-gradient-to-b from-red-950/30"} via-[#06101F] to-[#06101F]`} aria-hidden />
       <GlassCard goldAccent className="relative w-full max-w-2xl p-10 text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-400/40 bg-red-500/10">
-          <Lock className="h-7 w-7 text-red-300" />
+        <div className={`mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full ${isFirstTime ? "border border-amber-400/40 bg-amber-500/10" : "border border-red-400/40 bg-red-500/10"}`}>
+          <Lock className={`h-7 w-7 ${isFirstTime ? "text-amber-300" : "text-red-300"}`} />
         </div>
-        <GoldEyebrow>הגישה הושעתה</GoldEyebrow>
+        <GoldEyebrow>{eyebrow}</GoldEyebrow>
         <h1 className="mt-3 font-display text-3xl font-extrabold text-white md:text-4xl">
-          {isCancelled
-            ? "המנוי בוטל"
-            : "הגישה למערכת SPARK Quality מושעית עד להסדרת התשלום"}
+          {heading}
         </h1>
         <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-white/75">
-          {isCancelled
-            ? "המנוי שלכם בוטל. ניתן לחדש את המנוי בכל עת — הנתונים שלכם נשמרים במלואם."
-            : "ניסיון החיוב האחרון לא הושלם, ותקופת החסד של 3 ימים הסתיימה. הנתונים שלכם שמורים במלואם — מיד עם השלמת התשלום הגישה תיפתח אוטומטית."}
+          {body}
         </p>
         <div className="mx-auto mt-8 max-w-md rounded-xl border border-white/10 bg-white/5 p-5 text-right">
           <div className="text-[11px] uppercase tracking-[0.3em] text-gold/80">סטטוס נוכחי</div>

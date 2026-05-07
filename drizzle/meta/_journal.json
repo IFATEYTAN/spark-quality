@@ -57,6 +57,13 @@
       "when": 1778160956868,
       "tag": "0007_lonely_molly_hayes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1778180751924,
+      "tag": "0008_secret_mac_gargan",
+      "breakpoints": true
     }
   ]
 }
