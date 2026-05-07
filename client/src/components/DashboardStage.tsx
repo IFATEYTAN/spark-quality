@@ -3,6 +3,7 @@ import { useState } from "react";
 import { AlertTriangle, TrendingUp, Calendar, Mail, Gift, Sparkles, ArrowLeft, Download, Mail as MailIcon, MessageSquare, Briefcase, AlertOctagon, X } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip, LabelList } from "recharts";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 import { CUSTOMERS, STATS, INSURER_BREAKDOWN, AGE_GROUPS_NO_PENSION, formatCurrency } from "@/lib/demoData";
 import type { Customer } from "@/lib/demoData";
 import { AnimatedNumber } from "./AnimatedNumber";
@@ -283,15 +284,47 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
 
         {/* Customer table - priority list */}
         <div className="animate-fade-up">
-          <div className="mb-5 flex items-baseline justify-between">
+          <div className="mb-5 flex flex-col items-start justify-between gap-3 lg:flex-row lg:items-baseline">
             <div>
               <div className="label-tag text-gold mb-1">רשימת פעולה</div>
               <h2 className="font-display text-2xl font-bold text-navy-deep">לקוחות בעדיפות גבוהה</h2>
             </div>
-            <button className="text-sm font-semibold text-navy-deep hover:text-gold flex items-center gap-1">
-              ראה את כל 1,071 הלקוחות
-              <ArrowLeft className="h-3.5 w-3.5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const headers = ["שם", "גיל", "עיר", "מוצר", "חברה", "סטטוס", "דגל", "צבירה", "פעולה"];
+                  const rows = customers.map((c) => [c.name, String(c.age), c.city, c.product, c.insurer, c.status, c.flag, String(c.accumulation), c.recommendation]);
+                  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+                  const wb = XLSX.utils.book_new();
+                  XLSX.utils.book_append_sheet(wb, ws, "לקוחות");
+                  XLSX.writeFile(wb, `clients-${new Date().toISOString().slice(0,10)}.xlsx`);
+                  toast.success("הקובץ הורד בהצלחה");
+                }}
+                className="rounded-sm border border-border bg-card px-3 py-2 text-xs font-semibold text-navy-deep hover:border-gold hover:text-gold"
+              >
+                ייצוא Excel
+              </button>
+              <button
+                onClick={() => {
+                  const html = `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8"><title>רשימת לקוחות</title><style>body{font-family:Arial,sans-serif;margin:24px;color:#0f172a}h1{font-size:20px;margin-bottom:12px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #cbd5e1;padding:8px;text-align:right;font-size:12px}th{background:#f1f5f9}</style></head><body><h1>תיק לקוחות &middot; ${new Date().toLocaleDateString("he-IL")}</h1><table><thead><tr><th>שם</th><th>גיל</th><th>עיר</th><th>מוצר</th><th>חברה</th><th>סטטוס</th><th>דגל</th><th>צבירה</th><th>פעולה</th></tr></thead><tbody>${customers.map((c) => `<tr><td>${c.name}</td><td>${c.age}</td><td>${c.city}</td><td>${c.product}</td><td>${c.insurer}</td><td>${c.status}</td><td>${c.flag}</td><td>${formatCurrency(c.accumulation)}</td><td>${c.recommendation}</td></tr>`).join("")}</tbody></table></body></html>`;
+                  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `clients-${new Date().toISOString().slice(0,10)}.html`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("הקובץ הורד בהצלחה");
+                }}
+                className="rounded-sm border border-border bg-card px-3 py-2 text-xs font-semibold text-navy-deep hover:border-gold hover:text-gold"
+              >
+                ייצוא HTML
+              </button>
+              <button className="text-sm font-semibold text-navy-deep hover:text-gold flex items-center gap-1">
+                ראה את כל 1,071 הלקוחות
+                <ArrowLeft className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
           <div className="glass-card rounded-sm overflow-hidden">
