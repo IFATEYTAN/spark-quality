@@ -155,7 +155,7 @@ export default function DemoExperience() {
     <div className="h-screen flex flex-col overflow-hidden bg-navy-deep">
       {!cleanMode && <Header stage={STAGE_LABELS_DYNAMIC[stage]} onReset={reset} />}
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden relative pb-32 sm:pb-24">
         {stage === "intro" && (
           <IntroStage
             onContinue={() => setStage(isAdmin ? "upload" : "analyzing")}
@@ -189,11 +189,11 @@ export default function DemoExperience() {
       </main>
 
       {/* Floating navigation cluster - bottom-left corner (away from RTL primary action zone) */}
-      <div className="fixed bottom-6 left-6 z-50 flex items-center gap-2">
-        {/* Fullscreen toggle */}
+      <div className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-50 flex items-center gap-2">
+        {/* Fullscreen toggle - hidden on very small screens where it overlaps */}
         <button
           onClick={toggleFullscreen}
-          className="group relative h-11 w-11 rounded-full bg-navy-deep/85 backdrop-blur-md border border-gold/30 flex items-center justify-center text-gold/90 shadow-xl shadow-black/30 transition-all hover:bg-navy-deep hover:border-gold hover:text-gold hover:scale-105"
+          className="hidden sm:flex group relative h-11 w-11 rounded-full bg-navy-deep/85 backdrop-blur-md border border-gold/30 items-center justify-center text-gold/90 shadow-xl shadow-black/30 transition-all hover:bg-navy-deep hover:border-gold hover:text-gold hover:scale-105"
           aria-label={isFullscreen ? "יציאה ממסך מלא" : "מסך מלא (F)"}
           title={isFullscreen ? "יציאה ממסך מלא (Esc)" : "מסך מלא (F)"}
         >
@@ -208,7 +208,7 @@ export default function DemoExperience() {
         <button
           onClick={goPrev}
           disabled={!canGoBack}
-          className="group h-11 w-11 rounded-full bg-navy-deep/85 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/80 shadow-xl shadow-black/30 transition-all hover:bg-navy-deep hover:border-white/40 hover:text-white hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
+          className="group h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-navy-deep/85 backdrop-blur-md border border-white/15 flex items-center justify-center text-white/80 shadow-xl shadow-black/30 transition-all hover:bg-navy-deep hover:border-white/40 hover:text-white hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
           aria-label="מסך קודם (חץ ימין)"
           title="מסך קודם (→)"
         >
@@ -219,7 +219,7 @@ export default function DemoExperience() {
         <button
           onClick={goNext}
           disabled={!canGoForward}
-          className="group h-12 w-12 rounded-full bg-gradient-to-br from-gold to-[#B89346] flex items-center justify-center text-navy-deep shadow-xl shadow-gold/30 transition-all hover:scale-110 hover:shadow-gold/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
+          className="group h-12 w-12 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-gold to-[#B89346] flex items-center justify-center text-navy-deep shadow-xl shadow-gold/30 transition-all hover:scale-110 hover:shadow-gold/50 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100"
           aria-label="מסך הבא (חץ שמאל)"
           title="מסך הבא (←)"
         >
@@ -245,22 +245,22 @@ function KeyboardHint() {
 
   return (
     <div
-      className="fixed bottom-7 left-1/2 -translate-x-1/2 z-40 pointer-events-none animate-fade-in"
+      className="fixed bottom-20 sm:bottom-7 left-1/2 -translate-x-1/2 z-40 pointer-events-none animate-fade-in w-max max-w-[90vw]"
       style={{ animationDelay: "1s" }}
     >
-      <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-navy-deep/80 backdrop-blur-md border border-gold/20 shadow-lg">
-        <span className="label-tag text-[10px] text-white/60 tracking-widest">
+      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-full bg-navy-deep/90 backdrop-blur-md border border-gold/20 shadow-lg">
+        <span className="hidden sm:inline-block label-tag text-[10px] text-white/60 tracking-widest">
           טיפ
         </span>
-        <kbd className="px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
+        <kbd className="px-1.5 sm:px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
           ←
         </kbd>
-        <span className="text-[11px] text-white/70">למעבר בין מסכים</span>
-        <span className="text-white/30">·</span>
-        <kbd className="px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
+        <span className="text-[10px] sm:text-[11px] text-white/70">למעבר בין מסכים</span>
+        <span className="hidden sm:inline-block text-white/30">·</span>
+        <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
           F
         </kbd>
-        <span className="text-[11px] text-white/70">למסך מלא</span>
+        <span className="hidden sm:inline-block text-[11px] text-white/70">למסך מלא</span>
       </div>
     </div>
   );
