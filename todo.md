@@ -278,3 +278,11 @@
 - [x] נוספו sections חדשים Categories (6 כרטיסים) ו-Team (יפעת + ענת); תמחור על מקומו ב-Home כשונית לדף עצמאי
 - [x] רספונסיב: nav מתכווץ להמבורגר מתחת ל-lg breakpoint, לוגו מתמקד בימין, CTAs לא נגלשים
 - [x] vitest 37/37 עוברים, אין שגיאות TypeScript
+
+
+## Round 32 — Demo upload gating (admin-only) (2026-05-07)
+- [x] לזהות איפה מוצג UploadStage בדמו ולהוסיף בדיקת `useAuth().user?.role === "admin"` (DemoExperience)
+- [x] משתמש רגיל / אורח: STAGE_ORDER_GUEST מדלג מ-Intro ישירות ל-Analyzing; DashboardStage כבר נופל חזרה ל-CUSTOMERS/STATS מובנים
+- [x] אדמין: STAGE_ORDER_FULL שומר את הזרימה המלאה כולל UploadStage; תויות מסכים התעדכנו ל-5/5 mode
+- [x] safety net: אם משתמש לא-אדמין מגיע ל-stage="upload" מ-stale state, queueMicrotask מקדם אותו ל-"analyzing"
+- [x] vitest 37/37 עוברים, אין שגיאות TypeScript
