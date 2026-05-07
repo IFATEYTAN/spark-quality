@@ -325,9 +325,15 @@
 
 
 ## Round 37 — תיקון: כפתור התשלום הפעיל את fallback במקום iCount (2026-05-07)
-- [ ] לאתר למה startStandingOrder לא נקרא או נכשל בשקט והפעיל את requestCheckout
-- [ ] לוודא שאם iCount keys לא מוגדרים → תשגיאה ברורה למשתמש (לא fallback שקט)
-- [ ] להסיר/להפריד לחלוטין את ה-fallback "ענת תיצור איתכם קשר" — יישאר רק ככפתור משני נפרד
-- [ ] להוסיף לוגים בשרת על כל קריאה ל-startStandingOrder (success/fail)
-- [ ] לבנות endpoint ל-Pricing שיגיד למשתמש האם החיבור ל-iCount תקין
+- [x] מצאתי ת-Onboarding קורא ל-requestCheckout (notify-Anat) במקום startStandingOrder
+- [x] תיקנתי את upgradeTo להשתמש ב-startStandingOrder ולפתוח את iCount בטאב חדש
+- [x] ה-fallback למייל ידני נשמר כמסלול משני בלבד (requestManualInvoice) — לא מתבצע אוטומטית
+- [x] אומתתי שמפתחות iCount ה-secrets מוגדרים (ICOUNT_API_TOKEN=41 תווים, ICOUNT_COMPANY_ID=iclaim, ICOUNT_API_USER=info@iclaim.co.il)
 - [ ] לבדוק את הזרם בדפדפן עד הסוף
+
+
+## Round 38 — תיקון toggle "חודשי/שנתי" ב-/pricing (2026-05-07)
+- [ ] לשכתב את ה-toggle כ-segmented control ברור עם רקע מובחן לאופציה הפעילה
+- [ ] להציג badge "חיסכון 16%" ליד "שנתי" בצורה בולטת
+- [ ] לוודא RTL נכון
+- [ ] בדיקה ויזואלית

@@ -161,26 +161,47 @@ export default function Pricing() {
             כל תוכנית כוללת ליווי הקמה, הדרכה אישית, ותשלום מאובטח דרך iCount. הגישה למערכת תיפתח מיד עם השלמת התשלום וההצגת רישיון סוכן בתוקף.
           </p>
 
-          {/* Toggle */}
-          <div className="flex items-center justify-center gap-4 mt-10">
-            <span className={`text-sm font-medium ${!isAnnual ? "text-white" : "text-white/50"}`}>
-              תשלום חודשי
-            </span>
+          {/* Segmented toggle — חודשי / שנתי */}
+          <div
+            role="tablist"
+            aria-label="בחירת תקופת חיוב"
+            className="inline-flex items-center gap-1 mt-10 p-1 rounded-full bg-white/5 border border-white/15 backdrop-blur-sm"
+          >
             <button
-              onClick={() => setIsAnnual(!isAnnual)}
-              className="relative inline-flex h-7 w-14 items-center rounded-full bg-white/10 border border-white/20 transition-colors focus:outline-none"
-              aria-label="החלפת תקופת חיוב"
+              role="tab"
+              aria-selected={!isAnnual}
+              onClick={() => setIsAnnual(false)}
+              className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                !isAnnual
+                  ? "bg-gold text-[#06101F] shadow-[0_4px_18px_rgba(212,175,75,0.25)]"
+                  : "text-white/65 hover:text-white"
+              }`}
             >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-gold transition-transform ${
-                  isAnnual ? "translate-x-1" : "translate-x-8"
-                }`}
-              />
+              חודשי
             </button>
-            <span className={`text-sm font-medium ${isAnnual ? "text-white" : "text-white/50"}`}>
-              תשלום שנתי
-              <span className="text-gold text-xs mx-1">(חיוב מראש)</span>
-            </span>
+            <button
+              role="tab"
+              aria-selected={isAnnual}
+              onClick={() => setIsAnnual(true)}
+              className={`relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 ${
+                isAnnual
+                  ? "bg-gold text-[#06101F] shadow-[0_4px_18px_rgba(212,175,75,0.25)]"
+                  : "text-white/65 hover:text-white"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                שנתי
+                <span
+                  className={`text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded-full uppercase ${
+                    isAnnual
+                      ? "bg-[#06101F]/15 text-[#06101F]"
+                      : "bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+                  }`}
+                >
+                  חיסכון 16%
+                </span>
+              </span>
+            </button>
           </div>
         </div>
 
