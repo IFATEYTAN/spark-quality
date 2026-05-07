@@ -242,6 +242,33 @@ export async function createClient(data: InsertClient) {
   return (result as unknown as { insertId: number }).insertId;
 }
 
+export async function updateClient(opts: {
+  clientId: number;
+  workspaceId: number;
+  isVip?: boolean;
+  notes?: string;
+  flagStatus?:
+    | "regular"
+    | "liquid_fund"
+    | "tikun_190"
+    | "high_fees"
+    | "risk_ending"
+    | "coverage_gaps";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const patch: Partial<InsertClient> = {};
+  if (opts.isVip !== undefined) patch.isVip = opts.isVip;
+  if (opts.notes !== undefined) patch.notes = opts.notes;
+  if (opts.flagStatus !== undefined) patch.flagStatus = opts.flagStatus;
+  if (Object.keys(patch).length === 0) return;
+  patch.updatedAt = new Date();
+  await db
+    .update(clients)
+    .set(patch)
+    .where(and(eq(clients.id, opts.clientId), eq(clients.workspaceId, opts.workspaceId)));
+}
+
 export async function getClientPolicies(clientId: number, workspaceId: number) {
   const db = await getDb();
   if (!db) return [];

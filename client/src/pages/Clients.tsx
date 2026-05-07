@@ -21,6 +21,11 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { CategoryScenarioModal } from "@/components/CategoryScenarioModal";
+import { TableToolbar, type ExportColumn } from "@/components/TableToolbar";
+import {
+  ClientDetailDrawer,
+  type ClientDetailRow,
+} from "@/components/ClientDetailDrawer";
 
 type FlagKind = "all" | "vip" | "liquid_fund" | "tikun_190" | "high_fees" | "risk_ending" | "coverage_gaps";
 
@@ -94,6 +99,41 @@ export default function Clients() {
   }, [clientsQuery.data]);
 
   const [flowCategory, setFlowCategory] = useState<DashboardCategory | null>(null);
+  const [selectedClient, setSelectedClient] = useState<ClientDetailRow | null>(null);
+
+  const exportColumns: ExportColumn<(typeof filtered)[number]>[] = useMemo(
+    () => [
+      { key: "fullName", label: "שם", format: (v) => (v ? String(v) : "-") },
+      { key: "idNumber", label: "ת\"ז" },
+      { key: "email", label: "מייל", format: (v) => (v ? String(v) : "") },
+      { key: "phone", label: "טלפון", format: (v) => (v ? String(v) : "") },
+      {
+        key: "isVip",
+        label: "VIP",
+        format: (v) => (v ? "כן" : "לא"),
+      },
+      {
+        key: "flagStatus",
+        label: "דגל",
+        format: (v) => {
+          const meta = v && v !== "regular" ? FLAG_META[v as keyof typeof FLAG_META] : null;
+          return meta?.label ?? "רגיל";
+        },
+      },
+      {
+        key: "totalBalance",
+        label: "צבירה",
+        format: (v) => Number(v ?? 0),
+      },
+      { key: "notes", label: "הערות", format: (v) => (v ? String(v) : "") },
+      {
+        key: "createdAt",
+        label: "נוסף בתאריך",
+        format: (v) => (v ? new Date(v as string).toLocaleDateString("he-IL") : ""),
+      },
+    ],
+    []
+  );
 
   if (loading) {
     return (
@@ -212,6 +252,22 @@ export default function Clients() {
           onActivate={() => setFlowCategory(null)}
         />
 
+        {/* Refresh + Export toolbar */}
+        <TableToolbar
+          rows={filtered}
+          columns={exportColumns}
+          fileName={`spark-clients-${new Date().toISOString().slice(0, 10)}`}
+          reportTitle="דוח לקוחות · SPARK AI"
+          summaryLabel={`מציג ${filtered.length.toLocaleString("he-IL")} מתוך ${(clientsQuery.data?.length ?? 0).toLocaleString("he-IL")} לקוחות`}
+          onRefresh={() => clientsQuery.refetch()}
+          isRefreshing={clientsQuery.isRefetching}
+        />
+
+        <ClientDetailDrawer
+          client={selectedClient}
+          onClose={() => setSelectedClient(null)}
+        />
+
         {/* Body */}
         {clientsQuery.isLoading ? (
           <GlassCard className="p-16 text-center">
@@ -243,10 +299,48 @@ export default function Clients() {
         ) : (
           <div className="grid gap-3">
             {filtered.map((client) => (
-              <GlassCard
+              <div
                 key={client.id}
-                className="p-5 hover:bg-white/[0.07] hover:border-gold/30 transition-all"
+                role="button"
+                tabIndex={0}
+                onClick={() =>
+                  setSelectedClient({
+                    id: client.id,
+                    fullName: client.fullName,
+                    idNumber: client.idNumber,
+                    email: client.email,
+                    phone: client.phone,
+                    isVip: client.isVip,
+                    notes: client.notes,
+                    flagStatus: (client as { flagStatus?: string }).flagStatus,
+                    totalBalance: (client as { totalBalance?: string | number })
+                      .totalBalance,
+                    birthDate: (client as { birthDate?: Date | string }).birthDate,
+                    createdAt: client.createdAt,
+                  })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedClient({
+                      id: client.id,
+                      fullName: client.fullName,
+                      idNumber: client.idNumber,
+                      email: client.email,
+                      phone: client.phone,
+                      isVip: client.isVip,
+                      notes: client.notes,
+                      flagStatus: (client as { flagStatus?: string }).flagStatus,
+                      totalBalance: (client as { totalBalance?: string | number })
+                        .totalBalance,
+                      birthDate: (client as { birthDate?: Date | string }).birthDate,
+                      createdAt: client.createdAt,
+                    });
+                  }
+                }}
+                className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 rounded-lg"
               >
+              <GlassCard className="p-5 hover:bg-white/[0.07] hover:border-gold/30 transition-all">
                 <div className="flex items-center justify-between gap-4 flex-wrap">
                   <div className="flex items-center gap-4">
                     <div
@@ -321,6 +415,7 @@ export default function Clients() {
                   </div>
                 </div>
               </GlassCard>
+              </div>
             ))}
           </div>
         )}
