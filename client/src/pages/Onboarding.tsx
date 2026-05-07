@@ -15,10 +15,16 @@ import {
   Crown,
   FileText,
   Loader2,
+  Phone,
   Shield,
   Sparkles,
   Users,
+  Wallet,
 } from "lucide-react";
+import {
+  isValidIsraeliMobile,
+  isValidIsraeliTaxId,
+} from "@shared/ilValidators";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -32,6 +38,9 @@ export default function Onboarding() {
   const [, navigate] = useLocation();
   const [mode, setMode] = useState<Mode>("choose");
   const [workspaceName, setWorkspaceName] = useState("");
+  const [taxIdType, setTaxIdType] = useState<"company" | "individual">("company");
+  const [taxId, setTaxId] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [inviteToken, setInviteToken] = useState("");
 
   // Legal consent checkboxes (required by Israeli law)
@@ -50,7 +59,7 @@ export default function Onboarding() {
   const createWorkspace = trpc.workspaces.create.useMutation({
     onSuccess: async (_data, variables) => {
       toast.success("הסוכנות נוצרה בהצלחה!", {
-        description: "✨ כעת יש לאמת את רישיון הסוכן שלך",
+        description: "✨ כעת יש לאמת את רישיון הסוכן שלכם",
       });
       setCreatedWorkspaceName(variables.name);
       await utils.auth.me.refetch();
@@ -61,10 +70,26 @@ export default function Onboarding() {
     },
   });
 
+  // מסלול ראשי — פתיחת הוראת קבע באשראי דרך iCount Hosted Page.
+  // זה מה שהמשתמש באמת לוחץ עליו בסוף ה-Onboarding.
+  const startStandingOrder = trpc.billing.startStandingOrder.useMutation({
+    onSuccess: (res) => {
+      toast.success("מעבירים לעמוד הסליקה של iCount", {
+        description: "נפתח חלון חדש להזנת פרטי הכרטיס.",
+      });
+      window.open(res.url, "_blank", "noopener,noreferrer");
+      window.location.assign("/billing/waiting");
+    },
+    onError: (err) => {
+      toast.error("לא הצלחנו לפתוח עמוד תשלום", { description: err.message });
+    },
+  });
+
+  // מסלול גיבוי — טיפול ידני (notify Anat) למידה ו-iCount לא מגיב.
   const requestCheckout = trpc.billing.requestCheckout.useMutation({
     onSuccess: () => {
       toast.success("הבקשה התקבלה ✨", {
-        description: "ענת מצוות SPARK תיצור איתך קשר במייל עם לינק תשלום ב-iCount.",
+        description: "ענת מצוות SPARK תיצור איתכם קשר במייל עם לינק תשלום ב-iCount.",
       });
       window.location.assign("/dashboard");
     },
@@ -73,9 +98,16 @@ export default function Onboarding() {
     },
   });
 
-
-
   const upgradeTo = (plan: PaidPlan) => {
+    startStandingOrder.mutate({
+      plan,
+      period: billingPeriod,
+      origin: window.location.origin,
+    });
+  };
+
+  // CTA משני למקרה ש-iCount מחזיר שגיאה — משתמש גיבוי.
+  const requestManualInvoice = (plan: PaidPlan) => {
     requestCheckout.mutate({
       plan,
       period: billingPeriod,
@@ -133,10 +165,10 @@ export default function Onboarding() {
     mode === "choose"
       ? `שלום ${firstName}! אני פיית SPARK 🪄 בואו נבחר איך מתחילים.`
       : mode === "create"
-        ? "תני לסוכנות שלך שם שיעורר השראה ✨"
+        ? "תנו לסוכנות שלכם שם שיעורר השראה ✨"
         : mode === "billing"
-          ? "כל הכבוד! 🎉 בחרי תוכנית כדי להתחיל לעבוד."
-          : "הדביקי את קוד ההזמנה שקיבלת";
+          ? "כל הכבוד! 🎉 בחרו תוכנית כדי להתחיל לעבוד."
+          : "הדביקו את קוד ההזמנה שקיבלתם";
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={88}>
@@ -162,7 +194,7 @@ export default function Onboarding() {
               <span className="text-gold">.</span>
             </h1>
             <p className="mt-5 text-base lg:text-lg text-white/75 max-w-xl mx-auto leading-relaxed">
-              לפני שמתחילים — בואו נחבר אותך לסביבת העבודה הנכונה.
+              לפני שמתחילים — בואו נחבר אתכם לסביבת העבודה הנכונה.
             </p>
           </div>
 
@@ -225,7 +257,7 @@ export default function Onboarding() {
             <GlassCard goldAccent className="p-7 lg:p-10 animate-fade-up">
               <GoldEyebrow>פתיחת סוכנות חדשה</GoldEyebrow>
               <h2 className="font-display text-2xl lg:text-3xl font-bold text-white tracking-tight mb-7">
-                איך נקרא לסוכנות שלך?
+                איך נקרא לסוכנות שלכם?
               </h2>
               <div className="space-y-5">
                 <div>
@@ -239,6 +271,63 @@ export default function Onboarding() {
                     placeholder='לדוגמה: "ביטוח דניאל" או "בית-הסוכן הירוק"'
                     className="bg-white/5 border-white/25 text-white placeholder:text-white/40 h-12 text-base"
                   />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <Label htmlFor="taxId" className="text-white/90 mb-2 block text-sm font-semibold">
+                      מספר ח.פ / עוסק מורשה / ת״ז
+                    </Label>
+                    <div className="flex gap-2">
+                      <select
+                        value={taxIdType}
+                        onChange={(e) => setTaxIdType(e.target.value as "company" | "individual")}
+                        className="bg-white/5 border border-white/25 text-white h-12 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-gold/50"
+                      >
+                        <option value="company" className="bg-[#06101F]">ח.פ / ע.מ</option>
+                        <option value="individual" className="bg-[#06101F]">ת״ז (עוסק פטור)</option>
+                      </select>
+                      <Input
+                        id="taxId"
+                        value={taxId}
+                        onChange={(e) => setTaxId(e.target.value)}
+                        placeholder="9 ספרות"
+                        className={`flex-1 bg-white/5 border-white/25 text-white placeholder:text-white/40 h-12 text-base ${
+                          taxId.length > 0 && !isValidIsraeliTaxId(taxId, taxIdType)
+                            ? "border-red-500/50 focus-visible:ring-red-500/50"
+                            : ""
+                        }`}
+                      />
+                    </div>
+                    {taxId.length > 0 && !isValidIsraeliTaxId(taxId, taxIdType) && (
+                      <p className="text-red-400 text-xs mt-1.5">
+                        {taxIdType === "company" ? "מספר ח.פ אינו תקין" : "מספר ת״ז אינו תקין"}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <Label htmlFor="phone" className="text-white/90 mb-2 block text-sm font-semibold">
+                      טלפון נייד (לקבלת התראות)
+                    </Label>
+                    <Input
+                      id="phone"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder="05X-XXXXXXX"
+                      dir="ltr"
+                      className={`bg-white/5 border-white/25 text-white placeholder:text-white/40 h-12 text-base text-right ${
+                        contactPhone.length > 0 && !isValidIsraeliMobile(contactPhone)
+                          ? "border-red-500/50 focus-visible:ring-red-500/50"
+                          : ""
+                      }`}
+                    />
+                    {contactPhone.length > 0 && !isValidIsraeliMobile(contactPhone) && (
+                      <p className="text-red-400 text-xs mt-1.5 text-right">
+                        מספר נייד אינו תקין
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Legal Consent Section */}
@@ -264,9 +353,16 @@ export default function Onboarding() {
                   </Button>
                   <Button
                     onClick={() =>
-                      createWorkspace.mutate({ name: workspaceName.trim() })
+                      createWorkspace.mutate({
+                        name: workspaceName.trim(),
+                        taxId: taxId.trim(),
+                        taxIdType,
+                        contactPhone: contactPhone.trim(),
+                      })
                     }
                     disabled={
+                      !isValidIsraeliTaxId(taxId, taxIdType) ||
+                      !isValidIsraeliMobile(contactPhone) ||
                       workspaceName.trim().length < 2 ||
                       !allLegalAgreed ||
                       createWorkspace.isPending
@@ -294,7 +390,7 @@ export default function Onboarding() {
             <GlassCard className="p-7 lg:p-10 animate-fade-up">
               <GoldEyebrow>הצטרפות לסוכנות קיימת</GoldEyebrow>
               <h2 className="font-display text-2xl lg:text-3xl font-bold text-white tracking-tight mb-7">
-                הזיני את קוד ההזמנה
+                הזינו את קוד ההזמנה
               </h2>
               <div className="space-y-5">
                 <div>
@@ -401,7 +497,7 @@ function BillingStep({
           איזו תוכנית מתאימה לך?
         </h2>
         <p className="text-sm text-white/70 leading-relaxed mb-7">
-          בחרי את התוכנית שמתאימה לגודל הסוכנות שלך. כל שינוי מתבצע
+          בחרו את התוכנית שמתאימה לגודל הסוכנות שלכם. כל שינוי מתבצע
           בלחיצה — בלי התחייבויות.
         </p>
 

@@ -95,7 +95,7 @@ export default function Dashboard() {
           <p className="mt-4 text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
             {isAdmin
               ? "מבט-על על כל הסוכנות והפעילות של הצוות."
-              : "הלקוחות שלך, הדוחות והמשימות שלך — במקום אחד."}
+              : "הלקוחות שלכם, הדוחות והמשימות שלכם — במקום אחד."}
           </p>
         </div>
 
@@ -114,7 +114,7 @@ export default function Dashboard() {
               {totalClients.toLocaleString("he-IL")}
             </div>
             <div className="text-xs text-white/55 mt-1">
-              {isAdmin ? "בכל הסוכנות" : "בתיק שלך"}
+              {isAdmin ? "בכל הסוכנות" : "בתיק שלכם"}
             </div>
           </GlassCard>
 
@@ -179,7 +179,7 @@ export default function Dashboard() {
               riskEnding: metricsQuery.data?.riskEnding ?? 0,
               coverageGaps: metricsQuery.data?.coverageGaps ?? 0,
             }}
-            subtitle="זיהינו את הקטגוריות הפעילות בתיק שלך — לחצי על קטגוריה כדי לראות את תרשים הזרימה האוטומטי ואת הצעד הבא."
+            subtitle="זיהינו את הקטגוריות הפעילות בתיק שלכם — לחצו על קטגוריה כדי לראות את תרשים הזרימה האוטומטי ואת הצעד הבא."
           />
         )}
 
@@ -220,7 +220,7 @@ export default function Dashboard() {
                   <p className="text-sm text-white/65 leading-relaxed mb-4">
                     {isAdmin
                       ? "כל הלקוחות של הסוכנות, פילוח חכם וחיפוש מהיר."
-                      : "הלקוחות שלך עם פילוח לפי גיל, יצרן ופרמיות."}
+                      : "הלקוחות שלכם עם פילוח לפי גיל, יצרן ופרמיות."}
                   </p>
                   <div className="flex items-center gap-2 text-gold text-sm font-semibold opacity-80 group-hover:opacity-100 transition-opacity">
                     פתיחת התיק

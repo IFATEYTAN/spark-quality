@@ -124,8 +124,8 @@ export function ActionCenter({
           <h2 className="font-display text-2xl lg:text-3xl font-black text-white tracking-tight">
             {title ??
               (totalActionable > 0
-                ? <>הצעדים הבאים שלך · <span className="text-gold mono-num">{totalActionable}</span> הזדמנויות פעילות</>
-                : "הצעדים הבאים שלך")}
+                ? <>הצעדים הבאים שלכם · <span className="text-gold mono-num">{totalActionable}</span> הזדמנויות פעילות</>
+                : "הצעדים הבאים שלכם")}
           </h2>
           {subtitle && (
             <p className="mt-2 text-sm text-white/65 max-w-2xl leading-relaxed">{subtitle}</p>
@@ -199,7 +199,7 @@ export function ActionCenter({
       {totalActionable === 0 && (
         <GlassCard className="mt-5 p-5 text-center bg-white/[0.03] border-dashed border-white/15">
           <p className="text-sm text-white/55">
-            אחרי שתעלי דוח שורנס, המערכת תזהה אוטומטית את הקטגוריות הפעילות ותציג את הצעדים הבאים כאן.
+            אחרי העלאת דוח שורנס, המערכת תזהה אוטומטית את הקטגוריות הפעילות ותציג את הצעדים הבאים כאן.
           </p>
         </GlassCard>
       )}

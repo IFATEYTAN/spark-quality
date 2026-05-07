@@ -132,7 +132,7 @@ export default function UploadReport() {
                 <Upload className="h-9 w-9 text-gold" />
               </div>
               <h3 className="font-display text-2xl lg:text-3xl font-black text-white tracking-tight mb-3">
-                לחצי או גררי קובץ לכאן
+                לחצו או גררו קובץ לכאן
               </h3>
               <p className="text-sm text-white/60 mb-6">
                 קבצי XLSX / XLS · עד 10MB · עיבוד אוטומטי
@@ -163,7 +163,7 @@ export default function UploadReport() {
               שומר במערכת...
             </h3>
             <p className="text-sm text-white/65">
-              {parsed?.stats.totalCustomers} לקוחות מועברים לתיק שלך
+              {parsed?.stats.totalCustomers} לקוחות מועברים לתיק שלכם
             </p>
           </GlassCard>
         )}
@@ -182,7 +182,7 @@ export default function UploadReport() {
                   הדוח עובד בהצלחה!
                 </h3>
                 <p className="text-sm text-white/65 mt-1">
-                  {importedCount} לקוחות נוספו / עודכנו בתיק שלך
+                  {importedCount} לקוחות נוספו / עודכנו בתיק שלכם
                 </p>
               </div>
             </div>
@@ -254,7 +254,7 @@ export default function UploadReport() {
               showWhenEmpty
               eyebrow="מרכז הפעולות · מה לעשות עכשיו"
               title={<>המהלכים הבאים שלך</>}
-              subtitle="זיהינו אוטומטית את הלקוחות בתיק — לחצי על כל קטגוריה כדי לראות את התרשים האוטומטי ואת הצעד הבא."
+              subtitle="זיהינו אוטומטית את הלקוחות בתיק — לחצו על כל קטגוריה כדי לראות את התרשים האוטומטי ואת הצעד הבא."
             />
           </div>
         )}

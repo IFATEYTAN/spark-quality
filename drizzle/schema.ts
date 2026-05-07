@@ -38,8 +38,35 @@ export const workspaces = mysqlTable("workspaces", {
   id: int("id").autoincrement().primaryKey(),
   /** Display name, e.g. "קסם" או "ביטוח דניאל" */
   name: varchar("name", { length: 200 }).notNull(),
+  /** Legal identifier on tax invoices: 9-digit Israeli company number (ח.פ) or 9-digit Israeli ID (ת״ז) for sole proprietors. Validated with the Israeli check-digit algorithm before insert. Required for issuing tax-compliant invoices via iCount. */
+  taxId: varchar("taxId", { length: 20 }),
+  /** "company" (ח.פ / עוסק מורשה) or "individual" (ת״ז – עוסק פטור / עצמאי) — drives the invoice header and VAT logic. */
+  taxIdType: mysqlEnum("taxIdType", ["company", "individual"]),
+  /** Primary contact phone in E.164-friendly format ("+972…" or "05…"). Used for billing alerts, account-recovery SMS in the future, and operational outreach by the SPARK team. */
+  contactPhone: varchar("contactPhone", { length: 32 }),
   /** Subscription plan: basic | pro | premium | enterprise. Trial removed in Round 33 — every workspace is paid from day one. "trial" kept in enum only for legacy rows that will be migrated to "basic" by db:push. */
   plan: mysqlEnum("plan", ["trial", "basic", "pro", "premium", "enterprise"]).default("basic").notNull(),
+  /** Billing period of the active subscription. "yearly" gets a discount (charged once a year up-front). "monthly" is full price every month. */
+  billingPeriod: mysqlEnum("billingPeriod", ["monthly", "yearly"]).default("yearly").notNull(),
+  /** Payment method on file. "standing_order" (הוראת קבע) is the default; "installments" is intentionally NOT supported. "manual" is used for invoiced/iCount clients. */
+  paymentMethod: mysqlEnum("paymentMethod", ["standing_order", "manual"]).default("manual").notNull(),
+  /**
+   * Operational subscription status, independent of `plan`:
+   *  - active        — paid, full access
+   *  - past_due      — last charge failed, inside the 3-day grace window (still has access, sees banner)
+   *  - suspended     — grace expired, full block screen + suspension email sent
+   *  - cancelled     — cancelled by user / admin (no access)
+   * Default "active" so existing tenants keep working until billing logic kicks in.
+   */
+  subscriptionStatus: mysqlEnum("subscriptionStatus", ["active", "past_due", "suspended", "cancelled"]).default("active").notNull(),
+  /** Timestamp of the last successful charge (any period). NULL until first invoice. */
+  lastPaymentAt: timestamp("lastPaymentAt"),
+  /** When the next charge is due (renewal). Used to schedule the dunning job. */
+  nextChargeAt: timestamp("nextChargeAt"),
+  /** When the current billing cycle started failing. NULL when status is `active`. Drives the 3-day grace window. */
+  pastDueSince: timestamp("pastDueSince"),
+  /** When the suspension email was sent (so we don’t spam). NULL until suspension fires. */
+  suspensionEmailSentAt: timestamp("suspensionEmailSentAt"),
   /** VIP threshold in ILS - clients with total balance above this are auto-flagged as VIP. Default 1,000,000. */
   vipThreshold: decimal("vipThreshold", { precision: 14, scale: 2 }).default("1000000.00").notNull(),
   /** Trial ends at this date (null after upgrade) */
@@ -52,6 +79,12 @@ export const workspaces = mysqlTable("workspaces", {
   suspendedAt: timestamp("suspendedAt"),
   /** Free-form note from super-admin (e.g. reason for suspension). */
   adminNote: text("adminNote"),
+  /** iCount client (לקוח) ID — set on first standing-order signup. */
+  iCountClientId: varchar("iCountClientId", { length: 64 }),
+  /** iCount standing-order (הוראת קבע) ID returned by iCount after card capture. Used to cancel/update via API. */
+  iCountSubscriptionId: varchar("iCountSubscriptionId", { length: 64 }),
+  /** Last iCount document (chashbonit) ID issued for this workspace. */
+  iCountLastInvoiceId: varchar("iCountLastInvoiceId", { length: 64 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -182,7 +182,7 @@ export default function Home() {
               className="font-display text-5xl lg:text-7xl font-black leading-[1.05] tracking-tighter text-white animate-fade-up"
               style={{ animationDelay: "0.2s" }}
             >
-              הסוכן שלך,
+              הסוכן שלכם,
               <br />
               <span className="text-gold">משוחרר</span>
               <span className="text-white/90"> מהעבודה</span>
@@ -217,7 +217,7 @@ export default function Home() {
                 href={loginHref}
                 className="group flex items-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-8 py-4 text-base font-bold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-gold/60"
               >
-                בחרי תוכנית והתחילי
+                בחרו תוכנית והתחילו
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               </a>
             </div>
@@ -288,7 +288,7 @@ export default function Home() {
               {
                 icon: TrendingUp,
                 title: "תיק לקוחות מסודר",
-                body: "כל הלקוחות שלך במקום אחד, עם פילוח לפי גיל, יצרן ביטוח, נכסים, ופרמיות. חיפוש מהיר ופילטרים חכמים.",
+                body: "כל הלקוחות שלכם במקום אחד, עם פילוח לפי גיל, יצרן ביטוח, נכסים, ופרמיות. חיפוש מהיר ופילטרים חכמים.",
               },
               {
                 icon: Users,
@@ -325,7 +325,7 @@ export default function Home() {
             <div className="rounded-lg border border-gold/20 bg-gradient-to-br from-[#06101F]/80 to-[#0B1A2D]/80 backdrop-blur-md p-10 lg:p-14 text-center">
               <Shield className="h-10 w-10 text-gold mx-auto mb-6" />
               <h2 className="font-display text-3xl lg:text-4xl font-black text-white tracking-tight mb-4">
-                הנתונים שלך — <span className="text-gold">שלך בלבד.</span>
+                הנתונים שלכם — <span className="text-gold">שלכם בלבד.</span>
               </h2>
               <p className="text-base lg:text-lg text-white/75 leading-relaxed max-w-2xl mx-auto">
                 בידוד מלא בין סוכנויות, הצפנה בכל שכבה, התאמה לחוקי הגנת הפרטיות
@@ -503,11 +503,9 @@ export default function Home() {
               <div className="h-px w-12 bg-gold" />
             </div>
             <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight">
-              שש קטגוריות שמעלות לך את ההכנסות
+              שש קטגוריות שמעלות לכם את ההכנסות
             </h2>
-            <p className="mt-4 text-base text-white/70 max-w-2xl mx-auto leading-relaxed">
-              המערכת סורקת את תיק הלקוחות שלך ומסמנת כל הזדמנות לאחת משש קטגוריות קבועות — כל אחת עם תרחיש מדויק ותסריט פעולה מוכן למשלוח.
-            </p>
+            <p className="mt-4 text-base text-white/70 max-w-2xl mx-auto leading-relaxed">              המערכת סורקת את תיק הלקוחות שלכם ומסמנת כל הזדמנות לאחת משש הקטגוריות הקבועות — כל אחת עם תרחיש מדויק ותסריט פעולה מוכן למשלוח.            </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
             {[
@@ -581,7 +579,7 @@ export default function Home() {
         <div className="container">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tight mb-6">
-              מוכנה לראות את <span className="text-gold">SPARK AI</span> בפעולה?
+              מוכנים לראות את <span className="text-gold">SPARK AI</span> בפעולה?
             </h2>
             <p className="text-base text-white/70 leading-relaxed mb-10">
               הפעילו את הדמו האינטראקטיבי וצפו איך 1,584 לקוחות הופכים בתוך

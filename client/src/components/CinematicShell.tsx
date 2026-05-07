@@ -5,6 +5,7 @@ import { Link, useLocation } from "wouter";
 import { LayoutDashboard, Users, Upload as UploadIcon, UserCog, LogOut, Sparkles, ShieldCheck } from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { AccessGuard } from "./AccessGuard";
 
 interface CinematicShellProps {
   children: ReactNode;
@@ -119,7 +120,9 @@ export function CinematicShell({
       {/* Main layout */}
       <div className="relative z-10 flex">
         {showSidebar && <CinematicSidebar />}
-        <main className="flex-1 min-w-0">{children}</main>
+        <main className="flex-1 min-w-0">
+          {showSidebar ? <AccessGuard>{children}</AccessGuard> : children}
+        </main>
       </div>
     </div>
   );

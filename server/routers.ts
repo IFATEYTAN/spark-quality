@@ -11,6 +11,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminRouter } from "./adminRouter";
 import { billingRouter } from "./billing";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { isValidIsraeliTaxId, normalizeIsraeliMobile } from "@shared/ilValidators";
 
 function escapeHtml(value: string): string {
   return value
@@ -191,6 +192,9 @@ export const appRouter = router({
         z.object({
           name: z.string().min(2).max(200),
           plan: z.enum(["basic", "pro", "premium", "enterprise"]).optional(),
+          taxId: z.string().min(9).max(20),
+          taxIdType: z.enum(["company", "individual"]),
+          contactPhone: z.string().min(9).max(32),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -200,9 +204,31 @@ export const appRouter = router({
             message: "User already belongs to a workspace.",
           });
         }
+
+        // Validate Israeli check-digit on tax ID and Israeli mobile.
+        if (!isValidIsraeliTaxId(input.taxId, input.taxIdType)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              input.taxIdType === "company"
+                ? "מספר ח.פ אינו תקין. יש להזין 9 ספרות ללא מקף או רווח."
+                : "מספר ת״ז שהוזן אינו תקין (תקלת ספרת ביקורת).",
+          });
+        }
+        const phoneNorm = normalizeIsraeliMobile(input.contactPhone);
+        if (!phoneNorm) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "מספר טלפון נייד לא תקין. לדוגמה: 05X-XXXXXXX.",
+          });
+        }
+
         const workspaceId = await db.createWorkspace({
           name: input.name,
           plan: input.plan ?? "basic",
+          taxId: input.taxId.replace(/\D+/g, ""),
+          taxIdType: input.taxIdType,
+          contactPhone: phoneNorm,
         });
         await db.updateUserWorkspace(ctx.user.id, workspaceId, "owner");
         return { workspaceId };

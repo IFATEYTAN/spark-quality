@@ -12,6 +12,9 @@ import Home from "./pages/Home";
 import Legal from "./pages/Legal";
 import Onboarding from "./pages/Onboarding";
 import Pricing from "./pages/Pricing";
+import BillingWaiting from "./pages/BillingWaiting";
+import BillingSuccess from "./pages/BillingSuccess";
+import BillingFailed from "./pages/BillingFailed";
 import Team from "./pages/Team";
 import UploadReport from "./pages/UploadReport";
 
@@ -28,6 +31,9 @@ function Router() {
       <Route path={"/clients"} component={Clients} />
       <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/pricing"} component={Pricing} />
+      <Route path={"/billing/waiting"} component={BillingWaiting} />
+      <Route path={"/billing/success"} component={BillingSuccess} />
+      <Route path={"/billing/failed"} component={BillingFailed} />
       <Route path={"/legal/terms"}>{() => <Legal kind="terms" />}</Route>
       <Route path={"/legal/privacy"}>{() => <Legal kind="privacy" />}</Route>
       <Route path={"/legal/accessibility"}>{() => <Legal kind="accessibility" />}</Route>

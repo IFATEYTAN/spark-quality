@@ -160,8 +160,8 @@ export default function Clients() {
             </h1>
             <p className="mt-3 text-sm lg:text-base text-white/65 leading-relaxed">
               {user?.workspaceRole === "agent"
-                ? "מציג רק את הלקוחות שלך — בידוד מלא בתוך הסוכנות."
-                : "מציג את כל לקוחות הסוכנות — כתפקיד מנהל יש לך גישה מלאה."}
+                ? "מציג רק את הלקוחות שלכם — בידוד מלא בתוך הסוכנות."
+                : "מציג את כל לקוחות הסוכנות — כתפקיד מנהל יש לכם גישה מלאה."}
             </p>
           </div>
           <Link href="/upload">
@@ -237,8 +237,8 @@ export default function Clients() {
                   <PlayCircle className="h-5 w-5 text-gold" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-white">ראי תרשים זרימה אינטראקטיבי</div>
-                  <div className="text-xs text-white/55">צפי בתרשים הזרימה של התהליך האוטומטי לקטגוריה זו</div>
+                  <div className="text-sm font-bold text-white">ראו תרשים זרימה אינטראקטיבי</div>
+                  <div className="text-xs text-white/55">צפו בתרשים הזרימה של התהליך האוטומטי לקטגוריה זו</div>
                 </div>
               </div>
               <span className="text-xs font-bold text-gold whitespace-nowrap">לצפיה ←</span>
@@ -284,8 +284,8 @@ export default function Clients() {
             </h3>
             <p className="text-sm text-white/55 mb-6 max-w-md mx-auto">
               {search
-                ? "נסי מילת חיפוש אחרת — שם פרטי, חלק מתעודת הזהות, או הסיומת של המייל."
-                : "התחילי בהעלאת דוח שורנס כדי לראות את הלקוחות בתיק שלך."}
+                ? "נסו מילת חיפוש אחרת — שם פרטי, חלק מתעודת הזהות, או הסיומת של המייל."
+                : "התחילו בהעלאת דוח שורנס כדי לראות את הלקוחות בתיק שלכם."}
             </p>
             {!search && (
               <Link href="/upload">

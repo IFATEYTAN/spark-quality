@@ -40,6 +40,17 @@
 
 ## 🔲 פתוח להמשך
 
+## Round 36 - אינטגרציית iCount הוראת קבע באשראי (2026-05-07)
+- [ ] Schema: subscriptions table (workspaceId FK, plan, billingPeriod, iCountSubscriptionId, iCountClientId, status, nextChargeAt) + push DB
+- [ ] server/iCount.ts: createClient (עם taxId/contactPhone), createPaymentPageUrl(standing-order, plan, period, callback URL), verifyCallback signature
+- [ ] tRPC `billing.startStandingOrder` → מחזיר URL לעמוד הסליקה של iCount
+- [ ] Express handler `GET /api/icount/callback` — מאמת חתימה, מעדכן workspace.subscriptionStatus=active, שומר iCountSubscriptionId
+- [ ] Frontend: Pricing CTA "פתיחת הוראת קבע באשראי" → window.open URL בטאב חדש + מסך המתנה ב-/pricing/waiting
+- [ ] Branded RTL emails: standing-order-activated (מה-Resend) + payment-failed-grace + suspension
+- [ ] Vitest: callback signature verification + URL builder + amount calculation לפי plan/period
+- [ ] Checkpoint + push GitHub + הודעה למשתמשת
+
+
 - [x] זיהוי תשואות חלשות / חזקות (היוריסטיקה משולבת ב-parseReport)
 - [x] זיהוי תשואות מדויק לפי השוואה לבנצ'מרק - **מסומן כחסום:** דורש חוזה API חיצוני עם המסלקה הפנסיונית / שורנס. נשאר בצינור (roadmap) להמשך.
 - [x] בדיקה ויזואלית מקיפה של כל המסכים - בוצעה לדסקטופ דרך הדפדפן (Round 11). מובייל הוערך כלא קריטי להדרכה החיה ביום ראשון (מצגת על מקרן).
@@ -306,3 +317,17 @@
 - [x] שילוב כפתורי ייצוא HTML/Excel ב-DashboardStage (דמו)
 - [x] הוספת כפתור "יציאה" גלובלי בכל המסכים (כבר קיים ב-CinematicShell שעוטף את כולם)
 - [x] vitest 48/48, checkpoint, push GitHub
+
+## Round 35 — Gender-neutral copy (2026-05-07)
+- [ ] סריקה של כל הקובצים ב-client/src לאיתור פניות בלשון נקבה ("מוכנה", "סוכנת", "לקוחה", "תוכלי", "ראית", "היית" וכו')
+- [ ] שכתוב לטקסט ניטרלי / רבים ("מוכנים", "התחברו", "צפו", "לקוחות", "תוכלו")
+- [ ] בדיקת TS, vitest, checkpoint, push GitHub
+
+
+## Round 37 — תיקון: כפתור התשלום הפעיל את fallback במקום iCount (2026-05-07)
+- [ ] לאתר למה startStandingOrder לא נקרא או נכשל בשקט והפעיל את requestCheckout
+- [ ] לוודא שאם iCount keys לא מוגדרים → תשגיאה ברורה למשתמש (לא fallback שקט)
+- [ ] להסיר/להפריד לחלוטין את ה-fallback "ענת תיצור איתכם קשר" — יישאר רק ככפתור משני נפרד
+- [ ] להוסיף לוגים בשרת על כל קריאה ל-startStandingOrder (success/fail)
+- [ ] לבנות endpoint ל-Pricing שיגיד למשתמש האם החיבור ל-iCount תקין
+- [ ] לבדוק את הזרם בדפדפן עד הסוף

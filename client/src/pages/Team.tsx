@@ -38,7 +38,7 @@ export default function Team() {
 
   useEffect(() => {
     if (user && !isAdmin) {
-      toast.error("אין לך הרשאות לגשת למסך הזה");
+      toast.error("אין לכם הרשאות לגשת למסך הזה");
       navigate("/dashboard");
     }
   }, [user, isAdmin, navigate]);
@@ -196,7 +196,7 @@ export default function Team() {
               <div className="space-y-4">
                 <div className="bg-gold/10 border border-gold/30 rounded-md p-5">
                   <p className="text-sm text-white/85 mb-3 font-semibold">
-                    שלחי את הקישור הבא לסוכן באימייל או בוואטסאפ:
+                    שלחו את הקישור הבא לסוכן באימייל או בוואטסאפ:
                   </p>
                   <div className="flex gap-2">
                     <Input

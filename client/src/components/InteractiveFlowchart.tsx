@@ -189,8 +189,8 @@ function ControlsBar({
     <div className="flex items-center justify-between gap-2 flex-wrap">
       <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground">
         <Zap className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-        <span className="hidden sm:inline">תרשים זרימה אינטראקטיבי · לחצי על כל שלב לפרטים מלאים</span>
-        <span className="sm:hidden">הקישי על כל שלב לפרטים</span>
+        <span className="hidden sm:inline">תרשים זרימה אינטראקטיבי · לחצו על כל שלב לפרטים מלאים</span>
+        <span className="sm:hidden">הקישו על כל שלב לפרטים</span>
       </div>
       <div className="flex items-center gap-2">
         {!isPlaying ? (
@@ -200,7 +200,7 @@ function ControlsBar({
             className="group flex items-center gap-1.5 rounded-md bg-navy-deep px-4 py-2 text-xs font-semibold text-cream shadow-sm transition-all hover:bg-navy hover:shadow-lg min-h-[40px]"
           >
             <Play className="h-3.5 w-3.5 text-gold" />
-            {activeStep === -1 ? "הפעלי סימולציה" : activeStep >= total - 1 ? "הפעלי שוב" : "המשך"}
+            {activeStep === -1 ? "הפעלו סימולציה" : activeStep >= total - 1 ? "הפעלו שוב" : "המשך"}
           </button>
         ) : (
           <button

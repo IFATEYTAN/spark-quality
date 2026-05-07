@@ -327,7 +327,7 @@ export function AIComposerModal({ customer, channel, onClose }: AIComposerModalP
                 {phase === "done" && (
                   <>
                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                    <span className="text-xs font-semibold text-emerald-700">ההודעה מוכנה לשליחה</span>
+                    <span className="text-xs font-semibold text-emerald-700">ההודעה מוכנה למשלוח</span>
                     <span className="label-tag text-[9px] text-muted-foreground mr-3">
                       ⏱ ניסוח: 1.2 שניות
                     </span>

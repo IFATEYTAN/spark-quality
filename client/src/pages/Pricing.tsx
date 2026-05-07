@@ -93,10 +93,26 @@ export default function Pricing() {
   const [, navigate] = useLocation();
   const { user, isAuthenticated } = useAuth();
 
+  // Primary path — open iCount Standing Order capture page in a new tab.
+  const startStandingOrder = trpc.billing.startStandingOrder.useMutation({
+    onSuccess: (res) => {
+      toast.success("מעבירים לעמוד הסליקה המאובטח של iCount", {
+        description:
+          "נפתח חלון חדש להזנת פרטי הכרטיס. המערכת תיפה אוטומטית ברגע שההוראת הקבע תאושר.",
+      });
+      window.open(res.url, "_blank", "noopener,noreferrer");
+      navigate("/billing/waiting");
+    },
+    onError: (err) => {
+      toast.error("לא הצלחנו לפתוח עמוד תשלום", { description: err.message });
+    },
+  });
+  // Fallback path — manual followup (notify owner). Kept for the
+  // "לקבלת הצעת מחיר מותאם" CTA.
   const requestCheckout = trpc.billing.requestCheckout.useMutation({
     onSuccess: () => {
       toast.success("הבקשה התקבלה ✨", {
-        description: "ענת מצוות SPARK תיצור איתך קשר במייל עם לינק תשלום ב-iCount.",
+        description: "ענת מצוות SPARK תיצור איתכם קשר במייל עם לינק תשלום ב-iCount.",
       });
     },
     onError: (err) => {
@@ -117,9 +133,10 @@ export default function Pricing() {
       navigate("/onboarding");
       return;
     }
-    requestCheckout.mutate({
+    startStandingOrder.mutate({
       plan: slug,
       period: isAnnual ? "yearly" : "monthly",
+      origin: window.location.origin,
     });
   };
 
@@ -201,14 +218,15 @@ export default function Pricing() {
 
               <button
                 onClick={() => handleSelect(plan.slug)}
-                disabled={requestCheckout.isPending}
+                disabled={startStandingOrder.isPending || requestCheckout.isPending}
                 className={`w-full py-3 rounded-lg font-medium transition-all mb-6 disabled:opacity-50 inline-flex items-center justify-center gap-2 ${
                   plan.popular
                     ? "bg-gold text-[#06101F] hover:bg-gold-light shadow-[0_0_20px_rgba(201,169,97,0.3)]"
                     : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
                 }`}
               >
-                {requestCheckout.isPending && requestCheckout.variables?.plan === plan.slug ? (
+                {(startStandingOrder.isPending && startStandingOrder.variables?.plan === plan.slug) ||
+                (requestCheckout.isPending && requestCheckout.variables?.plan === plan.slug) ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   ctaLabel(plan)
