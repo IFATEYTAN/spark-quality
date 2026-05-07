@@ -1,0 +1,31 @@
+{
+  "query": "SELECT id, email, name, role, workspaceId FROM users WHERE email IN ('anat@leandolini.com','ifat@spark-ai.co.il','sparkaidigital@gmail.com');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT id, email, name, role, workspaceId FROM users WHERE email IN ('anat@leandolini.com','ifat@spark-ai.co.il','sparkaidigital@gmail.com');",
+  "rows": [
+    {
+      "id": "1",
+      "email": "ifat@spark-ai.co.il",
+      "name": "ifat eytan",
+      "role": "admin",
+      "workspaceId": "1"
+    },
+    {
+      "id": "1140010",
+      "email": "sparkaidigital@gmail.com",
+      "name": "ifat eytan",
+      "role": "admin",
+      "workspaceId": "NULL"
+    },
+    {
+      "id": "2910015",
+      "email": "anat@leandolini.com",
+      "name": "Anat Hemell Greenberg",
+      "role": "admin",
+      "workspaceId": "60002"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tname\trole\tworkspaceId\n1\tifat@spark-ai.co.il\tifat eytan\tadmin\t1\n1140010\tsparkaidigital@gmail.com\tifat eytan\tadmin\tNULL\n2910015\tanat@leandolini.com\tAnat Hemell Greenberg\tadmin\t60002\n",
+  "stderr": "",
+  "execution_time_ms": 1712
+}

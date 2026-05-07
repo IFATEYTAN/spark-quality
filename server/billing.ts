@@ -303,9 +303,10 @@ export const billingRouter = router({
    *  - full-screen blocker         → status="blocked" / "cancelled"
    */
   myAccessStatus: protectedProcedure.query(async ({ ctx }) => {
-    // SPARK staff (admin role) are NEVER blocked by the payment gate.
-    // This includes the owner and any agency manager promoted to admin.
-    if (ctx.user.role === "admin") {
+    // ONLY SPARK AI staff (isSuperAdmin === true) bypass the payment gate.
+    // A workspace-level admin/owner of a paying customer is NOT super-admin
+    // and MUST go through normal billing checks.
+    if (ctx.user.isSuperAdmin === true) {
       return {
         status: "active" as const,
         graceEndsAt: null,
@@ -758,8 +759,8 @@ export const billingRouter = router({
   markPastDue: protectedProcedure
     .input(z.object({ workspaceId: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      // Only super-admin (role=admin) can mark workspaces past_due.
-      if (ctx.user.role !== "admin") {
+      // Only SPARK super-admin can mark workspaces past_due.
+      if (ctx.user.isSuperAdmin !== true) {
         throw new Error("FORBIDDEN");
       }
       const db = await requireDb();
@@ -811,7 +812,7 @@ export const billingRouter = router({
    * up, and only sends the suspension email once per workspace.
    */
   enforceSuspensions: protectedProcedure.mutation(async ({ ctx }) => {
-    if (ctx.user.role !== "admin") {
+    if (ctx.user.isSuperAdmin !== true) {
       throw new Error("FORBIDDEN");
     }
     const db = await requireDb();
@@ -871,7 +872,7 @@ export const billingRouter = router({
   restoreAccess: protectedProcedure
     .input(z.object({ workspaceId: z.number().int().positive() }))
     .mutation(async ({ ctx, input }) => {
-      if (ctx.user.role !== "admin") {
+      if (ctx.user.isSuperAdmin !== true) {
         throw new Error("FORBIDDEN");
       }
       const db = await requireDb();

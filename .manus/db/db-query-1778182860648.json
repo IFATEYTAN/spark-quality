@@ -1,0 +1,20 @@
+{
+  "query": "SELECT w.id, w.name, w.subscriptionStatus, w.plan, w.subscriptionEndsAt, w.lastPaymentAt, w.trialEndsAt, w.suspendedAt FROM workspaces w WHERE w.name LIKE '%בדיקה%' OR w.id IN (SELECT u.workspaceId FROM users u WHERE u.email = 'anat@leandolini.com');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT w.id, w.name, w.subscriptionStatus, w.plan, w.subscriptionEndsAt, w.lastPaymentAt, w.trialEndsAt, w.suspendedAt FROM workspaces w WHERE w.name LIKE '%בדיקה%' OR w.id IN (SELECT u.workspaceId FROM users u WHERE u.email = 'anat@leandolini.com');",
+  "rows": [
+    {
+      "id": "60002",
+      "name": "בדיקה",
+      "subscriptionStatus": "pending_payment",
+      "plan": "basic",
+      "subscriptionEndsAt": "NULL",
+      "lastPaymentAt": "NULL",
+      "trialEndsAt": "NULL",
+      "suspendedAt": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tsubscriptionStatus\tplan\tsubscriptionEndsAt\tlastPaymentAt\ttrialEndsAt\tsuspendedAt\n60002\tבדיקה\tpending_payment\tbasic\tNULL\tNULL\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1860
+}
