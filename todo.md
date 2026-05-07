@@ -337,3 +337,10 @@
 - [ ] להציג badge "חיסכון 16%" ליד "שנתי" בצורה בולטת
 - [ ] לוודא RTL נכון
 - [ ] בדיקה ויזואלית
+
+
+## Round 39 — Pricing UX: redirect ל-onboarding ו-form להשלמת פרטים (2026-05-07)
+- [ ] לזהות workspace ללא taxId/phone ולהציג modal "השלימי פרטי סוכנות" לפני iCount
+- [ ] לזהות user בלי workspaceId ולהפנות ל-/onboarding עם הודעה ברורה
+- [ ] להוסיף tRPC mutation `workspaces.completeBillingDetails` שמעדכן taxId+contactPhone+taxIdType
+- [ ] בדיקה ויזואלית של הזרם

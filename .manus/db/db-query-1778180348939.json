@@ -1,0 +1,30 @@
+{
+  "query": "SELECT u.id AS user_id, u.email, u.name, u.workspaceId, u.workspaceRole, u.createdAt, w.id AS ws_id, w.name AS ws_name, w.taxId, w.contactPhone, w.subscriptionStatus, w.createdAt AS ws_created FROM users u LEFT JOIN workspaces w ON u.workspaceId = w.id WHERE u.email = 'anat@leandolini.com' ORDER BY u.id DESC LIMIT 5;\nSELECT id, name, taxId, contactPhone, subscriptionStatus, createdAt FROM workspaces ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT u.id AS user_id, u.email, u.name, u.workspaceId, u.workspaceRole, u.createdAt, w.id AS ws_id, w.name AS ws_name, w.taxId, w.contactPhone, w.subscriptionStatus, w.createdAt AS ws_created FROM users u LEFT JOIN workspaces w ON u.workspaceId = w.id WHERE u.email = 'anat@leandolini.com' ORDER BY u.id DESC LIMIT 5;\nSELECT id, name, taxId, contactPhone, subscriptionStatus, createdAt FROM workspaces ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "user_id": "2910015",
+      "email": "anat@leandolini.com",
+      "name": "Anat Hemell Greenberg",
+      "workspaceId": "NULL",
+      "workspaceRole": "owner",
+      "createdAt": "2026-05-07 18:40:32",
+      "ws_id": "NULL",
+      "ws_name": "NULL",
+      "taxId": "NULL",
+      "contactPhone": "NULL",
+      "subscriptionStatus": "NULL",
+      "ws_created": "NULL"
+    }
+  ],
+  "messages": [
+    "id\tname\ttaxId\tcontactPhone\tsubscriptionStatus\tcreatedAt",
+    "60002\tבדיקה\t037216298\t0547395570\tactive\t2026-05-07 18:51:57",
+    "60001\tסוכנות לבדיקה\t037216298\t0547395570\tactive\t2026-05-07 18:41:13",
+    "30001\tיפעת spark-ai\tNULL\tNULL\tactive\t2026-05-06 17:25:35",
+    "1\tיפעת\tNULL\tNULL\tactive\t2026-05-06 09:17:16"
+  ],
+  "stdout": "user_id\temail\tname\tworkspaceId\tworkspaceRole\tcreatedAt\tws_id\tws_name\ttaxId\tcontactPhone\tsubscriptionStatus\tws_created\n2910015\tanat@leandolini.com\tAnat Hemell Greenberg\tNULL\towner\t2026-05-07 18:40:32\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\nid\tname\ttaxId\tcontactPhone\tsubscriptionStatus\tcreatedAt\n60002\tבדיקה\t037216298\t0547395570\tactive\t2026-05-07 18:51:57\n60001\tסוכנות לבדיקה\t037216298\t0547395570\tactive\t2026-05-07 18:41:13\n30001\tיפעת spark-ai\tNULL\tNULL\tactive\t2026-05-06 17:25:35\n1\tיפעת\tNULL\tNULL\tactive\t2026-05-06 09:17:16\n",
+  "stderr": "",
+  "execution_time_ms": 1928
+}

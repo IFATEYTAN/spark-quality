@@ -1,0 +1,30 @@
+{
+  "query": "SELECT u.id AS user_id, u.email, u.workspaceId, w.id AS ws_id, w.name AS ws_name, w.taxId, w.contactPhone, w.subscriptionStatus FROM users u LEFT JOIN workspaces w ON u.workspaceId = w.id WHERE u.email LIKE '%ifat%' OR u.email LIKE '%spark%' ORDER BY u.id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT u.id AS user_id, u.email, u.workspaceId, w.id AS ws_id, w.name AS ws_name, w.taxId, w.contactPhone, w.subscriptionStatus FROM users u LEFT JOIN workspaces w ON u.workspaceId = w.id WHERE u.email LIKE '%ifat%' OR u.email LIKE '%spark%' ORDER BY u.id DESC LIMIT 10;",
+  "rows": [
+    {
+      "user_id": "1140010",
+      "email": "sparkaidigital@gmail.com",
+      "workspaceId": "NULL",
+      "ws_id": "NULL",
+      "ws_name": "NULL",
+      "taxId": "NULL",
+      "contactPhone": "NULL",
+      "subscriptionStatus": "NULL"
+    },
+    {
+      "user_id": "1",
+      "email": "ifat@spark-ai.co.il",
+      "workspaceId": "1",
+      "ws_id": "1",
+      "ws_name": "יפעת",
+      "taxId": "NULL",
+      "contactPhone": "NULL",
+      "subscriptionStatus": "active"
+    }
+  ],
+  "messages": [],
+  "stdout": "user_id\temail\tworkspaceId\tws_id\tws_name\ttaxId\tcontactPhone\tsubscriptionStatus\n1140010\tsparkaidigital@gmail.com\tNULL\tNULL\tNULL\tNULL\tNULL\tNULL\n1\tifat@spark-ai.co.il\t1\t1\tיפעת\tNULL\tNULL\tactive\n",
+  "stderr": "",
+  "execution_time_ms": 1987
+}

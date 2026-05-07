@@ -1,0 +1,18 @@
+{
+  "query": "UPDATE users SET workspaceId = 60002, workspaceRole = 'owner' WHERE id = 2910015;\nDELETE FROM workspaces WHERE id = 60001;\nSELECT u.id, u.email, u.workspaceId, w.name, w.taxId, w.contactPhone FROM users u LEFT JOIN workspaces w ON u.workspaceId = w.id WHERE u.id = 2910015;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute UPDATE users SET workspaceId = 60002, workspaceRole = 'owner' WHERE id = 2910015;\nDELETE FROM workspaces WHERE id = 60001;\nSELECT u.id, u.email, u.workspaceId, w.name, w.taxId, w.contactPhone FROM users u LEFT JOIN workspaces w ON u.workspaceId = w.id WHERE u.id = 2910015;",
+  "rows": [
+    {
+      "id": "2910015",
+      "email": "anat@leandolini.com",
+      "workspaceId": "60002",
+      "name": "בדיקה",
+      "taxId": "037216298",
+      "contactPhone": "0547395570"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tworkspaceId\tname\ttaxId\tcontactPhone\n2910015\tanat@leandolini.com\t60002\tבדיקה\t037216298\t0547395570\n",
+  "stderr": "",
+  "execution_time_ms": 2309
+}

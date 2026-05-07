@@ -173,8 +173,19 @@ export async function createWorkspace(data: InsertWorkspace) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   // Trial removed (Round 33). Workspaces start with the plan they pay for; trialEndsAt stays null.
-  const result = await db.insert(workspaces).values(data);
-  return (result as unknown as { insertId: number }).insertId;
+  const raw = await db.insert(workspaces).values(data);
+  // MySQL2 driver returns [ResultSetHeader, undefined]; drizzle wraps it as
+  // either an array or { insertId, ... }. Be defensive and crash loudly if it
+  // is missing so we never silently return undefined and orphan a workspace.
+  const insertId =
+    (raw as unknown as { insertId?: number }).insertId ??
+    ((raw as unknown as Array<{ insertId?: number }>)[0]?.insertId);
+  if (typeof insertId !== "number" || !Number.isFinite(insertId)) {
+    throw new Error(
+      `Failed to read insertId from createWorkspace result. Raw: ${JSON.stringify(raw)}`,
+    );
+  }
+  return insertId;
 }
 
 export async function getWorkspaceById(id: number) {
@@ -396,6 +407,23 @@ export async function bulkUpsertClients(opts: {
 // ============================================================
 // FINANCIAL / VIP HELPERS
 // ============================================================
+
+/** Update workspace billing details (taxId + phone) */
+export async function updateWorkspaceBillingDetails(
+  workspaceId: number,
+  details: { taxId: string; taxIdType: "company" | "individual"; contactPhone: string }
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(workspaces)
+    .set({
+      taxId: details.taxId,
+      taxIdType: details.taxIdType,
+      contactPhone: details.contactPhone,
+    })
+    .where(eq(workspaces.id, workspaceId));
+}
 
 /** Update the VIP threshold (in ILS) for a workspace */
 export async function updateWorkspaceVipThreshold(

@@ -275,6 +275,40 @@ export const appRouter = router({
       return db.listWorkspaceInvitations(ctx.user.workspaceId);
     }),
 
+    /** Complete billing details (taxId + phone) for legacy workspaces missing them */
+    completeBillingDetails: workspaceAdminProcedure
+      .input(
+        z.object({
+          taxId: z.string().min(9).max(20),
+          taxIdType: z.enum(["company", "individual"]),
+          contactPhone: z.string().min(9).max(32),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!isValidIsraeliTaxId(input.taxId, input.taxIdType)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              input.taxIdType === "company"
+                ? "מספר ח.פ אינו תקין. יש להזין 9 ספרות ללא מקף או רווח."
+                : "מספר ת”ז שהוזן אינו תקין (תקלת ספרת ביקורת).",
+          });
+        }
+        const phoneNorm = normalizeIsraeliMobile(input.contactPhone);
+        if (!phoneNorm) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "מספר טלפון נייד לא תקין. לדוגמה: 05X-XXXXXXX.",
+          });
+        }
+        await db.updateWorkspaceBillingDetails(ctx.user.workspaceId, {
+          taxId: input.taxId.replace(/\D+/g, ""),
+          taxIdType: input.taxIdType,
+          contactPhone: phoneNorm,
+        });
+        return { ok: true as const };
+      }),
+
     /** Update VIP threshold (owner/admin only) - clients with totalBalance >= threshold are auto-flagged VIP */
     updateVipThreshold: workspaceAdminProcedure
       .input(z.object({ vipThreshold: z.number().int().min(0).max(100_000_000) }))
