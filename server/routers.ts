@@ -10,6 +10,7 @@ import { sendEmail } from "./email";
 import { systemRouter } from "./_core/systemRouter";
 import { adminRouter } from "./adminRouter";
 import { billingRouter } from "./billing";
+import { composerRouter } from "./composer";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 function escapeHtml(value: string): string {
@@ -463,6 +464,8 @@ export const appRouter = router({
   admin: adminRouter,
 
   billing: billingRouter,
+
+  composer: composerRouter,
 });
 
 export type AppRouter = typeof appRouter;

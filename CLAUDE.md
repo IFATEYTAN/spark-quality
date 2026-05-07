@@ -49,7 +49,7 @@ VIP threshold is workspace-scoped; `workspaces.updateVipThreshold` re-runs `db.r
 
 ### AI Composer
 
-A modal that drafts personalized email/WhatsApp messages per client based on `flagStatus`. Currently template-based on the client; the LLM hook (`server/_core/llm.ts`) is wired and ready to take over. When changing the template logic, keep the per-category CTA aligned with the table above.
+A modal that drafts personalized email/WhatsApp messages per client based on `flagStatus` / `status`. Wired to the LLM via `composer.draft` (`server/composer.ts`, `protectedProcedure`): the client passes the customer payload inline (so it works for both real DB clients and demo mock data), the server prompts `gemini-2.5-flash` with a `json_schema` response format and returns `{ subject?, body, source: "llm" | "fallback" }`. There is a deterministic Hebrew template fallback baked into the procedure for when `BUILT_IN_FORGE_API_KEY` is missing or the LLM throws — and the modal also falls back locally on auth/network errors (so the public `/demo` route renders the template instead of redirecting to login). Keep the per-category CTAs in `categoryHint()` aligned with the table above when adding new flags.
 
 ### Known gaps / blocked work
 

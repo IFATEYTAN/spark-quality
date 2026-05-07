@@ -1,8 +1,9 @@
 // Editorial Fintech | מודאל ניסוח AI - אפקט ה-WOW
-import { useEffect, useState, useRef } from "react";
-import { X, Mail, MessageSquare, Sparkles, Send, Brain, CheckCircle2, Copy, Wand2, ExternalLink } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Brain, CheckCircle2, Copy, ExternalLink, Mail, MessageSquare, Send, Sparkles, Wand2, X } from "lucide-react";
 import { toast } from "sonner";
 import type { Customer } from "@/lib/demoData";
+import { trpc } from "@/lib/trpc";
 
 interface AIComposerModalProps {
   customer: Customer | null;
@@ -10,8 +11,9 @@ interface AIComposerModalProps {
   onClose: () => void;
 }
 
-// תבניות הודעות מותאמות אישית לכל סטטוס
-const buildMessage = (customer: Customer, channel: "email" | "whatsapp"): { subject?: string; body: string } => {
+// Local fallback used when the user is not authenticated (public /demo) or
+// the server falls back too. Keeps the cinematic UX identical even offline.
+const buildLocalFallback = (customer: Customer, channel: "email" | "whatsapp"): { subject?: string; body: string } => {
   const firstName = customer.name.split(" ")[0];
 
   if (customer.status === "ריסק זמני") {
@@ -65,6 +67,10 @@ const AI_THINKING_STEPS = [
   { label: "מנסח הודעה מותאמת אישית", icon: Sparkles },
 ];
 
+const THINKING_STEP_MS = 450;
+const TYPING_START_DELAY = 300;
+const MIN_THINKING_MS = AI_THINKING_STEPS.length * THINKING_STEP_MS + TYPING_START_DELAY;
+
 export function AIComposerModal({ customer, channel, onClose }: AIComposerModalProps) {
   const [phase, setPhase] = useState<"thinking" | "typing" | "done">("thinking");
   const [thinkingStep, setThinkingStep] = useState(0);
@@ -73,55 +79,70 @@ export function AIComposerModal({ customer, channel, onClose }: AIComposerModalP
   const messageRef = useRef<{ subject?: string; body: string } | null>(null);
   const bodyContainerRef = useRef<HTMLDivElement>(null);
 
+  const draftMutation = trpc.composer.draft.useMutation();
+  const mutateAsyncRef = useRef(draftMutation.mutateAsync);
+  mutateAsyncRef.current = draftMutation.mutateAsync;
+
   useEffect(() => {
     if (!customer || !channel) return;
-    messageRef.current = buildMessage(customer, channel);
+
+    let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+    const intervals: ReturnType<typeof setInterval>[] = [];
+
     setPhase("thinking");
     setThinkingStep(0);
     setTypedSubject("");
     setTypedBody("");
+    messageRef.current = null;
 
-    const thinkingTimers: NodeJS.Timeout[] = [];
     AI_THINKING_STEPS.forEach((_, idx) => {
-      thinkingTimers.push(
-        setTimeout(() => setThinkingStep(idx), idx * 450),
-      );
+      timeouts.push(setTimeout(() => {
+        if (!cancelled) setThinkingStep(idx);
+      }, idx * THINKING_STEP_MS));
     });
 
-    const startTyping = setTimeout(() => {
+    const llmPromise = mutateAsyncRef.current({
+      channel,
+      customer: {
+        name: customer.name,
+        age: customer.age,
+        city: customer.city,
+        product: customer.product,
+        insurer: customer.insurer,
+        accumulation: customer.accumulation,
+        status: customer.status,
+      },
+    }).catch(() => null); // public /demo or transient failure → null → local fallback
+
+    const minDelay = new Promise<void>(resolve => {
+      timeouts.push(setTimeout(resolve, MIN_THINKING_MS));
+    });
+
+    Promise.all([llmPromise, minDelay]).then(([result]) => {
+      if (cancelled) return;
+
+      const msg: { subject?: string; body: string } = result
+        ? {
+            subject: result.subject && result.subject.length > 0 ? result.subject : undefined,
+            body: result.body,
+          }
+        : buildLocalFallback(customer, channel);
+
+      messageRef.current = msg;
       setPhase("typing");
-      const msg = messageRef.current!;
+
       const fullSubject = msg.subject || "";
       const fullBody = msg.body;
       let subjectIdx = 0;
       let bodyIdx = 0;
 
-      const typeSubject = setInterval(() => {
-        subjectIdx++;
-        setTypedSubject(fullSubject.slice(0, subjectIdx));
-        if (subjectIdx >= fullSubject.length) {
-          clearInterval(typeSubject);
-          // start typing body
-          const typeBody = setInterval(() => {
-            bodyIdx += Math.floor(Math.random() * 3) + 2;
-            setTypedBody(fullBody.slice(0, bodyIdx));
-            // auto-scroll
-            if (bodyContainerRef.current) {
-              bodyContainerRef.current.scrollTop = bodyContainerRef.current.scrollHeight;
-            }
-            if (bodyIdx >= fullBody.length) {
-              setTypedBody(fullBody);
-              clearInterval(typeBody);
-              setPhase("done");
-            }
-          }, 18);
-        }
-      }, 25);
-
-      // If no subject (whatsapp), start body directly
-      if (!fullSubject) {
-        clearInterval(typeSubject);
+      const startBodyTyping = () => {
         const typeBody = setInterval(() => {
+          if (cancelled) {
+            clearInterval(typeBody);
+            return;
+          }
           bodyIdx += Math.floor(Math.random() * 3) + 2;
           setTypedBody(fullBody.slice(0, bodyIdx));
           if (bodyContainerRef.current) {
@@ -133,12 +154,33 @@ export function AIComposerModal({ customer, channel, onClose }: AIComposerModalP
             setPhase("done");
           }
         }, 18);
+        intervals.push(typeBody);
+      };
+
+      if (!fullSubject) {
+        startBodyTyping();
+        return;
       }
-    }, AI_THINKING_STEPS.length * 450 + 300);
+
+      const typeSubject = setInterval(() => {
+        if (cancelled) {
+          clearInterval(typeSubject);
+          return;
+        }
+        subjectIdx++;
+        setTypedSubject(fullSubject.slice(0, subjectIdx));
+        if (subjectIdx >= fullSubject.length) {
+          clearInterval(typeSubject);
+          startBodyTyping();
+        }
+      }, 25);
+      intervals.push(typeSubject);
+    });
 
     return () => {
-      thinkingTimers.forEach(clearTimeout);
-      clearTimeout(startTyping);
+      cancelled = true;
+      timeouts.forEach(clearTimeout);
+      intervals.forEach(clearInterval);
     };
   }, [customer, channel]);
 
