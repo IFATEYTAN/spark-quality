@@ -175,4 +175,5 @@ Required for full functionality (see `server/_core/env.ts`):
 - `OWNER_OPEN_ID` — auto-grants `role=admin` + `isSuperAdmin=true` on user upsert
 - `BUILT_IN_FORGE_API_URL`, `BUILT_IN_FORGE_API_KEY` — LLM, storage, notification proxy
 - `RESEND_API_KEY` — outbound email (optional; failures are swallowed)
+- `ICOUNT_API_KEY`, `ICOUNT_COMPANY_ID` — iCount billing (optional). When unset, `billing.requestCheckout` (`server/billing.ts`) falls back to a manual flow: it notifies SPARK staff via Manus + emails Anat with the upgrade request. When set, the same endpoint is the place to wire the real hosted-checkout call (TODO marked inline). Pricing source-of-truth is the `PLAN_PRICES` table in `server/billing.ts` — keep `client/src/pages/Pricing.tsx` and the Onboarding billing step in sync with it.
 - `PORT` — preferred port (server falls through to the next free one)

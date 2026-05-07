@@ -7,12 +7,25 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { FairyMascot } from "@/components/FairyMascot";
 import { trpc } from "@/lib/trpc";
-import { Building2, Loader2, Users, ArrowRight, Shield, FileText, Accessibility } from "lucide-react";
+import {
+  Accessibility,
+  ArrowRight,
+  Building2,
+  Check,
+  Crown,
+  FileText,
+  Loader2,
+  Shield,
+  Sparkles,
+  Users,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
-type Mode = "choose" | "create" | "join";
+type Mode = "choose" | "create" | "join" | "billing";
+type BillingPeriod = "monthly" | "yearly";
+type PaidPlan = "basic" | "premium";
 
 export default function Onboarding() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -28,19 +41,50 @@ export default function Onboarding() {
 
   const allLegalAgreed = agreeTerms && agreePrivacy && agreeAccessibility;
 
+  // Billing step state — set after a successful workspace.create. Trial is the
+  // default plan on the workspace, so picking it here just sends the user on.
+  const [createdWorkspaceName, setCreatedWorkspaceName] = useState("");
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>("yearly");
+
   const utils = trpc.useUtils();
   const createWorkspace = trpc.workspaces.create.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (_data, variables) => {
       toast.success("הסוכנות נוצרה בהצלחה!", {
-        description: "✨ פיית SPARK מעבירה אותך לדשבורד...",
+        description: "✨ נשאר רק לבחור תוכנית ואת בפנים",
       });
+      setCreatedWorkspaceName(variables.name);
       await utils.auth.me.refetch();
-      window.location.assign("/dashboard");
+      setMode("billing");
     },
     onError: (err) => {
       toast.error("שגיאה ביצירת הסוכנות", { description: err.message });
     },
   });
+
+  const requestCheckout = trpc.billing.requestCheckout.useMutation({
+    onSuccess: () => {
+      toast.success("הבקשה התקבלה ✨", {
+        description: "ענת מצוות SPARK תיצור איתך קשר במייל עם לינק תשלום ב-iCount.",
+      });
+      window.location.assign("/dashboard");
+    },
+    onError: (err) => {
+      toast.error("שגיאה בשליחת הבקשה", { description: err.message });
+    },
+  });
+
+  const continueWithTrial = () => {
+    toast.success("מעולה! נכנסים לניסיון של 14 יום 🎁");
+    window.location.assign("/dashboard");
+  };
+
+  const upgradeTo = (plan: PaidPlan) => {
+    requestCheckout.mutate({
+      plan,
+      period: billingPeriod,
+      workspaceName: createdWorkspaceName || undefined,
+    });
+  };
 
   const acceptInvite = trpc.workspaces.acceptInvite.useMutation({
     onSuccess: async () => {
@@ -93,7 +137,9 @@ export default function Onboarding() {
       ? `שלום ${firstName}! אני פיית SPARK 🪄 בואו נבחר איך מתחילים.`
       : mode === "create"
         ? "תני לסוכנות שלך שם שיעורר השראה ✨"
-        : "הדביקי את קוד ההזמנה שקיבלת";
+        : mode === "billing"
+          ? "כל הכבוד! 🎉 בחרי תוכנית — אפשר להתחיל גם עם 14 יום ניסיון חינם."
+          : "הדביקי את קוד ההזמנה שקיבלת";
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={88}>
@@ -306,9 +352,234 @@ export default function Onboarding() {
               </div>
             </GlassCard>
           )}
+
+          {/* Billing mode - shown after workspace.create succeeds */}
+          {mode === "billing" && (
+            <BillingStep
+              workspaceName={createdWorkspaceName}
+              period={billingPeriod}
+              onPeriodChange={setBillingPeriod}
+              onTrial={continueWithTrial}
+              onUpgrade={upgradeTo}
+              isPending={requestCheckout.isPending}
+            />
+          )}
         </div>
       </div>
     </CinematicShell>
+  );
+}
+
+interface BillingStepProps {
+  workspaceName: string;
+  period: BillingPeriod;
+  onPeriodChange: (period: BillingPeriod) => void;
+  onTrial: () => void;
+  onUpgrade: (plan: PaidPlan) => void;
+  isPending: boolean;
+}
+
+function BillingStep({
+  workspaceName,
+  period,
+  onPeriodChange,
+  onTrial,
+  onUpgrade,
+  isPending,
+}: BillingStepProps) {
+  // Source of truth lives in server/billing.ts; mirrored here for SSR-free display.
+  const basicPrice = period === "yearly" ? 150 : 180;
+  const premiumPrice = period === "yearly" ? 350 : 420;
+
+  return (
+    <div className="animate-fade-up" style={{ animationDelay: "0.1s" }}>
+      <GlassCard goldAccent className="p-7 lg:p-10">
+        <GoldEyebrow>בחירת תוכנית · {workspaceName || "הסוכנות שלך"}</GoldEyebrow>
+        <h2 className="font-display text-2xl lg:text-3xl font-bold text-white tracking-tight mb-3">
+          איזו תוכנית מתאימה לך?
+        </h2>
+        <p className="text-sm text-white/70 leading-relaxed mb-7">
+          אפשר להתחיל עם 14 יום ניסיון חינם, ולשדרג כשתהיי מוכנה. כל שינוי מתבצע
+          בלחיצה — בלי התחייבויות.
+        </p>
+
+        {/* Period toggle - mirrors the Pricing page pattern exactly */}
+        <div className="flex items-center justify-center gap-4 mb-8">
+          <span
+            className={`text-sm font-medium ${period === "monthly" ? "text-white" : "text-white/50"}`}
+          >
+            חודשי
+          </span>
+          <button
+            type="button"
+            onClick={() => onPeriodChange(period === "yearly" ? "monthly" : "yearly")}
+            className="relative inline-flex h-7 w-14 items-center rounded-full bg-white/10 border border-white/20 transition-colors focus:outline-none"
+            aria-label="החלפת תקופת חיוב"
+          >
+            <span
+              className={`inline-block h-5 w-5 transform rounded-full bg-gold transition-transform ${
+                period === "yearly" ? "translate-x-1" : "translate-x-8"
+              }`}
+            />
+          </button>
+          <span
+            className={`text-sm font-medium ${period === "yearly" ? "text-white" : "text-white/50"}`}
+          >
+            שנתי{" "}
+            <span className="text-gold text-xs">(חיסכון של 16%)</span>
+          </span>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <PlanCard
+            icon={<Sparkles className="h-5 w-5 text-gold" />}
+            eyebrow="חינם · 14 יום"
+            title="ניסיון"
+            priceLabel="₪0"
+            priceSuffix="ל-14 יום"
+            features={[
+              "כל היכולות של Base",
+              "בלי כרטיס אשראי",
+              "ביטול בלחיצה",
+            ]}
+            ctaLabel="המשך עם ניסיון"
+            ctaVariant="ghost"
+            onClick={onTrial}
+            disabled={isPending}
+          />
+          <PlanCard
+            icon={<Building2 className="h-5 w-5 text-gold" />}
+            eyebrow="לסוכן עצמאי"
+            title="Base"
+            priceLabel={`₪${basicPrice}`}
+            priceSuffix={period === "yearly" ? "לחודש (חיוב שנתי)" : "לחודש"}
+            features={[
+              "עד 500 לקוחות פעילים",
+              "זיהוי דגלים אוטומטי",
+              "דוחות חודשיים + תמיכה במייל",
+            ]}
+            ctaLabel="שדרוג ל-Base"
+            ctaVariant="outline"
+            onClick={() => onUpgrade("basic")}
+            disabled={isPending}
+          />
+          <PlanCard
+            icon={<Crown className="h-5 w-5 text-[#06101F]" />}
+            eyebrow="המומלץ ביותר"
+            title="Premium"
+            priceLabel={`₪${premiumPrice}`}
+            priceSuffix={period === "yearly" ? "לחודש (חיוב שנתי)" : "לחודש"}
+            features={[
+              "לקוחות ללא הגבלה",
+              "זיהוי VIP, תיקון 190, השתלמות",
+              "אוטומציות WhatsApp + תמיכה VIP",
+            ]}
+            ctaLabel="שדרוג ל-Premium"
+            ctaVariant="gold"
+            onClick={() => onUpgrade("premium")}
+            disabled={isPending}
+            highlighted
+          />
+        </div>
+
+        <p className="text-xs text-white/55 leading-relaxed text-center mt-6">
+          * שדרוג בתשלום מועבר כעת לטיפול ידני של צוות SPARK AI עד להפעלת iCount.
+          תקבלי מייל עם לינק תשלום מאובטח תוך זמן קצר.
+        </p>
+      </GlassCard>
+    </div>
+  );
+}
+
+interface PlanCardProps {
+  icon: React.ReactNode;
+  eyebrow: string;
+  title: string;
+  priceLabel: string;
+  priceSuffix: string;
+  features: string[];
+  ctaLabel: string;
+  ctaVariant: "ghost" | "outline" | "gold";
+  onClick: () => void;
+  disabled?: boolean;
+  highlighted?: boolean;
+}
+
+function PlanCard({
+  icon,
+  eyebrow,
+  title,
+  priceLabel,
+  priceSuffix,
+  features,
+  ctaLabel,
+  ctaVariant,
+  onClick,
+  disabled,
+  highlighted,
+}: PlanCardProps) {
+  return (
+    <div
+      className={`relative rounded-xl p-5 flex flex-col gap-4 border transition-all ${
+        highlighted
+          ? "bg-gradient-to-br from-gold/15 to-gold/5 border-gold/50 shadow-[0_8px_28px_rgba(201,169,97,0.18)]"
+          : "bg-white/5 border-white/15 hover:border-white/25"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <div
+          className={`h-9 w-9 rounded-lg flex items-center justify-center ${
+            highlighted
+              ? "bg-gold border border-gold/60"
+              : "bg-white/10 border border-white/20"
+          }`}
+        >
+          {icon}
+        </div>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-gold/85">
+          {eyebrow}
+        </span>
+      </div>
+
+      <div>
+        <h3 className="font-display text-xl font-bold text-white tracking-tight mb-1">
+          {title}
+        </h3>
+        <div className="flex items-baseline gap-2">
+          <span className="font-display text-3xl font-bold text-white">
+            {priceLabel}
+          </span>
+          <span className="text-xs text-white/60">{priceSuffix}</span>
+        </div>
+      </div>
+
+      <ul className="space-y-2 flex-1">
+        {features.map(feature => (
+          <li
+            key={feature}
+            className="flex items-start gap-2 text-xs text-white/80 leading-relaxed"
+          >
+            <Check className="h-3.5 w-3.5 text-gold shrink-0 mt-0.5" />
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+
+      <Button
+        onClick={onClick}
+        disabled={disabled}
+        variant={ctaVariant === "gold" ? "default" : ctaVariant === "outline" ? "outline" : "ghost"}
+        className={`w-full font-bold disabled:opacity-50 ${
+          ctaVariant === "gold"
+            ? "bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] hover:shadow-lg hover:shadow-gold/30"
+            : ctaVariant === "outline"
+              ? "border-white/25 bg-white/5 text-white hover:bg-white/10"
+              : "bg-white/10 text-white hover:bg-white/15 border border-white/15"
+        }`}
+      >
+        {disabled ? <Loader2 className="h-4 w-4 animate-spin" /> : ctaLabel}
+      </Button>
+    </div>
   );
 }
 

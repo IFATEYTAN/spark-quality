@@ -1,13 +1,52 @@
-import { useState } from "react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
-import { Check, X } from "lucide-react";
-import { Link } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { Check, Loader2, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { useLocation } from "wouter";
+
+type PaidPlan = "basic" | "premium";
 
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(true);
+  const [, navigate] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+
+  const requestCheckout = trpc.billing.requestCheckout.useMutation({
+    onSuccess: () => {
+      toast.success("הבקשה התקבלה ✨", {
+        description: "ענת מצוות SPARK תיצור איתך קשר במייל עם לינק תשלום ב-iCount.",
+      });
+    },
+    onError: (err) => {
+      toast.error("שגיאה בשליחת הבקשה", { description: err.message });
+    },
+  });
+
+  const userWorkspaceId = (user as { workspaceId?: number } | null | undefined)?.workspaceId ?? null;
+
+  const handleSelect = (slug: PaidPlan) => {
+    // Not signed in → send through onboarding (which handles login + workspace).
+    if (!isAuthenticated) {
+      navigate("/onboarding");
+      return;
+    }
+    // Signed in but no workspace → finish onboarding first.
+    if (!userWorkspaceId) {
+      navigate("/onboarding");
+      return;
+    }
+    // Existing workspace → request a real upgrade.
+    requestCheckout.mutate({
+      plan: slug,
+      period: isAnnual ? "yearly" : "monthly",
+    });
+  };
 
   const plans = [
     {
+      slug: "basic" as const,
       name: "Base Plan",
       description: "לסוכנים עצמאיים שרוצים להתחיל לעבוד חכם",
       monthlyPrice: 180,
@@ -19,10 +58,12 @@ export default function Pricing() {
         "תמיכה במייל",
       ],
       missing: ["ייצוא נתונים", "זיהוי הזדמנויות פיננסיות (VIP, 190)", "אוטומציות WhatsApp"],
-      cta: "התחל ניסיון חינם",
+      ctaUpgrade: "שדרוג ל-Base",
+      ctaTrial: "התחל ניסיון חינם",
       popular: false,
     },
     {
+      slug: "premium" as const,
       name: "Premium Plan",
       description: "לסוכנויות צומחות שדורשות אוטומציה מלאה",
       monthlyPrice: 420,
@@ -36,7 +77,8 @@ export default function Pricing() {
         "תמיכה טלפונית VIP",
       ],
       missing: [],
-      cta: "בחר פרימיום",
+      ctaUpgrade: "שדרוג ל-Premium",
+      ctaTrial: "בחר פרימיום",
       popular: true,
     },
   ];
@@ -104,17 +146,21 @@ export default function Pricing() {
                 )}
               </div>
 
-              <Link href="/onboarding">
-                <button
-                  className={`w-full py-3 rounded-lg font-medium transition-all mb-8 ${
-                    plan.popular
-                      ? "bg-gold text-[#06101F] hover:bg-gold-light shadow-[0_0_20px_rgba(201,169,97,0.3)]"
-                      : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
-                  }`}
-                >
-                  {plan.cta}
-                </button>
-              </Link>
+              <button
+                onClick={() => handleSelect(plan.slug)}
+                disabled={requestCheckout.isPending}
+                className={`w-full py-3 rounded-lg font-medium transition-all mb-8 disabled:opacity-50 inline-flex items-center justify-center gap-2 ${
+                  plan.popular
+                    ? "bg-gold text-[#06101F] hover:bg-gold-light shadow-[0_0_20px_rgba(201,169,97,0.3)]"
+                    : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                }`}
+              >
+                {requestCheckout.isPending && requestCheckout.variables?.plan === plan.slug ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  (isAuthenticated && userWorkspaceId ? plan.ctaUpgrade : plan.ctaTrial)
+                )}
+              </button>
 
               <div className="space-y-4 flex-1">
                 {plan.features.map((feature) => (
