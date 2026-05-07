@@ -25,7 +25,7 @@ import { useLocation } from "wouter";
 
 type Mode = "choose" | "create" | "join" | "billing";
 type BillingPeriod = "monthly" | "yearly";
-type PaidPlan = "basic" | "premium";
+type PaidPlan = "basic" | "pro" | "premium";
 
 export default function Onboarding() {
   const { user, loading, isAuthenticated } = useAuth();
@@ -73,10 +73,7 @@ export default function Onboarding() {
     },
   });
 
-  const continueWithTrial = () => {
-    toast.success("מעולה! נכנסים לניסיון של 14 יום 🎁");
-    window.location.assign("/dashboard");
-  };
+
 
   const upgradeTo = (plan: PaidPlan) => {
     requestCheckout.mutate({
@@ -138,7 +135,7 @@ export default function Onboarding() {
       : mode === "create"
         ? "תני לסוכנות שלך שם שיעורר השראה ✨"
         : mode === "billing"
-          ? "כל הכבוד! 🎉 בחרי תוכנית — אפשר להתחיל גם עם 14 יום ניסיון חינם."
+          ? "כל הכבוד! 🎉 בחרי תוכנית כדי להתחיל לעבוד."
           : "הדביקי את קוד ההזמנה שקיבלת";
 
   return (
@@ -191,7 +188,7 @@ export default function Onboarding() {
                   </h2>
                   <p className="text-sm text-white/70 leading-relaxed mb-5">
                     אני סוכן עצמאי או מנהל בית-סוכן ורוצה לפתוח סביבת עבודה
-                    חדשה. ניסיון 14 יום בחינם.
+                    חדשה.
                   </p>
                   <div className="flex items-center gap-2 text-gold text-sm font-semibold">
                     התחל
@@ -255,8 +252,7 @@ export default function Onboarding() {
                 />
 
                 <p className="text-xs text-white/55 leading-relaxed">
-                  תקופת ניסיון של 14 יום ללא צורך בכרטיס אשראי. תוכלו להזמין
-                  צוות, לבטל בכל רגע.
+                  תוכלו להזמין צוות ולנהל את הסוכנות מכל מקום.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <Button
@@ -359,7 +355,7 @@ export default function Onboarding() {
               workspaceName={createdWorkspaceName}
               period={billingPeriod}
               onPeriodChange={setBillingPeriod}
-              onTrial={continueWithTrial}
+
               onUpgrade={upgradeTo}
               isPending={requestCheckout.isPending}
             />
@@ -374,7 +370,7 @@ interface BillingStepProps {
   workspaceName: string;
   period: BillingPeriod;
   onPeriodChange: (period: BillingPeriod) => void;
-  onTrial: () => void;
+
   onUpgrade: (plan: PaidPlan) => void;
   isPending: boolean;
 }
@@ -383,13 +379,14 @@ function BillingStep({
   workspaceName,
   period,
   onPeriodChange,
-  onTrial,
+
   onUpgrade,
   isPending,
 }: BillingStepProps) {
   // Source of truth lives in server/billing.ts; mirrored here for SSR-free display.
-  const basicPrice = period === "yearly" ? 150 : 180;
-  const premiumPrice = period === "yearly" ? 350 : 420;
+  const basicPrice = 150;
+  const proPrice = 249;
+  const premiumPrice = 389;
 
   return (
     <div className="animate-fade-up" style={{ animationDelay: "0.1s" }}>
@@ -399,7 +396,7 @@ function BillingStep({
           איזו תוכנית מתאימה לך?
         </h2>
         <p className="text-sm text-white/70 leading-relaxed mb-7">
-          אפשר להתחיל עם 14 יום ניסיון חינם, ולשדרג כשתהיי מוכנה. כל שינוי מתבצע
+          בחרי את התוכנית שמתאימה לגודל הסוכנות שלך. כל שינוי מתבצע
           בלחיצה — בלי התחייבויות.
         </p>
 
@@ -432,35 +429,35 @@ function BillingStep({
 
         <div className="grid md:grid-cols-3 gap-4">
           <PlanCard
-            icon={<Sparkles className="h-5 w-5 text-gold" />}
-            eyebrow="חינם · 14 יום"
-            title="ניסיון"
-            priceLabel="₪0"
-            priceSuffix="ל-14 יום"
-            features={[
-              "כל היכולות של Base",
-              "בלי כרטיס אשראי",
-              "ביטול בלחיצה",
-            ]}
-            ctaLabel="המשך עם ניסיון"
-            ctaVariant="ghost"
-            onClick={onTrial}
-            disabled={isPending}
-          />
-          <PlanCard
             icon={<Building2 className="h-5 w-5 text-gold" />}
             eyebrow="לסוכן עצמאי"
             title="Base"
             priceLabel={`₪${basicPrice}`}
             priceSuffix={period === "yearly" ? "לחודש (חיוב שנתי)" : "לחודש"}
             features={[
-              "עד 500 לקוחות פעילים",
+              "עד 300 לקוחות פעילים",
               "זיהוי דגלים אוטומטי",
               "דוחות חודשיים + תמיכה במייל",
             ]}
-            ctaLabel="שדרוג ל-Base"
+            ctaLabel="בחר Base"
             ctaVariant="outline"
             onClick={() => onUpgrade("basic")}
+            disabled={isPending}
+          />
+          <PlanCard
+            icon={<Sparkles className="h-5 w-5 text-gold" />}
+            eyebrow="לסוכנות בצמיחה"
+            title="Pro"
+            priceLabel={`₪${proPrice}`}
+            priceSuffix={period === "yearly" ? "לחודש (חיוב שנתי)" : "לחודש"}
+            features={[
+              "עד 1000 לקוחות פעילים",
+              "זיהוי דגלים מורחב",
+              "ייצוא נתונים מלא",
+            ]}
+            ctaLabel="בחר Pro"
+            ctaVariant="outline"
+            onClick={() => onUpgrade("pro")}
             disabled={isPending}
           />
           <PlanCard
@@ -474,7 +471,7 @@ function BillingStep({
               "זיהוי VIP, תיקון 190, השתלמות",
               "אוטומציות WhatsApp + תמיכה VIP",
             ]}
-            ctaLabel="שדרוג ל-Premium"
+            ctaLabel="בחר Premium"
             ctaVariant="gold"
             onClick={() => onUpgrade("premium")}
             disabled={isPending}

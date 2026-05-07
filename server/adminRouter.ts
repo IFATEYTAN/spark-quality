@@ -47,7 +47,7 @@ export const adminRouter = router({
     .input(
       z.object({
         workspaceId: z.number(),
-        plan: z.enum(["trial", "basic", "premium", "enterprise"]),
+        plan: z.enum(["basic", "pro", "premium", "enterprise"]),
       })
     )
     .mutation(async ({ ctx, input }) => {

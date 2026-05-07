@@ -38,8 +38,8 @@ export const workspaces = mysqlTable("workspaces", {
   id: int("id").autoincrement().primaryKey(),
   /** Display name, e.g. "קסם" או "ביטוח דניאל" */
   name: varchar("name", { length: 200 }).notNull(),
-  /** Subscription plan: trial | basic | premium | enterprise */
-  plan: mysqlEnum("plan", ["trial", "basic", "premium", "enterprise"]).default("trial").notNull(),
+  /** Subscription plan: basic | pro | premium | enterprise. Trial removed in Round 33 — every workspace is paid from day one. "trial" kept in enum only for legacy rows that will be migrated to "basic" by db:push. */
+  plan: mysqlEnum("plan", ["trial", "basic", "pro", "premium", "enterprise"]).default("basic").notNull(),
   /** VIP threshold in ILS - clients with total balance above this are auto-flagged as VIP. Default 1,000,000. */
   vipThreshold: decimal("vipThreshold", { precision: 14, scale: 2 }).default("1000000.00").notNull(),
   /** Trial ends at this date (null after upgrade) */
@@ -90,6 +90,12 @@ export const users = mysqlTable(
      * - agent: regular agent, sees only their own clients
      */
     workspaceRole: mysqlEnum("workspaceRole", ["owner", "admin", "agent"]).default("agent").notNull(),
+    /** Israeli broker license number. Required during onboarding for any workspace owner. Unique to prevent duplicates. */
+    licenseNumber: varchar("licenseNumber", { length: 64 }),
+    /** Storage key of the uploaded license proof (image/pdf). */
+    licenseFileKey: varchar("licenseFileKey", { length: 255 }),
+    /** Set after SPARK staff verifies the license. */
+    licenseVerifiedAt: timestamp("licenseVerifiedAt"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
     updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
     lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

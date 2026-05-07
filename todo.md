@@ -286,3 +286,15 @@
 - [x] אדמין: STAGE_ORDER_FULL שומר את הזרימה המלאה כולל UploadStage; תויות מסכים התעדכנו ל-5/5 mode
 - [x] safety net: אם משתמש לא-אדמין מגיע ל-stage="upload" מ-stale state, queueMicrotask מקדם אותו ל-"analyzing"
 - [x] vitest 37/37 עוברים, אין שגיאות TypeScript
+
+
+## Round 33 — Pricing 3 tiers + license capture (2026-05-07)
+- [ ] עדכון products.ts: 3 תוכניות (Base 150 / Pro 249 / Premium 389), הסרת trial, עמודת flags-quota לכל תוכנית
+- [ ] שדרוג Pricing.tsx ל-3 כרטיסים עם השוואת V/X לכל פיצ'ר; הדגשת "מומלץ" על Pro
+- [ ] הסרת באנר "תקופת ניסיון פעילה" מ-Dashboard, מה-Header, ומכל copy ב-Home
+- [ ] שינוי כל ה-CTA "התחל ניסיון חינם" ל"בחר תוכנית" / "התחל עכשיו"
+- [ ] schema: הוספת license_number + license_file_key + license_verified ל-workspace/user
+- [ ] LicenseCaptureStep ב-Onboarding: input מספר רישיון + file upload (image/pdf), חסימת המשך בלי שניהם
+- [ ] tRPC: license.submit + license.checkUnique (למניעת כפילויות)
+- [ ] עדכון Onboarding flow: ללא license + תשלום אין כניסה לדשבורד
+- [ ] vitest לקוטג'רים החדשים, checkpoint, push GitHub

@@ -15,7 +15,7 @@ vi.mock("./db", () => ({
     {
       id: 1,
       name: "Sample Agency",
-      plan: "trial",
+      plan: "basic",
       suspendedAt: null,
       memberCount: 2,
       clientCount: 31,

@@ -137,9 +137,8 @@ export async function updateUserWorkspace(
 export async function createWorkspace(data: InsertWorkspace) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  // Set 14-day trial by default
-  const trialEndsAt = data.trialEndsAt ?? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
-  const result = await db.insert(workspaces).values({ ...data, trialEndsAt });
+  // Trial removed (Round 33). Workspaces start with the plan they pay for; trialEndsAt stays null.
+  const result = await db.insert(workspaces).values(data);
   return (result as unknown as { insertId: number }).insertId;
 }
 
@@ -641,7 +640,7 @@ export async function setWorkspaceSuspended(
 
 export async function setWorkspacePlan(
   workspaceId: number,
-  plan: "trial" | "basic" | "premium" | "enterprise"
+  plan: "trial" | "basic" | "pro" | "premium" | "enterprise"
 ) {
   const db = await getDb();
   if (!db) return;
