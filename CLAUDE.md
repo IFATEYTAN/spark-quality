@@ -163,7 +163,7 @@ Schema is in `drizzle/schema.ts`. Migrations are SQL files in `drizzle/*.sql` ge
 - **Type re-exports**: `shared/types.ts` re-exports `drizzle/schema` types and the shared `errors`. Import domain types from `@shared` (or directly from `drizzle/schema` server-side), not by reaching into `_core`.
 - **Hebrew error messages** are user-visible — the codebase mixes English (logs, internal errors) with Hebrew (user-facing TRPCError messages). Match the surrounding style.
 - **Patches**: `wouter@3.7.1` is patched (see `patches/`). pnpm applies it automatically on install.
-- **Branch policy** (per repo instructions): develop on `claude/add-claude-documentation-D8sR5`, never push to other branches without explicit permission.
+- **Branch policy** (per repo instructions): follow the branch specified in the active session; never push to other branches without explicit permission.
 
 ## Environment variables
 
