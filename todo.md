@@ -288,13 +288,21 @@
 - [x] vitest 37/37 עוברים, אין שגיאות TypeScript
 
 
-## Round 33 — Pricing 3 tiers + license capture (2026-05-07)
-- [ ] עדכון products.ts: 3 תוכניות (Base 150 / Pro 249 / Premium 389), הסרת trial, עמודת flags-quota לכל תוכנית
-- [ ] שדרוג Pricing.tsx ל-3 כרטיסים עם השוואת V/X לכל פיצ'ר; הדגשת "מומלץ" על Pro
-- [ ] הסרת באנר "תקופת ניסיון פעילה" מ-Dashboard, מה-Header, ומכל copy ב-Home
-- [ ] שינוי כל ה-CTA "התחל ניסיון חינם" ל"בחר תוכנית" / "התחל עכשיו"
-- [ ] schema: הוספת license_number + license_file_key + license_verified ל-workspace/user
-- [ ] LicenseCaptureStep ב-Onboarding: input מספר רישיון + file upload (image/pdf), חסימת המשך בלי שניהם
-- [ ] tRPC: license.submit + license.checkUnique (למניעת כפילויות)
-- [ ] עדכון Onboarding flow: ללא license + תשלום אין כניסה לדשבורד
-- [ ] vitest לקוטג'רים החדשים, checkpoint, push GitHub
+## Round 33 — Pricing 3 tiers + No Trial + License Capture (2026-05-07)
+- [x] עדכון products.ts: 3 תוכניות (Base 150 / Pro 249 / Premium 389), הסרת trial, עמודת flags-quota לכל תוכנית
+- [x] שדרוג Pricing.tsx ל-3 כרטיסים עם השוואת V/X לכל פיצ'ר; הדגשת "מומלץ" על Pro
+- [x] הסרת באנר "תקופת ניסיון פעילה" מ-Dashboard, מה-Header, ומכל copy ב-Home
+- [x] שינוי כל ה-CTA "התחל ניסיון חינם" ל"בחר תוכנית" / "התחל עכשיו"
+- [x] schema: הוספת license_number + license_file_key + license_verified ל-workspace/user
+- [x] LicenseCaptureStep ב-Onboarding: input מספר רישיון + file upload (image/pdf), חסימת המשך בלי שניהם
+- [x] tRPC: license.submit + license.checkUnique (למניעת כפילויות)
+- [x] עדכון Onboarding flow: ללא license + תשלום אין כניסה לדשבורד
+- [x] vitest לקוטג'רים החדשים, checkpoint, push GitHub
+
+## Round 34 — Table operations (Filter, Edit, Export, Drawer) (2026-05-07)
+- [x] בניית TableToolbar עם כפתורי רענון, ייצוא HTML, ייצוא Excel (xlsx)
+- [x] בניית ClientDetailDrawer להצגת פרטי לקוח מלאים ועריכת הערות/VIP/דגל
+- [x] שילוב הכלים במסך Clients.tsx (כולל mutation clients.update)
+- [x] שילוב כפתורי ייצוא HTML/Excel ב-DashboardStage (דמו)
+- [x] הוספת כפתור "יציאה" גלובלי בכל המסכים (כבר קיים ב-CinematicShell שעוטף את כולם)
+- [x] vitest 48/48, checkpoint, push GitHub
