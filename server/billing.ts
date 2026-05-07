@@ -4,14 +4,30 @@ import { notifyOwner } from "./_core/notification";
 import { protectedProcedure, router } from "./_core/trpc";
 import { sendEmail } from "./email";
 
+// 3-tier pricing. Yearly price = monthly with ~16% discount, billed once a year.
 const PLAN_PRICES = {
-  basic: { monthly: 180, yearly: 150 * 12 },
-  premium: { monthly: 420, yearly: 350 * 12 },
+  basic: { monthly: 150, yearly: 150 * 12 },
+  pro: { monthly: 249, yearly: 249 * 12 },
+  premium: { monthly: 389, yearly: 389 * 12 },
 } as const;
 
 const PLAN_LABELS = {
   basic: "Base",
+  pro: "Pro",
   premium: "Premium",
+} as const;
+
+// Quota of "flags" (דגלים / התראות פעילות) the user can have open at any moment.
+const PLAN_FLAGS_QUOTA = {
+  basic: 50,
+  pro: 200,
+  premium: -1, // -1 = unlimited
+} as const;
+
+const PLAN_CLIENT_LIMIT = {
+  basic: 300,
+  pro: 1000,
+  premium: -1, // -1 = unlimited
 } as const;
 
 const PERIOD_LABELS = {
@@ -47,12 +63,24 @@ export const billingRouter = router({
         monthly: PLAN_PRICES.basic.monthly,
         yearlyPerMonth: PLAN_PRICES.basic.yearly / 12,
         yearlyTotal: PLAN_PRICES.basic.yearly,
+        flagsQuota: PLAN_FLAGS_QUOTA.basic,
+        clientLimit: PLAN_CLIENT_LIMIT.basic,
+      },
+      pro: {
+        label: PLAN_LABELS.pro,
+        monthly: PLAN_PRICES.pro.monthly,
+        yearlyPerMonth: PLAN_PRICES.pro.yearly / 12,
+        yearlyTotal: PLAN_PRICES.pro.yearly,
+        flagsQuota: PLAN_FLAGS_QUOTA.pro,
+        clientLimit: PLAN_CLIENT_LIMIT.pro,
       },
       premium: {
         label: PLAN_LABELS.premium,
         monthly: PLAN_PRICES.premium.monthly,
         yearlyPerMonth: PLAN_PRICES.premium.yearly / 12,
         yearlyTotal: PLAN_PRICES.premium.yearly,
+        flagsQuota: PLAN_FLAGS_QUOTA.premium,
+        clientLimit: PLAN_CLIENT_LIMIT.premium,
       },
       icountReady: isICountConfigured(),
     };
@@ -69,7 +97,7 @@ export const billingRouter = router({
   requestCheckout: protectedProcedure
     .input(
       z.object({
-        plan: z.enum(["basic", "premium"]),
+        plan: z.enum(["basic", "pro", "premium"]),
         period: z.enum(["monthly", "yearly"]),
         workspaceName: z.string().trim().max(200).optional(),
       })

@@ -5,7 +5,6 @@ import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicSh
 import { ActionCenter } from "@/components/ActionCenter";
 import { trpc } from "@/lib/trpc";
 import {
-  AlertCircle,
   Building2,
   Crown,
   FileSpreadsheet,
@@ -79,16 +78,7 @@ export default function Dashboard() {
   };
   const firstName = user?.name?.split(" ")[0] || "סוכן";
 
-  const trialDaysLeft =
-    workspace?.plan === "trial" && workspace.trialEndsAt
-      ? Math.max(
-          0,
-          Math.ceil(
-            (new Date(workspace.trialEndsAt).getTime() - Date.now()) /
-              (24 * 60 * 60 * 1000)
-          )
-        )
-      : null;
+  // Trial flow removed: every account is paid from day one (Round 33).
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={88} showSidebar>
@@ -108,35 +98,6 @@ export default function Dashboard() {
               : "הלקוחות שלך, הדוחות והמשימות שלך — במקום אחד."}
           </p>
         </div>
-
-        {/* Trial banner */}
-        {trialDaysLeft !== null && (
-          <GlassCard
-            goldAccent
-            className="mb-8 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 animate-fade-up"
-          >
-            <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gold/15 border border-gold/30 flex items-center justify-center shrink-0">
-                <AlertCircle className="h-5 w-5 text-gold" />
-              </div>
-              <div>
-                <div className="text-sm font-bold text-white">
-                  תקופת ניסיון פעילה
-                </div>
-                <div className="text-xs text-white/65 mt-0.5">
-                  מסתיימת בעוד {trialDaysLeft} ימים — שדרגו לפני כדי לא לאבד
-                  גישה.
-                </div>
-              </div>
-            </div>
-            <Button
-              size="sm"
-              className="bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] font-bold shrink-0"
-            >
-              שדרוג עכשיו
-            </Button>
-          </GlassCard>
-        )}
 
         {/* Stats grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">

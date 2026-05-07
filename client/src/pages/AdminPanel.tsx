@@ -54,10 +54,10 @@ const STATUS_HE: Record<string, string> = {
 };
 
 const PLAN_HE: Record<string, string> = {
-  trial: "ניסיון",
-  basic: "בסיסי",
-  premium: "פרימיום",
-  enterprise: "ארגוני",
+  basic: "Base (150₪)",
+  pro: "Pro (249₪)",
+  premium: "Premium (389₪)",
+  enterprise: "ארגוני (מותאם אישית)",
 };
 
 export default function AdminPanel() {
@@ -278,7 +278,7 @@ function WorkspacesTab() {
                       value={w.plan}
                       onValueChange={v =>
                         planMut.mutate(
-                          { workspaceId: w.id, plan: v as "trial" | "basic" | "premium" | "enterprise" },
+                          { workspaceId: w.id, plan: v as "basic" | "pro" | "premium" | "enterprise" },
                           {
                             onSuccess: () => toast.success(`חבילה עודכנה ל-${PLAN_HE[v] ?? v}`),
                             onError: e => toast.error(e.message),
@@ -290,8 +290,8 @@ function WorkspacesTab() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="trial">{PLAN_HE.trial}</SelectItem>
                         <SelectItem value="basic">{PLAN_HE.basic}</SelectItem>
+                        <SelectItem value="pro">{PLAN_HE.pro}</SelectItem>
                         <SelectItem value="premium">{PLAN_HE.premium}</SelectItem>
                         <SelectItem value="enterprise">{PLAN_HE.enterprise}</SelectItem>
                       </SelectContent>

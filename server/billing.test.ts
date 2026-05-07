@@ -43,10 +43,13 @@ describe("billing router", () => {
   it("plans query returns the canonical price table", async () => {
     const caller = billingRouter.createCaller(makeCtx());
     const result = await caller.plans();
-    expect(result.basic.monthly).toBe(180);
+    expect(result.basic.monthly).toBe(150);
     expect(result.basic.yearlyPerMonth).toBe(150);
-    expect(result.premium.monthly).toBe(420);
-    expect(result.premium.yearlyPerMonth).toBe(350);
+    expect(result.basic.clientLimit).toBe(300);
+    expect(result.pro.monthly).toBe(249);
+    expect(result.pro.clientLimit).toBe(1000);
+    expect(result.premium.monthly).toBe(389);
+    expect(result.premium.clientLimit).toBe(-1);
     expect(typeof result.icountReady).toBe("boolean");
   });
 
@@ -59,7 +62,7 @@ describe("billing router", () => {
 
     expect(result.ok).toBe(true);
     expect(result.mode).toBe("manual_followup");
-    expect(result.amount).toBe(350 * 12);
+    expect(result.amount).toBe(389 * 12);
 
     expect(mockNotifyOwner).toHaveBeenCalledTimes(1);
     const notify = mockNotifyOwner.mock.calls[0][0] as { title: string; content: string };
@@ -72,17 +75,26 @@ describe("billing router", () => {
     expect(email.to).toBe("anathemell@gmail.com");
     expect(email.subject).toContain("Premium");
     expect(email.replyTo).toBe("anat@example.com");
-    expect(email.html).toContain("4,200"); // 350*12 with he-IL grouping
+    expect(email.html).toContain((389 * 12).toLocaleString("he-IL"));
   });
 
-  it("requestCheckout for basic monthly uses ₪180", async () => {
+  it("requestCheckout for basic monthly uses ₪150", async () => {
     const caller = billingRouter.createCaller(makeCtx());
     const result = await caller.requestCheckout({ plan: "basic", period: "monthly" });
-    expect(result.amount).toBe(180);
+    expect(result.amount).toBe(150);
     expect(mockSendEmail).toHaveBeenCalledTimes(1);
     const email = mockSendEmail.mock.calls[0][0] as { html?: string };
-    expect(email.html).toContain("180");
+    expect(email.html).toContain("150");
     expect(email.html).toContain("Base");
+  });
+
+  it("requestCheckout for pro monthly uses ₪249", async () => {
+    const caller = billingRouter.createCaller(makeCtx());
+    const result = await caller.requestCheckout({ plan: "pro", period: "monthly" });
+    expect(result.amount).toBe(249);
+    const email = mockSendEmail.mock.calls[0][0] as { html?: string };
+    expect(email.html).toContain("249");
+    expect(email.html).toContain("Pro");
   });
 
   it("includes workspaceName when provided (e.g. fresh signup)", async () => {

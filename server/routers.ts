@@ -135,7 +135,7 @@ export const appRouter = router({
       .input(
         z.object({
           name: z.string().min(2).max(200),
-          plan: z.enum(["trial", "basic", "premium", "enterprise"]).optional(),
+          plan: z.enum(["basic", "pro", "premium", "enterprise"]).optional(),
         })
       )
       .mutation(async ({ ctx, input }) => {
@@ -147,7 +147,7 @@ export const appRouter = router({
         }
         const workspaceId = await db.createWorkspace({
           name: input.name,
-          plan: input.plan ?? "trial",
+          plan: input.plan ?? "basic",
         });
         await db.updateUserWorkspace(ctx.user.id, workspaceId, "owner");
         return { workspaceId };

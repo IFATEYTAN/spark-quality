@@ -217,7 +217,7 @@ export default function Home() {
                 href={loginHref}
                 className="group flex items-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-8 py-4 text-base font-bold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-gold/60"
               >
-                התחילו 14 ימי ניסיון בחינם
+                בחרי תוכנית והתחילי
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               </a>
             </div>
@@ -226,7 +226,7 @@ export default function Home() {
               className="mt-6 text-xs tracking-[0.2em] text-white/50 animate-fade-in"
               style={{ animationDelay: "0.8s" }}
             >
-              ללא כרטיס אשראי · הקמה תוך 60 שניות · ביטול בקליק
+              הקמה תוך 60 שניות · ביטול בקליק
             </p>
           </div>
 
@@ -368,14 +368,14 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {/* Base */}
-            <div className="rounded-lg p-8 backdrop-blur-md bg-white/5 border border-white/10">
+            <div className="rounded-lg p-8 backdrop-blur-md bg-white/5 border border-white/10 flex flex-col">
               <div className="text-[11px] tracking-[0.3em] uppercase text-white/60 mb-3">
-                Base
+                Base Plan
               </div>
-              <h3 className="font-display text-3xl font-black text-white tracking-tight">
-                סוכן יחיד
+              <h3 className="font-display text-2xl font-black text-white tracking-tight">
+                לסוכנים עצמאיים שרוצים להתחיל לעבוד חכם
               </h3>
               <div className="mt-6 flex items-baseline gap-2">
                 <span className="font-display text-5xl font-black text-white">
@@ -384,14 +384,14 @@ export default function Home() {
                 <span className="text-base text-white/60">₪ / חודש</span>
               </div>
               <p className="text-xs text-white/50 mt-1">
-                או 1,500 ₪ לשנה (חיסכון של 17%)
+                חיוב שנתי של 1800 ₪
               </p>
-              <ul className="mt-8 space-y-3 text-sm text-white/80">
+              <ul className="mt-8 space-y-3 text-sm text-white/80 flex-1">
                 {[
-                  "עד 500 לקוחות",
-                  "ניתוח דוחות שורנס",
-                  "דשבורד דגלים",
-                  "אזור אישי מלא",
+                  "עד 300 לקוחות פעילים",
+                  "זיהוי דגלים אוטומטי (ריסק, פנסיה)",
+                  "הפקת דוחות חודשיים",
+                  "תמיכה במייל",
                 ].map((p) => (
                   <li key={p} className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-gold shrink-0" />
@@ -403,36 +403,75 @@ export default function Home() {
                 href={loginHref}
                 className="mt-8 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60"
               >
-                התחילו ניסיון
+                בחר Base
               </a>
             </div>
 
-            {/* Premium */}
-            <div className="relative rounded-lg p-8 backdrop-blur-md bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/40 shadow-[0_8px_32px_rgba(201,169,97,0.2)]">
-              <div className="absolute -top-3 right-1/2 translate-x-1/2 px-3 py-1 bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] text-[11px] font-bold tracking-widest uppercase rounded-full shadow-lg">
-                המומלץ
+            {/* Pro */}
+            <div className="rounded-lg p-8 backdrop-blur-md bg-white/5 border border-white/10 flex flex-col">
+              <div className="text-[11px] tracking-[0.3em] uppercase text-white/60 mb-3">
+                Pro Plan
               </div>
-              <div className="text-[11px] tracking-[0.3em] uppercase text-gold mb-3">
-                Premium
-              </div>
-              <h3 className="font-display text-3xl font-black text-white tracking-tight">
-                סוכנות / בית-סוכן
+              <h3 className="font-display text-2xl font-black text-white tracking-tight">
+                לסוכנויות בצמיחה שצריכות יותר
               </h3>
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="font-display text-5xl font-black text-gold">
-                  350
+                <span className="font-display text-5xl font-black text-white">
+                  249
                 </span>
                 <span className="text-base text-white/60">₪ / חודש</span>
               </div>
               <p className="text-xs text-white/50 mt-1">
-                או 3,500 ₪ לשנה (חיסכון של 17%)
+                חיוב שנתי של 2988 ₪
               </p>
-              <ul className="mt-8 space-y-3 text-sm text-white/85">
+              <ul className="mt-8 space-y-3 text-sm text-white/80 flex-1">
+                {[
+                  "עד 1000 לקוחות פעילים",
+                  "זיהוי דגלים מורחב",
+                  "ייצוא נתונים מלא",
+                  "תמיכה בוואטסאפ",
+                ].map((p) => (
+                  <li key={p} className="flex items-center gap-2">
+                    <Check className="h-4 w-4 text-gold shrink-0" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={loginHref}
+                className="mt-8 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60"
+              >
+                בחר Pro
+              </a>
+            </div>
+
+            {/* Premium */}
+            <div className="relative rounded-lg p-8 backdrop-blur-md bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/40 shadow-[0_8px_32px_rgba(201,169,97,0.2)] flex flex-col">
+              <div className="absolute -top-3 right-1/2 translate-x-1/2 px-3 py-1 bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] text-[11px] font-bold tracking-widest uppercase rounded-full shadow-lg">
+                המומלץ ביותר
+              </div>
+              <div className="text-[11px] tracking-[0.3em] uppercase text-gold mb-3">
+                Premium Plan
+              </div>
+              <h3 className="font-display text-2xl font-black text-white tracking-tight">
+                לסוכנויות צומחות שדורשות אוטומציה מלאה
+              </h3>
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="font-display text-5xl font-black text-gold">
+                  389
+                </span>
+                <span className="text-base text-white/60">₪ / חודש</span>
+              </div>
+              <p className="text-xs text-white/50 mt-1">
+                חיוב שנתי של 4668 ₪
+              </p>
+              <ul className="mt-8 space-y-3 text-sm text-white/85 flex-1">
                 {[
                   "לקוחות ללא הגבלה",
-                  "צוות סוכנים + מנהל",
-                  "בידוד נתונים בין סוכנים",
-                  "הזמנות בקליק לחברי צוות",
+                  "זיהוי דגלים אוטומטי מלא",
+                  "זיהוי הזדמנויות פיננסיות (VIP, 190, השתלמות)",
+                  "ייצוא נתונים מלא (מותנה במנוי פעיל)",
+                  "אוטומציות Email ו-WhatsApp",
                   "תמיכה VIP",
                 ].map((p) => (
                   <li key={p} className="flex items-center gap-2">
@@ -445,7 +484,7 @@ export default function Home() {
                 href={loginHref}
                 className="mt-8 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30 transition-all hover:scale-[1.02]"
               >
-                התחילו ניסיון פרימיום
+                בחר פרימיום
               </a>
             </div>
           </div>
