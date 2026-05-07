@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import * as db from "./db";
+import { storagePut } from "./storage";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
 import { sendEmail } from "./email";
@@ -124,6 +125,60 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    /**
+     * Capture broker-license number + file in one tRPC call.
+     * Frontend sends fileBase64 (data URL or raw base64) + filename + mimeType.
+     * Server uploads to S3 and persists licenseNumber + licenseFileKey on user row.
+     * Enforces uniqueness on licenseNumber to prevent duplicate / fraudulent accounts.
+     */
+    setLicense: protectedProcedure
+      .input(
+        z.object({
+          licenseNumber: z
+            .string()
+            .trim()
+            .regex(/^[0-9A-Za-z-]{4,20}$/, "מספר רישיון אינו תקין (4–20 תווים)"),
+          fileBase64: z.string().min(50).max(15_000_000),
+          fileName: z.string().trim().min(1).max(200),
+          mimeType: z
+            .string()
+            .regex(/^(image\/(png|jpeg|jpg|webp)|application\/pdf)$/, "הקובץ חייב להיות PNG / JPG / PDF"),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const license = input.licenseNumber.trim();
+        const existing = await db.getUserByLicenseNumber(license);
+        if (existing && existing.id !== ctx.user.id) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: "מספר רישיון זה כבר רשום במערכת תחת משתמש אחר.",
+          });
+        }
+
+        // Strip optional data:URL prefix
+        const rawBase64 = input.fileBase64.replace(/^data:[^;]+;base64,/, "");
+        const buffer = Buffer.from(rawBase64, "base64");
+        if (buffer.length < 100 || buffer.length > 10 * 1024 * 1024) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "גודל הקובץ חייב להיות בין 100B ל-10MB.",
+          });
+        }
+
+        const ext = input.fileName.includes(".")
+          ? input.fileName.split(".").pop()!.toLowerCase()
+          : input.mimeType === "application/pdf"
+            ? "pdf"
+            : "png";
+        const safeKey = `licenses/user-${ctx.user.id}/${Date.now()}.${ext}`;
+        const { key } = await storagePut(safeKey, buffer, input.mimeType);
+
+        await db.setUserLicense(ctx.user.id, {
+          licenseNumber: license,
+          licenseFileKey: key,
+        });
+        return { success: true, licenseFileKey: key } as const;
+      }),
   }),
 
   // ========================================================

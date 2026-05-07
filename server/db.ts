@@ -131,6 +131,41 @@ export async function updateUserWorkspace(
     .where(eq(users.id, userId));
 }
 
+/**
+ * Find a user by exact insurance-license number (used to detect duplicates
+ * before assigning a license to another user).
+ */
+export async function getUserByLicenseNumber(licenseNumber: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.licenseNumber, licenseNumber))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Persist the agent's broker-license number + uploaded license file (storage key).
+ * Sets licenseVerifiedAt to NOW so the back-office knows when it was captured.
+ */
+export async function setUserLicense(
+  userId: number,
+  data: { licenseNumber: string; licenseFileKey: string }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(users)
+    .set({
+      licenseNumber: data.licenseNumber,
+      licenseFileKey: data.licenseFileKey,
+      licenseVerifiedAt: new Date(),
+    })
+    .where(eq(users.id, userId));
+}
+
 // ============================================================
 // WORKSPACES
 // ============================================================

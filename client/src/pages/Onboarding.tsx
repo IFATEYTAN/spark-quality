@@ -23,7 +23,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
-type Mode = "choose" | "create" | "join" | "billing";
+type Mode = "choose" | "create" | "license" | "join" | "billing";
 type BillingPeriod = "monthly" | "yearly";
 type PaidPlan = "basic" | "pro" | "premium";
 
@@ -50,11 +50,11 @@ export default function Onboarding() {
   const createWorkspace = trpc.workspaces.create.useMutation({
     onSuccess: async (_data, variables) => {
       toast.success("הסוכנות נוצרה בהצלחה!", {
-        description: "✨ נשאר רק לבחור תוכנית ואת בפנים",
+        description: "✨ כעת יש לאמת את רישיון הסוכן שלך",
       });
       setCreatedWorkspaceName(variables.name);
       await utils.auth.me.refetch();
-      setMode("billing");
+      setMode("license");
     },
     onError: (err) => {
       toast.error("שגיאה ביצירת הסוכנות", { description: err.message });
@@ -347,6 +347,11 @@ export default function Onboarding() {
                 </div>
               </div>
             </GlassCard>
+          )}
+
+          {/* License capture - shown after workspace.create succeeds, before billing */}
+          {mode === "license" && (
+            <LicenseStep onContinue={() => setMode("billing")} />
           )}
 
           {/* Billing mode - shown after workspace.create succeeds */}
@@ -653,5 +658,108 @@ function LegalConsentBlock({
         </span>
       </label>
     </div>
+  );
+}
+
+
+function LicenseStep({ onContinue }: { onContinue: () => void }) {
+  const [licenseNumber, setLicenseNumber] = useState("");
+  const [fileBase64, setFileBase64] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [mimeType, setMimeType] = useState("");
+
+  const setLicense = trpc.auth.setLicense.useMutation({
+    onSuccess: () => {
+      toast.success("הרישיון אומת ונשמר בהצלחה");
+      onContinue();
+    },
+    onError: (err) => {
+      toast.error("שגיאה בשמירת הרישיון", { description: err.message });
+    },
+  });
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("הקובץ גדול מדי (מקסימום 10MB)");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const result = ev.target?.result as string;
+      setFileBase64(result);
+      setFileName(file.name);
+      setMimeType(file.type);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <GlassCard goldAccent className="p-7 lg:p-10 animate-fade-up">
+      <GoldEyebrow>אימות רישיון סוכן</GoldEyebrow>
+      <h2 className="font-display text-2xl lg:text-3xl font-bold text-white tracking-tight mb-3">
+        העלאת רישיון
+      </h2>
+      <p className="text-white/70 mb-7 leading-relaxed">
+        כדי להבטיח את פרטיות הלקוחות ולעמוד בדרישות הרגולציה, המערכת פתוחה לסוכני ביטוח מורשים בלבד.
+      </p>
+
+      <div className="space-y-5">
+        <div>
+          <Label htmlFor="licenseNumber" className="text-white/90 mb-2 block text-sm font-semibold">
+            מספר רישיון סוכן
+          </Label>
+          <Input
+            id="licenseNumber"
+            value={licenseNumber}
+            onChange={(e) => setLicenseNumber(e.target.value)}
+            placeholder="לדוגמה: 123456"
+            className="bg-white/5 border-white/25 text-white placeholder:text-white/40 h-12 text-base"
+          />
+        </div>
+
+        <div>
+          <Label htmlFor="licenseFile" className="text-white/90 mb-2 block text-sm font-semibold">
+            צילום רישיון (PNG, JPG, PDF)
+          </Label>
+          <Input
+            id="licenseFile"
+            type="file"
+            accept="image/png, image/jpeg, image/webp, application/pdf"
+            onChange={handleFileChange}
+            className="bg-white/5 border-white/25 text-white/70 h-12 text-base file:text-white file:bg-white/10 file:border-0 file:rounded-md file:px-3 file:py-1 file:mr-2 file:text-sm hover:file:bg-white/20 cursor-pointer"
+          />
+          {fileName && (
+            <p className="text-xs text-gold mt-2">
+              קובץ נבחר: {fileName}
+            </p>
+          )}
+        </div>
+
+        <Button
+          onClick={() =>
+            setLicense.mutate({
+              licenseNumber,
+              fileBase64,
+              fileName,
+              mimeType,
+            })
+          }
+          disabled={
+            licenseNumber.trim().length < 4 ||
+            !fileBase64 ||
+            setLicense.isPending
+          }
+          className="w-full bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] hover:shadow-lg hover:shadow-gold/30 font-bold h-12 mt-4 disabled:opacity-50"
+        >
+          {setLicense.isPending ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            "אימות והמשך לתשלום ✨"
+          )}
+        </Button>
+      </div>
+    </GlassCard>
   );
 }
