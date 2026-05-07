@@ -77,7 +77,7 @@ export default function Onboarding() {
       toast.success("הבקשה נשלחה — מעבירים אתכם למסך ההמתנה", {
         description: "לינק לעמוד התשלום נשלח אליכם במייל.",
       });
-      window.location.assign(`/billing/waiting?req=${res.requestId}`);
+      navigate(`/billing/waiting?req=${res.requestId}`, { replace: true });
     },
     onError: (err) => {
       toast.error("לא הצלחנו לפתוח את הבקשה לתשלום", { description: err.message });
@@ -90,7 +90,7 @@ export default function Onboarding() {
       toast.success("הבקשה התקבלה ✨", {
         description: "ענת מצוות SPARK תיצור איתכם קשר במייל עם לינק תשלום ב-iCount.",
       });
-      window.location.assign("/dashboard");
+      navigate("/dashboard", { replace: true });
     },
     onError: (err) => {
       toast.error("שגיאה בשליחת הבקשה", { description: err.message });
@@ -118,7 +118,7 @@ export default function Onboarding() {
     onSuccess: async () => {
       toast.success("הצטרפת לסוכנות בהצלחה!");
       await utils.auth.me.refetch();
-      window.location.assign("/dashboard");
+      navigate("/dashboard", { replace: true });
     },
     onError: (err) => {
       toast.error("ההזמנה לא תקפה", { description: err.message });
@@ -138,14 +138,14 @@ export default function Onboarding() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      window.location.href = "/";
+      navigate("/", { replace: true });
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, isAuthenticated, navigate]);
 
   // If user already has a workspace, redirect to dashboard
   useEffect(() => {
     if (user && (user as { workspaceId?: number }).workspaceId) {
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [user, navigate]);
 

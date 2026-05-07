@@ -27,8 +27,8 @@ export default function UploadReport() {
   const utils = trpc.useUtils();
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) window.location.href = "/";
-  }, [loading, isAuthenticated]);
+    if (!loading && !isAuthenticated) navigate("/", { replace: true });
+  }, [loading, isAuthenticated, navigate]);
 
   const saveReport = trpc.reports.save.useMutation({
     onSuccess: (data) => {

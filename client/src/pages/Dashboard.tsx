@@ -24,13 +24,13 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      window.location.href = "/";
+      navigate("/", { replace: true });
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, isAuthenticated, navigate]);
 
   useEffect(() => {
     if (user && !(user as { workspaceId?: number | null }).workspaceId) {
-      navigate("/onboarding");
+      navigate("/onboarding", { replace: true });
     }
   }, [user, navigate]);
 

@@ -50,16 +50,17 @@ const FLAG_TO_CATEGORY: Record<Exclude<FlagKind, "all">, DashboardCategory> = {
   coverage_gaps: "coverageGaps",
 };
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 
 export default function Clients() {
   const { user, loading, isAuthenticated } = useAuth();
+  const [, navigate] = useLocation();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<FlagKind>("all");
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) window.location.href = "/";
-  }, [loading, isAuthenticated]);
+    if (!loading && !isAuthenticated) navigate("/", { replace: true });
+  }, [loading, isAuthenticated, navigate]);
 
   const clientsQuery = trpc.clients.list.useQuery(undefined, {
     enabled: isAuthenticated,

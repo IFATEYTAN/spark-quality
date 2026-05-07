@@ -29,9 +29,9 @@ export default function Team() {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      window.location.href = "/";
+      navigate("/", { replace: true });
     }
-  }, [loading, isAuthenticated]);
+  }, [loading, isAuthenticated, navigate]);
 
   const userRole = (user as { workspaceRole?: string } | null)?.workspaceRole;
   const isAdmin = userRole === "owner" || userRole === "admin";
