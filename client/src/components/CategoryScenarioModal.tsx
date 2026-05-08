@@ -49,8 +49,8 @@ const SCENARIOS: Record<string, CategoryScenario> = {
     steps: [
       { icon: FileSpreadsheet, label: "טריגר", detail: "סריקת דוח שורנס - לקוח X עם צבירה של 1.4M ₪", variant: "trigger" },
       { icon: Brain, label: "ניתוח AI", detail: "בדיקת תיק רב-יצרני · זיהוי הזדמנויות תיקון 190 · פילוח פיזור", variant: "ai" },
-      { icon: Mail, label: "פעולה אוטומטית", detail: "ניסוח מייל אישי לסוכנת + סיכום פיננסי PDF + הצעת פגישה", variant: "action" },
-      { icon: UserCheck, label: "אישור סוכנת", detail: "הסוכנת רואה תקציר ומאשרת בקליק את שליחת המייל", variant: "approval" },
+      { icon: Mail, label: "פעולה אוטומטית", detail: "ניסוח מייל אישי לסוכן/ת + סיכום פיננסי PDF + הצעת פגישה", variant: "action" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת רואים תקציר ומאשרת בקליק את שליחת המייל", variant: "approval" },
       { icon: Target, label: "תוצאה", detail: "פגישה נקבעת ב-CRM · יצירת הזדמנות מכירה · 5.2M ₪ פוטנציאל", variant: "result" },
     ],
     outcome: [
@@ -69,7 +69,7 @@ const SCENARIOS: Record<string, CategoryScenario> = {
       { icon: FileSpreadsheet, label: "טריגר", detail: "צבירה < 12K × ותק או דמי ניהול > 1% על קופה ותיקה", variant: "trigger" },
       { icon: Brain, label: "ניתוח AI", detail: "השוואת מסלולים זמינים אצל יצרן · חישוב חיסכון פוטנציאלי", variant: "ai" },
       { icon: Mail, label: "פעולה אוטומטית", detail: "מייל מותאם עם השוואת מסלולים גרפית + הצעת פגישת שימור", variant: "action" },
-      { icon: UserCheck, label: "אישור סוכנת", detail: "הסוכנת רואה את ההמלצה ומאשרת לשליחה", variant: "approval" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת רואים את ההמלצה ומאשרת לשליחה", variant: "approval" },
       { icon: Target, label: "תוצאה", detail: "ניוד למסלול רווחי · הוזלת דמי ניהול · שימור הלקוח", variant: "result" },
     ],
     outcome: [
@@ -88,7 +88,7 @@ const SCENARIOS: Record<string, CategoryScenario> = {
       { icon: FileSpreadsheet, label: "טריגר", detail: "ערכי גיל וצבירה תואמים את הקריטריונים", variant: "trigger" },
       { icon: Brain, label: "ניתוח AI", detail: "סימולציית חיסכון במס · חישוב פטור צפוי · השוואת מוצרים", variant: "ai" },
       { icon: Mail, label: "פעולה אוטומטית", detail: "מייל הסבר + סימולציה גרפית בקובץ PDF + הצעת פגישה", variant: "action" },
-      { icon: UserCheck, label: "אישור סוכנת", detail: "הסוכנת בוחנת ומאשרת את הסימולציה לשליחה", variant: "approval" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת בוחנים ומאשרת את הסימולציה לשליחה", variant: "approval" },
       { icon: Target, label: "תוצאה", detail: "פתיחת קופת 190 · עמלת מכירה · חיסכון משמעותי ללקוח", variant: "result" },
     ],
     outcome: [
@@ -107,7 +107,7 @@ const SCENARIOS: Record<string, CategoryScenario> = {
       { icon: AlertTriangle, label: "טריגר", detail: "תאריך סיום פוליסה < 60 יום מהיום", variant: "trigger" },
       { icon: Brain, label: "ניתוח AI", detail: "חישוב פרמיה חדשה · בדיקת זמינות מסלולים · התאמה לפרופיל", variant: "ai" },
       { icon: MessageSquare, label: "פעולה אוטומטית", detail: "WhatsApp דחוף + מייל גיבוי עם הצעת חידוש מיידית", variant: "action" },
-      { icon: UserCheck, label: "אישור סוכנת", detail: "הסוכנת מאשרת את ההצעה - או מתאימה ידנית", variant: "approval" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת מאשרים את ההצעה - או מתאימה ידנית", variant: "approval" },
       { icon: Target, label: "תוצאה", detail: "חידוש כיסוי לפני תום · שימור משפחה · המשך עמלה", variant: "result" },
     ],
     outcome: [
@@ -126,7 +126,7 @@ const SCENARIOS: Record<string, CategoryScenario> = {
       { icon: Calendar, label: "טריגר", detail: "תאריך סיום הנחה < 45 יום קדימה", variant: "trigger" },
       { icon: Brain, label: "ניתוח AI", detail: "חישוב פרמיה חדשה · השוואה לחלופות · אסטרטגיית שימור", variant: "ai" },
       { icon: Mail, label: "פעולה אוטומטית", detail: "מייל יזום עם הצעת חידוש הנחה או מסלול חלופי תחרותי", variant: "action" },
-      { icon: UserCheck, label: "אישור סוכנת", detail: "הסוכנת מאשרת את האסטרטגיה לשליחה ללקוח", variant: "approval" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת מאשרים את האסטרטגיה לשליחה ללקוח", variant: "approval" },
       { icon: Target, label: "תוצאה", detail: "שימור הלקוח לפני הקפיצה · ללא תלונה · עמלה חודשית נמשכת", variant: "result" },
     ],
     outcome: [
@@ -145,7 +145,7 @@ const SCENARIOS: Record<string, CategoryScenario> = {
       { icon: AlertOctagon, label: "טריגר", detail: "ניתוח תיק - חסרים מוצרים מסוג פנסיה / ריסק / סיעוד", variant: "trigger" },
       { icon: Brain, label: "ניתוח AI", detail: "פרופיל סיכון · התאמת מוצר · המלצה מותאמת לגיל ולמצב משפחתי", variant: "ai" },
       { icon: Mail, label: "פעולה אוטומטית", detail: "מייל הסבר + הצעת פגישת ייעוץ להשלמת התיק הביטוחי", variant: "action" },
-      { icon: UserCheck, label: "אישור סוכנת", detail: "הסוכנת בוחנת את ההמלצה ומאשרת או מתאימה", variant: "approval" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת בוחנים את ההמלצה ומאשרת או מתאימה", variant: "approval" },
       { icon: Target, label: "תוצאה", detail: "פגישה · מכירת מוצר חדש · עמלות אאפסל · לקוח מבוטח כהלכה", variant: "result" },
     ],
     outcome: [

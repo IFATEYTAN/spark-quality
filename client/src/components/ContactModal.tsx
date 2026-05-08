@@ -318,7 +318,7 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     rows={4}
-                    placeholder="ספרי לנו על הסוכנות שלך, גודל הצוות והאתגרים העיקריים..."
+                    placeholder="ספרו לנו על הסוכנות שלכם, גודל הצוות והאתגרים העיקריים..."
                     className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition resize-none"
                   />
                 </div>

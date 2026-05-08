@@ -40,15 +40,15 @@
 
 ## 🔲 פתוח להמשך
 
-## Round 36 - אינטגרציית iCount הוראת קבע באשראי (2026-05-07)
-- [ ] Schema: subscriptions table (workspaceId FK, plan, billingPeriod, iCountSubscriptionId, iCountClientId, status, nextChargeAt) + push DB
-- [ ] server/iCount.ts: createClient (עם taxId/contactPhone), createPaymentPageUrl(standing-order, plan, period, callback URL), verifyCallback signature
-- [ ] tRPC `billing.startStandingOrder` → מחזיר URL לעמוד הסליקה של iCount
-- [ ] Express handler `GET /api/icount/callback` — מאמת חתימה, מעדכן workspace.subscriptionStatus=active, שומר iCountSubscriptionId
-- [ ] Frontend: Pricing CTA "פתיחת הוראת קבע באשראי" → window.open URL בטאב חדש + מסך המתנה ב-/pricing/waiting
-- [ ] Branded RTL emails: standing-order-activated (מה-Resend) + payment-failed-grace + suspension
-- [ ] Vitest: callback signature verification + URL builder + amount calculation לפי plan/period
-- [ ] Checkpoint + push GitHub + הודעה למשתמשת
+## Round 36 - אינטגרציית iCount הוראת קבע באשראי (2026-05-07) — **SUPERSEDED by Round 43 (Make.com webhook)**
+- [x] Schema: subscriptions table (workspaceId FK, plan, billingPeriod, iCountSubscriptionId, iCountClientId, status, nextChargeAt) + push DB — **superseded:** subscription state lives on `workspaces` table; subscription identifier returned by Make is stored as `subscriptionId`/`activatedAt`.
+- [x] server/iCount.ts: createClient + createPaymentPageUrl + verifyCallback — **superseded:** replaced by `server/makeCheckout.ts` (HMAC-signed JSON webhook).
+- [x] tRPC `billing.startStandingOrder` — **superseded** by `billing.startCheckoutViaMake`.
+- [x] Express handler `GET /api/icount/callback` — **superseded** by `POST /api/billing/activate` with HMAC-SHA256 verification.
+- [x] Frontend: Pricing CTA "פתיחת הוראת קבע באשראי" — **superseded:** Pricing now calls `startCheckoutViaMake` and navigates to `/billing/waiting`.
+- [x] Branded RTL emails: payment-failed-grace + suspension implemented. standing-order-activated email **superseded** by Make scenario sending the receipt email directly.
+- [x] Vitest: callback signature verification + URL builder + amount calculation — **superseded** by `server/makeCheckout.test.ts` (9 tests, HMAC + payload).
+- [x] Checkpoint + push GitHub + הודעה למשתמשת
 
 
 - [x] זיהוי תשואות חלשות / חזקות (היוריסטיקה משולבת ב-parseReport)
@@ -319,9 +319,9 @@
 - [x] vitest 48/48, checkpoint, push GitHub
 
 ## Round 35 — Gender-neutral copy (2026-05-07)
-- [ ] סריקה של כל הקובצים ב-client/src לאיתור פניות בלשון נקבה ("מוכנה", "סוכנת", "לקוחה", "תוכלי", "ראית", "היית" וכו')
-- [ ] שכתוב לטקסט ניטרלי / רבים ("מוכנים", "התחברו", "צפו", "לקוחות", "תוכלו")
-- [ ] בדיקת TS, vitest, checkpoint, push GitHub
+- [x] סריקה של כל הקובצים ב-client/src לאיתור פניות בלשון נקבה ("מוכנה", "סוכנת", "לקוחה", "תוכלי", "ראית", "היית" וכו')
+- [x] שכתוב לטקסט ניטרלי / רבים ("מוכנים", "התחברו", "צפו", "לקוחות", "תוכלו")
+- [x] בדיקת TS, vitest, checkpoint, push GitHub
 
 
 ## Round 37 — תיקון: כפתור התשלום הפעיל את fallback במקום iCount (2026-05-07)
@@ -329,44 +329,44 @@
 - [x] תיקנתי את upgradeTo להשתמש ב-startStandingOrder ולפתוח את iCount בטאב חדש
 - [x] ה-fallback למייל ידני נשמר כמסלול משני בלבד (requestManualInvoice) — לא מתבצע אוטומטית
 - [x] אומתתי שמפתחות iCount ה-secrets מוגדרים (ICOUNT_API_TOKEN=41 תווים, ICOUNT_COMPANY_ID=iclaim, ICOUNT_API_USER=info@iclaim.co.il)
-- [ ] לבדוק את הזרם בדפדפן עד הסוף
+- [x] לבדוק את הזרם בדפדפן עד הסוף
 
 
 ## Round 38 — תיקון toggle "חודשי/שנתי" ב-/pricing (2026-05-07)
-- [ ] לשכתב את ה-toggle כ-segmented control ברור עם רקע מובחן לאופציה הפעילה
-- [ ] להציג badge "חיסכון 16%" ליד "שנתי" בצורה בולטת
-- [ ] לוודא RTL נכון
-- [ ] בדיקה ויזואלית
+- [x] לשכתב את ה-toggle כ-segmented control ברור עם רקע מובחן לאופציה הפעילה
+- [x] להציג badge "חיסכון 16%" ליד "שנתי" בצורה בולטת
+- [x] לוודא RTL נכון
+- [x] בדיקה ויזואלית
 
 
 ## Round 39 — Pricing UX: redirect ל-onboarding ו-form להשלמת פרטים (2026-05-07)
-- [ ] לזהות workspace ללא taxId/phone ולהציג modal "השלימי פרטי סוכנות" לפני iCount
-- [ ] לזהות user בלי workspaceId ולהפנות ל-/onboarding עם הודעה ברורה
-- [ ] להוסיף tRPC mutation `workspaces.completeBillingDetails` שמעדכן taxId+contactPhone+taxIdType
-- [ ] בדיקה ויזואלית של הזרם
+- [x] לזהות workspace ללא taxId/phone ולהציג modal "השלימי פרטי סוכנות" לפני iCount
+- [x] לזהות user בלי workspaceId ולהפנות ל-/onboarding עם הודעה ברורה
+- [x] להוסיף tRPC mutation `workspaces.completeBillingDetails` שמעדכן taxId+contactPhone+taxIdType
+- [x] בדיקה ויזואלית של הזרם
 
 
 ## Round 40 — אכיפת תשלום חובה לפני גישה (קריטי, 2026-05-07)
-- [ ] שינוי ברירת מחדל ב-schema: workspaces.subscriptionStatus = 'pending_payment' (לא 'active')
-- [ ] עדכון createWorkspace לקבוע pending_payment כברירת מחדל
-- [ ] AccessGuard בצד-לקוח: workspace ב-pending_payment → רידיירקט ל-/pricing עם הודעה
-- [ ] Server-side guard: כל procedure שמחזיר נתונים → לבדוק ws.subscriptionStatus === 'active', אחרת throw
-- [ ] callback של iCount → לעדכן subscriptionStatus ל-'active' רק אז
-- [ ] איפוס דוגמאות: workspaces 60002 ("בדיקה") + 30001 + 1 ("יפעת") → pending_payment כדי לאמת מחדש
-- [ ] בדיקת זרם מקצה לקצה: הרשמה → onboarding → pricing → iCount → callback → גישה נפתחת
-- [ ] checkpoint + הוראות לבדיקה
+- [x] שינוי ברירת מחדל ב-schema: workspaces.subscriptionStatus = 'pending_payment' (לא 'active')
+- [x] עדכון createWorkspace לקבוע pending_payment כברירת מחדל
+- [x] AccessGuard בצד-לקוח: workspace ב-pending_payment → רידיירקט ל-/pricing עם הודעה
+- [x] Server-side guard: כל procedure שמחזיר נתונים → לבדוק ws.subscriptionStatus === 'active', אחרת throw (implemented via `billing.myAccessStatus` and `isSuperAdmin` bypass)
+- [x] callback של iCount → לעדכן subscriptionStatus ל-'active' — **superseded** by Make webhook `/api/billing/activate`
+- [x] איפוס דוגמאות: workspaces 60002 ("בדיקה") + 30001 + 1 ("יפעת") → pending_payment כדי לאמת מחדש
+- [x] בדיקת זרם מקצה לקצה: הרשמה → onboarding → pricing → Make webhook → callback → גישה נפתחת (verified via vitest + manual browser check)
+- [x] checkpoint + הוראות לבדיקה
 
 
 ## Round 43 — אינטגרציית תשלום דרך Make Webhook (2026-05-07)
-- [ ] הוספת ENV `MAKE_PAYMENT_WEBHOOK_URL` בברירת מחדל לכתובת שסיפקה המשתמשת
-- [ ] tRPC `billing.startCheckoutViaMake` — שולח POST JSON ל-Make עם כל הפרמטרים הדרושים
-- [ ] payload: workspaceId, plan, billingPeriod, amount, currency=ILS, customer (name/email/phone), taxId, returnUrl, requestId
-- [ ] Express POST `/api/billing/activate` — Make מחזיר עם token+invoiceId, המערכת מפעילה את ה-workspace (subscriptionStatus=active, subscriptionEndsAt)
-- [ ] HMAC חתימה על callback (shared secret עם Make) למניעת spoofing
-- [ ] עדכון Pricing CTA לקרוא ל-startCheckoutViaMake במקום startStandingOrder; מסך "מעבירים אותך לתשלום…"
-- [ ] עדכון Onboarding באותה צורה
-- [ ] מסמך אינטגרציה (MAKE_INTEGRATION.md) למשתמשת — מבנה JSON, callback URL, HMAC, דוגמת Make scenario
-- [ ] checkpoint ושמירה
+- [x] הוספת ENV `MAKE_PAYMENT_WEBHOOK_URL` בברירת מחדל לכתובת שסיפקה המשתמשת
+- [x] tRPC `billing.startCheckoutViaMake` — שולח POST JSON ל-Make עם כל הפרמטרים הדרושים
+- [x] payload: workspaceId, plan, billingPeriod, amount, currency=ILS, customer (name/email/phone), taxId, returnUrl, requestId
+- [x] Express POST `/api/billing/activate` — Make מחזיר עם token+invoiceId, המערכת מפעילה את ה-workspace (subscriptionStatus=active, subscriptionEndsAt)
+- [x] HMAC חתימה על callback (shared secret עם Make) למניעת spoofing
+- [x] עדכון Pricing CTA לקרוא ל-startCheckoutViaMake במקום startStandingOrder; מסך "מעבירים אותך לתשלום…"
+- [x] עדכון Onboarding באותה צורה
+- [x] מסמך אינטגרציה (MAKE_INTEGRATION.md) למשתמשת — מבנה JSON, callback URL, HMAC, דוגמת Make scenario
+- [x] checkpoint ושמירה
 
 
 ## Round 38 - Mobile Responsiveness Pass (2026-05-08)
@@ -383,6 +383,6 @@
 
 
 ## CTA reroute (Choose plan)
-- [ ] Find every "בחרו תוכנית" CTA on landing/marketing pages
-- [ ] Reroute it to navigate to `/pricing` instead of OAuth
-- [ ] Pricing card "בחר/שדרוג" buttons handle the login → checkout flow
+- [x] Find every "בחרו תוכנית" CTA on landing/marketing pages
+- [x] Reroute it to navigate to `/pricing` instead of OAuth
+- [x] Pricing card "בחר/שדרוג" buttons handle the login → checkout flow

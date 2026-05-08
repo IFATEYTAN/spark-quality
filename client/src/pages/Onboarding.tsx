@@ -491,9 +491,9 @@ function BillingStep({
   return (
     <div className="animate-fade-up" style={{ animationDelay: "0.1s" }}>
       <GlassCard goldAccent className="p-7 lg:p-10">
-        <GoldEyebrow>בחירת תוכנית · {workspaceName || "הסוכנות שלך"}</GoldEyebrow>
+        <GoldEyebrow>בחירת תוכנית · {workspaceName || "הסוכנות שלכם"}</GoldEyebrow>
         <h2 className="font-display text-2xl lg:text-3xl font-bold text-white tracking-tight mb-3">
-          איזו תוכנית מתאימה לך?
+          איזו תוכנית מתאימה לכם?
         </h2>
         <p className="text-sm text-white/70 leading-relaxed mb-7">
           בחרו את התוכנית שמתאימה לגודל הסוכנות שלכם. כל שינוי מתבצע
@@ -581,7 +581,7 @@ function BillingStep({
 
         <p className="text-xs text-white/55 leading-relaxed text-center mt-6">
           * שדרוג בתשלום מועבר כעת לטיפול ידני של צוות SPARK AI עד להפעלת iCount.
-          תקבלי מייל עם לינק תשלום מאובטח תוך זמן קצר.
+          תקבלו מייל עם לינק תשלום מאובטח תוך זמן קצר.
         </p>
       </GlassCard>
     </div>
