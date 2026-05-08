@@ -156,7 +156,7 @@ export default function Pricing() {
           <div className="flex justify-center mb-4">
             <GoldEyebrow>תמחור פשוט ושקוף · ללא ניסיון חינם</GoldEyebrow>
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-6">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6">
             בחרו את התוכנית המתאימה <span className="text-gold">לסוכנות שלכם</span>
           </h1>
           <p className="text-lg text-white/70 max-w-2xl mx-auto">
@@ -207,7 +207,7 @@ export default function Pricing() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
           {PLANS.map((plan) => (
             <GlassCard
               key={plan.slug}

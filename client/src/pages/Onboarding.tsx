@@ -176,7 +176,7 @@ export default function Onboarding() {
         <FairyMascot size="xl" position="right" message={fairyMessage} />
       </div>
 
-      <div className="container py-10 lg:py-20">
+      <div className="container py-6 sm:py-10 lg:py-20">
         <div className="max-w-3xl mx-auto">
           {/* Mobile fairy at top */}
           <div className="lg:hidden flex justify-center mb-6">
@@ -192,7 +192,7 @@ export default function Onboarding() {
               <span className="text-gold">{firstName}</span>
               <span className="text-gold">.</span>
             </h1>
-            <p className="mt-5 text-base lg:text-lg text-white/75 max-w-xl mx-auto leading-relaxed">
+            <p className="mt-4 sm:mt-5 text-sm sm:text-base lg:text-lg text-white/75 max-w-xl mx-auto leading-relaxed">
               לפני שמתחילים — בואו נחבר אתכם לסביבת העבודה הנכונה.
             </p>
           </div>
@@ -527,7 +527,7 @@ function BillingStep({
           </span>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
           <PlanCard
             icon={<Building2 className="h-5 w-5 text-gold" />}
             eyebrow="לסוכן עצמאי"

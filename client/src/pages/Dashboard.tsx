@@ -82,17 +82,17 @@ export default function Dashboard() {
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={88} showSidebar>
-      <div className="container py-10 lg:py-14">
+      <div className="container py-6 sm:py-10 lg:py-14">
         {/* Welcome header */}
-        <div className="mb-10 animate-fade-up">
+        <div className="mb-6 sm:mb-10 animate-fade-up">
           <GoldEyebrow>
             דשבורד · {workspace?.name || "סוכנות"}
           </GoldEyebrow>
-          <h1 className="font-display text-4xl lg:text-6xl font-black text-white tracking-tighter leading-[1.05]">
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-6xl font-black text-white tracking-tighter leading-[1.1]">
             שלום, <span className="text-gold">{firstName}</span>
             <span className="text-gold">.</span>
           </h1>
-          <p className="mt-4 text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
             {isAdmin
               ? "מבט-על על כל הסוכנות והפעילות של הצוות."
               : "הלקוחות שלכם, הדוחות והמשימות שלכם — במקום אחד."}
@@ -100,8 +100,8 @@ export default function Dashboard() {
         </div>
 
         {/* Stats grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          <GlassCard className="p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
+          <GlassCard className="p-4 sm:p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="h-9 w-9 rounded-md bg-gold/15 border border-gold/30 flex items-center justify-center">
                 <Users className="h-4 w-4 text-gold" />
@@ -110,7 +110,7 @@ export default function Dashboard() {
                 לקוחות
               </span>
             </div>
-            <div className="font-display text-4xl font-black text-white">
+            <div className="font-display text-3xl sm:text-4xl font-black text-white">
               {totalClients.toLocaleString("he-IL")}
             </div>
             <div className="text-xs text-white/55 mt-1">
@@ -118,7 +118,7 @@ export default function Dashboard() {
             </div>
           </GlassCard>
 
-          <GlassCard className="p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
+          <GlassCard className="p-4 sm:p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="h-9 w-9 rounded-md bg-gold/15 border border-gold/30 flex items-center justify-center">
                 <FileSpreadsheet className="h-4 w-4 text-gold" />
@@ -127,13 +127,13 @@ export default function Dashboard() {
                 דוחות
               </span>
             </div>
-            <div className="font-display text-4xl font-black text-white">
+            <div className="font-display text-3xl sm:text-4xl font-black text-white">
               {totalReports.toLocaleString("he-IL")}
             </div>
             <div className="text-xs text-white/55 mt-1">סה&quot;כ הועלו</div>
           </GlassCard>
 
-          <GlassCard className="p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
+          <GlassCard className="p-4 sm:p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="h-9 w-9 rounded-md bg-gold/15 border border-gold/30 flex items-center justify-center">
                 <Crown className="h-4 w-4 text-gold" />
@@ -142,13 +142,13 @@ export default function Dashboard() {
                 לקוחות VIP
               </span>
             </div>
-            <div className="font-display text-4xl font-black text-white">
+            <div className="font-display text-3xl sm:text-4xl font-black text-white">
               {vipCount.toLocaleString("he-IL")}
             </div>
             <div className="text-xs text-white/55 mt-1">עתירי נכסים</div>
           </GlassCard>
 
-          <GlassCard className="p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
+          <GlassCard className="p-4 sm:p-6 hover:border-gold/30 hover:bg-white/[0.07] transition-all">
             <div className="flex items-center justify-between mb-3">
               <div className="h-9 w-9 rounded-md bg-gold/15 border border-gold/30 flex items-center justify-center">
                 <TrendingUp className="h-4 w-4 text-gold" />
@@ -157,7 +157,7 @@ export default function Dashboard() {
                 ס"כ AUM
               </span>
             </div>
-            <div className="font-display text-2xl font-black text-white mono-num">
+            <div className="font-display text-xl sm:text-2xl font-black text-white mono-num">
               {formatIls(totalAum)}
             </div>
             <div className="text-xs text-white/55 mt-1">
@@ -184,7 +184,7 @@ export default function Dashboard() {
         )}
 
         {/* Action cards */}
-        <div className="grid md:grid-cols-2 gap-5">
+        <div className="grid sm:grid-cols-2 gap-4 sm:gap-5">
           <Link href="/upload" className="block">
             <GlassCard className="p-7 hover:bg-white/[0.08] hover:border-gold/40 hover:shadow-[0_8px_32px_rgba(201,169,97,0.18)] transition-all cursor-pointer group h-full">
               <div className="flex items-start gap-5">

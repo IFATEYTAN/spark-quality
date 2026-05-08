@@ -85,12 +85,12 @@ export default function Team() {
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={90} showSidebar>
-      <div className="container py-10 lg:py-14 max-w-5xl">
+      <div className="container py-6 sm:py-10 lg:py-14 max-w-5xl">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10 animate-fade-up">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-10 animate-fade-up">
           <div>
             <GoldEyebrow>ניהול צוות</GoldEyebrow>
-            <h1 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.05]">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.1]">
               הצוות <span className="text-gold">שלך</span>
             </h1>
             <p className="mt-3 text-sm lg:text-base text-white/65 leading-relaxed max-w-xl">
@@ -112,7 +112,7 @@ export default function Team() {
 
         {/* Invite form */}
         {showInviteForm && (
-          <GlassCard goldAccent className="p-7 mb-6 animate-fade-up">
+          <GlassCard goldAccent className="p-5 sm:p-7 mb-6 animate-fade-up">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-display text-xl font-bold text-white tracking-tight">
                 הזמנת סוכן חדש
@@ -248,13 +248,13 @@ export default function Team() {
               {membersQuery.data?.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 bg-white/[0.04] rounded-md border border-white/10 hover:bg-white/[0.07] hover:border-white/20 transition-all"
+                  className="flex items-center justify-between gap-3 p-4 bg-white/[0.04] rounded-md border border-white/10 hover:bg-white/[0.07] hover:border-white/20 transition-all"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <div className="font-display text-base font-bold text-white tracking-tight">
                       {member.name || "ללא שם"}
                     </div>
-                    <div className="text-xs text-white/55 mt-0.5">
+                    <div className="text-xs text-white/55 mt-0.5 truncate">
                       {member.email}
                     </div>
                   </div>
@@ -281,7 +281,7 @@ export default function Team() {
 
         {/* Pending invitations */}
         {(invitationsQuery.data?.length ?? 0) > 0 && (
-          <GlassCard className="p-7">
+          <GlassCard className="p-5 sm:p-7">
             <h2 className="font-display text-xl font-bold text-white tracking-tight mb-5">
               הזמנות ממתינות
             </h2>
@@ -289,14 +289,14 @@ export default function Team() {
               {invitationsQuery.data?.map((inv) => (
                 <div
                   key={inv.id}
-                  className="flex items-center justify-between p-4 bg-white/[0.04] rounded-md border border-white/10"
+                  className="flex items-center justify-between gap-3 p-4 bg-white/[0.04] rounded-md border border-white/10"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="h-9 w-9 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
                       <Mail className="h-4 w-4 text-white/50" />
                     </div>
                     <div>
-                      <div className="text-sm text-white">{inv.email}</div>
+                      <div className="text-sm text-white truncate">{inv.email}</div>
                       <div className="text-[11px] text-white/45 mt-0.5">
                         {inv.status === "pending" && "ממתין לאישור"}
                         {inv.status === "expired" && "פג תוקף"}

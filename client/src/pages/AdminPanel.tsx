@@ -111,10 +111,10 @@ export default function AdminPanel() {
 
   return (
     <CinematicShell heroAsset="hero" showSidebar>
-      <div className="px-4 lg:px-8 py-8 max-w-7xl mx-auto space-y-6">
+      <div className="px-4 lg:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-5 sm:space-y-6">
         <header>
           <GoldEyebrow>SPARK AI · ניהול מערכת</GoldEyebrow>
-          <h1 className="text-3xl lg:text-4xl text-white font-light tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl text-white font-light tracking-tight">
             פאנל מנהל מערכת
           </h1>
           <p className="text-white/60 mt-2 max-w-2xl">
@@ -125,7 +125,7 @@ export default function AdminPanel() {
         <DashboardStats />
 
         <Tabs defaultValue="workspaces" className="w-full" dir="rtl">
-          <TabsList className="bg-white/[0.04] border border-white/10 backdrop-blur-md p-1 h-auto flex-wrap gap-1 justify-start">
+          <TabsList className="bg-white/[0.04] border border-white/10 backdrop-blur-md p-1 h-auto flex flex-nowrap overflow-x-auto sm:flex-wrap gap-1 justify-start w-full sm:w-auto">
             <TabsTrigger
               value="workspaces"
               className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold data-[state=active]:border-gold/40 border border-transparent text-white/70 hover:text-white hover:bg-white/[0.06] transition px-4 py-2 rounded-md"

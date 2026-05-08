@@ -1,8 +1,19 @@
 // CinematicShell — שכבת עיצוב משותפת בסגנון הדמו לכל מסכי ה-SaaS
 // כוללת: רקע נייבי עמוק, תמונת hero אופציונלית, חלקיקי זהב, vignette, grain
-import { useMemo, type ReactNode } from "react";
+// + תפריט צד בנייד דרך כפתור Hamburger
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, Users, Upload as UploadIcon, UserCog, LogOut, Sparkles, ShieldCheck } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Upload as UploadIcon,
+  UserCog,
+  LogOut,
+  Sparkles,
+  ShieldCheck,
+  Menu,
+  X,
+} from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { AccessGuard } from "./AccessGuard";
@@ -40,6 +51,26 @@ export function CinematicShell({
   showSidebar = false,
   overlayStrength = 80,
 }: CinematicShellProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [location] = useLocation();
+
+  // סוגרים אוטומטית כשעוברים מסך
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location]);
+
+  // נועלים גלילה כש-drawer פתוח
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
+
   const particles = useMemo(
     () =>
       Array.from({ length: 22 }, (_, i) => ({
@@ -115,7 +146,20 @@ export function CinematicShell({
       )}
 
       {/* Header */}
-      {showHeader && <CinematicHeader />}
+      {showHeader && (
+        <CinematicHeader
+          showMenuButton={showSidebar}
+          onMenuClick={() => setMobileMenuOpen(true)}
+        />
+      )}
+
+      {/* Mobile drawer */}
+      {showSidebar && (
+        <MobileSidebarDrawer
+          open={mobileMenuOpen}
+          onClose={() => setMobileMenuOpen(false)}
+        />
+      )}
 
       {/* Main layout */}
       <div className="relative z-10 flex">
@@ -129,34 +173,40 @@ export function CinematicShell({
 }
 
 /** Header זהה לזה של הדמו: לוגו SPARK AI מימין, אינדיקטור LIVE משמאל */
-export function CinematicHeader() {
+export function CinematicHeader({
+  showMenuButton = false,
+  onMenuClick,
+}: {
+  showMenuButton?: boolean;
+  onMenuClick?: () => void;
+}) {
   const { user, isAuthenticated, logout } = useAuth();
 
   return (
     <header className="relative z-20 border-b border-white/10 bg-[#06101F]/85 backdrop-blur-md">
       <div className="container">
-        <div className="flex h-24 items-center justify-between gap-6">
+        <div className="flex h-16 sm:h-20 lg:h-24 items-center justify-between gap-3 sm:gap-6">
           {/* Right (RTL primary) - SPARK AI logo */}
           <Link
             href="/"
-            className="group flex items-center gap-3 transition-transform duration-300 hover:scale-[1.03]"
+            className="group flex items-center gap-3 transition-transform duration-300 hover:scale-[1.03] shrink-0"
             aria-label="חזרה לדף הבית"
           >
             <img
               src={LOGO.clear}
               alt="SPARK AI"
-              className="h-16 lg:h-20 w-auto object-contain"
+              className="h-10 sm:h-14 lg:h-20 w-auto object-contain"
               style={{ filter: "drop-shadow(0 2px 12px rgba(201,169,97,0.55)) brightness(1.1)" }}
             />
           </Link>
 
-          {/* Left - user state + cinematic demo link */}
-          <div className="flex items-center gap-3">
-            {/* קישור דמו - מוצג רק לאדמינים */}
+          {/* Left - user state + cinematic demo link + mobile menu */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* קישור דמו - מוצג רק לאדמינים, ובדסקטופ */}
             {user?.role === "admin" && (
               <Link
                 href="/demo"
-                className="group flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold transition-all hover:bg-gold/20 hover:border-gold/70 hover:scale-[1.03]"
+                className="hidden md:flex group items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold transition-all hover:bg-gold/20 hover:border-gold/70 hover:scale-[1.03]"
                 aria-label="צפייה בדמו האינטראקטיבי"
               >
                 <Sparkles className="h-3.5 w-3.5" />
@@ -175,7 +225,7 @@ export function CinematicHeader() {
                 </div>
                 <button
                   onClick={() => logout()}
-                  className="flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition-all hover:bg-white/10 hover:text-white"
+                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/80 transition-all hover:bg-white/10 hover:text-white"
                   aria-label="יציאה"
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -183,6 +233,18 @@ export function CinematicHeader() {
                 </button>
               </>
             ) : null}
+
+            {/* Hamburger button — מובייל בלבד, רק במסכים שיש להם sidebar */}
+            {showMenuButton && (
+              <button
+                type="button"
+                onClick={onMenuClick}
+                className="lg:hidden flex items-center justify-center h-10 w-10 rounded-md border border-white/15 bg-white/5 text-white hover:bg-white/10 transition-colors"
+                aria-label="פתיחת תפריט"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -204,7 +266,7 @@ export function CinematicSidebar() {
   const [location] = useLocation();
   const { user } = useAuth();
   const isSuperAdmin = !!user?.isSuperAdmin;
-  const visibleItems = NAV_ITEMS.filter(i => !i.superAdminOnly || isSuperAdmin);
+  const visibleItems = NAV_ITEMS.filter((i) => !i.superAdminOnly || isSuperAdmin);
   return (
     <aside className="hidden lg:block sticky top-0 h-[calc(100vh)] w-64 shrink-0 border-l border-white/10 bg-[#06101F]/40 backdrop-blur-md p-6">
       <nav className="flex flex-col gap-2 mt-4">
@@ -228,6 +290,114 @@ export function CinematicSidebar() {
         })}
       </nav>
     </aside>
+  );
+}
+
+/** Drawer לתפריט הצדדי בנייד — נשלף מימין (RTL) */
+function MobileSidebarDrawer({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [location] = useLocation();
+  const { user, logout } = useAuth();
+  const isSuperAdmin = !!user?.isSuperAdmin;
+  const visibleItems = NAV_ITEMS.filter((i) => !i.superAdminOnly || isSuperAdmin);
+
+  return (
+    <>
+      {/* Overlay */}
+      <div
+        onClick={onClose}
+        className={`lg:hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        aria-hidden="true"
+      />
+
+      {/* Drawer */}
+      <aside
+        className={`lg:hidden fixed top-0 right-0 z-50 h-screen w-72 max-w-[85vw] bg-[#06101F] border-l border-gold/30 shadow-[0_0_60px_rgba(201,169,97,0.15)] transform transition-transform duration-300 ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="תפריט ניווט"
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between px-5 h-16 border-b border-white/10">
+            <span className="font-display text-base text-gold tracking-wider">תפריט</span>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex items-center justify-center h-9 w-9 rounded-md border border-white/15 bg-white/5 text-white/80 hover:bg-white/10 transition-colors"
+              aria-label="סגירת תפריט"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {user && (
+            <div className="px-5 py-4 border-b border-white/10">
+              <div className="text-sm font-semibold text-white">{user.name}</div>
+              <div className="text-xs text-gold/70 tracking-wider">{user.email}</div>
+            </div>
+          )}
+
+          <nav className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+            {visibleItems.map((item) => {
+              const Icon = item.icon;
+              const active =
+                location === item.href || location.startsWith(item.href + "/");
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={onClose}
+                  className={`flex items-center gap-3 rounded-md px-4 py-3 text-sm font-medium transition-all min-h-[48px] ${
+                    active
+                      ? "bg-gold/15 border border-gold/40 text-gold shadow-[0_0_20px_rgba(201,169,97,0.15)]"
+                      : "border border-transparent text-white/80 hover:bg-white/5 hover:text-white hover:border-white/10"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {user?.role === "admin" && (
+            <div className="px-4 pb-2">
+              <Link
+                href="/demo"
+                onClick={onClose}
+                className="flex items-center justify-center gap-2 rounded-md border border-gold/40 bg-gold/10 px-4 py-3 text-sm font-semibold text-gold hover:bg-gold/20 transition-colors min-h-[48px]"
+              >
+                <Sparkles className="h-4 w-4" />
+                דמו הדרכה
+              </Link>
+            </div>
+          )}
+
+          <div className="p-4 border-t border-white/10">
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                onClose();
+              }}
+              className="w-full flex items-center justify-center gap-2 rounded-md border border-white/15 bg-white/5 px-4 py-3 text-sm text-white/80 hover:bg-white/10 hover:text-white transition-colors min-h-[48px]"
+            >
+              <LogOut className="h-4 w-4" />
+              יציאה
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }
 

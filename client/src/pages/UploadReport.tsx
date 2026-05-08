@@ -97,13 +97,13 @@ export default function UploadReport() {
 
   return (
     <CinematicShell showHero={false} showSidebar>
-      <div className="container py-10 lg:py-14 max-w-3xl">
+      <div className="container py-6 sm:py-10 lg:py-14 max-w-3xl">
         <div className="mb-10 animate-fade-up">
           <GoldEyebrow>שלב 1 / 5 · העלאת דוח</GoldEyebrow>
-          <h1 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.05]">
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.1]">
             העלאת דוח <span className="text-gold">שורנס</span>
           </h1>
-          <p className="mt-4 text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
+          <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
             טעינת קובץ XLSX יחיד שמתפצל אוטומטית: לקוחות, פוליסות, AUM, פרמיות
             ודגלים לפעולה.
           </p>
@@ -111,7 +111,7 @@ export default function UploadReport() {
 
         {state === "idle" && (
           <GlassCard
-            className="p-12 lg:p-16 border-dashed border-2 border-white/20 hover:border-gold/50 hover:bg-white/[0.07] transition-all cursor-pointer text-center animate-fade-up"
+            className="p-8 sm:p-12 lg:p-16 border-dashed border-2 border-white/20 hover:border-gold/50 hover:bg-white/[0.07] transition-all cursor-pointer text-center animate-fade-up"
             goldAccent={false}
           >
             <button
@@ -131,7 +131,7 @@ export default function UploadReport() {
               <div className="h-20 w-20 rounded-full bg-gradient-to-br from-gold/30 to-gold/5 border border-gold/40 flex items-center justify-center mx-auto mb-6 shadow-[0_0_40px_rgba(201,169,97,0.2)]">
                 <Upload className="h-9 w-9 text-gold" />
               </div>
-              <h3 className="font-display text-2xl lg:text-3xl font-black text-white tracking-tight mb-3">
+              <h3 className="font-display text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight mb-3">
                 לחצו או גררו קובץ לכאן
               </h3>
               <p className="text-sm text-white/60 mb-6">
@@ -145,7 +145,7 @@ export default function UploadReport() {
         )}
 
         {state === "parsing" && (
-          <GlassCard goldAccent className="p-12 lg:p-16 text-center">
+          <GlassCard goldAccent className="p-8 sm:p-12 lg:p-16 text-center">
             <Loader2 className="h-14 w-14 text-gold mx-auto mb-6 animate-spin" />
             <h3 className="font-display text-2xl font-black text-white tracking-tight mb-3">
               מנתח את הדוח...
@@ -157,7 +157,7 @@ export default function UploadReport() {
         )}
 
         {state === "saving" && (
-          <GlassCard goldAccent className="p-12 lg:p-16 text-center">
+          <GlassCard goldAccent className="p-8 sm:p-12 lg:p-16 text-center">
             <Loader2 className="h-14 w-14 text-gold mx-auto mb-6 animate-spin" />
             <h3 className="font-display text-2xl font-black text-white tracking-tight mb-3">
               שומר במערכת...

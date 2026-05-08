@@ -367,3 +367,16 @@
 - [ ] עדכון Onboarding באותה צורה
 - [ ] מסמך אינטגרציה (MAKE_INTEGRATION.md) למשתמשת — מבנה JSON, callback URL, HMAC, דוגמת Make scenario
 - [ ] checkpoint ושמירה
+
+
+## Round 38 - Mobile Responsiveness Pass (2026-05-08)
+- [x] Add mobile sidebar drawer (hamburger trigger) to CinematicShell
+- [x] Top bar on mobile: logo + hamburger; user info collapses
+- [x] Dashboard: KPI grid 2-cols on sm / 1 on xs; ActionCenter readable
+- [x] Clients: filter chips horizontal scroll on mobile, cards stack vertically
+- [x] UploadReport: drop-zone full width, no horizontal scroll
+- [x] Team: invite form stacks, table → cards
+- [x] AdminPanel: sub-tabs scroll horizontally on mobile, content fits
+- [x] Pricing: plan cards 1-col on mobile, 2-col on tablet
+- [x] Onboarding: form fields full width, plan cards 1-col on phone
+- [x] Demo: bottom controls verified (fixed earlier)

@@ -148,12 +148,12 @@ export default function Clients() {
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={90} showSidebar>
-      <div className="container py-10 lg:py-14">
+      <div className="container py-6 sm:py-10 lg:py-14">
         {/* Page header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10 animate-fade-up">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6 mb-6 sm:mb-10 animate-fade-up">
           <div>
             <GoldEyebrow>תיק לקוחות</GoldEyebrow>
-            <h1 className="font-display text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.05]">
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.1]">
               <span className="text-gold mono-num">
                 {totalCount.toLocaleString("he-IL")}
               </span>{" "}
@@ -188,8 +188,8 @@ export default function Clients() {
           </GlassCard>
         </div>
 
-        {/* Filter chips: All / VIP / financial flags */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* Filter chips: All / VIP / financial flags - scrolls horizontally on mobile */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap snap-x scrollbar-thin">
           {(
             [
               { key: "all" as const, label: "הכל", icon: Users, count: clientsQuery.data?.length ?? 0 },
@@ -206,7 +206,7 @@ export default function Clients() {
               <button
                 key={key}
                 onClick={() => setActiveFilter(key)}
-                className={`flex items-center gap-2 rounded-md px-3.5 h-10 text-xs font-semibold transition-all border ${
+                className={`flex items-center gap-2 rounded-md px-3.5 h-10 text-xs font-semibold transition-all border shrink-0 snap-start ${
                   active
                     ? "bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] border-gold shadow-md shadow-gold/30"
                     : "bg-white/[0.03] text-white/75 border-white/15 hover:bg-white/[0.06] hover:border-gold/40 hover:text-gold"
@@ -341,9 +341,9 @@ export default function Clients() {
                 }}
                 className="cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60 rounded-lg"
               >
-              <GlassCard className="p-5 hover:bg-white/[0.07] hover:border-gold/30 transition-all">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex items-center gap-4">
+              <GlassCard className="p-4 sm:p-5 hover:bg-white/[0.07] hover:border-gold/30 transition-all">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
                     <div
                       className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${
                         client.isVip
@@ -390,7 +390,7 @@ export default function Clients() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4 text-sm">
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm pr-14 sm:pr-0">
                     {Number((client as { totalBalance?: string }).totalBalance ?? 0) > 0 && (
                       <div className="flex items-center gap-1.5 text-white/75">
                         <span className="text-[10px] tracking-wider text-white/45 uppercase">צבירה</span>
