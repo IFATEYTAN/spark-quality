@@ -156,7 +156,7 @@ export function IntroStage({ onContinue }: IntroStageProps) {
               <h2 className="font-display font-black text-white leading-[1.05] text-5xl lg:text-7xl tracking-tighter">
                 ומה אם<br />
                 <span className="bg-gradient-to-l from-gold via-[#F4D87C] to-gold bg-clip-text text-transparent">
-                  היה לכם עוזר אישי
+                  היה לכם שותף AI חכם
                 </span><br />
                 שעובד 24/7?
               </h2>

@@ -10,11 +10,11 @@ export function Header({ stage, onReset }: HeaderProps) {
   return (
     <header className="relative z-50 border-b border-border/40 bg-background/95 backdrop-blur-md">
       <div className="container">
-        <div className="flex h-28 items-center justify-between gap-6">
+        <div className="flex h-14 sm:h-20 lg:h-28 items-center justify-between gap-4">
           {/* RIGHT side (RTL primary) - SPARK AI logo */}
           <button
             onClick={onReset}
-            className="group flex items-center justify-center h-20 transition-transform duration-300 hover:scale-[1.03]"
+            className="group flex items-center justify-center h-10 sm:h-14 lg:h-20 transition-transform duration-300 hover:scale-[1.03]"
             aria-label="חזרה למסך הראשי"
           >
             <img
@@ -42,6 +42,16 @@ export function Header({ stage, onReset }: HeaderProps) {
               </span>
             </div>
           </div>
+
+          {/* Mobile-only stage chip */}
+          {stage && (
+            <div className="md:hidden flex items-center gap-2 rounded-full bg-navy-deep/5 px-2.5 py-1 border border-navy-deep/10">
+              <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+              <span className="label-tag text-[10px] text-navy-deep truncate max-w-[120px]">
+                {stage}
+              </span>
+            </div>
+          )}
         </div>
       </div>
       <div className="gold-divider-solid" />

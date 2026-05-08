@@ -113,17 +113,17 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
             <img
               src={LOGO.clear}
               alt="SPARK AI"
-              className="w-[260px] sm:w-[380px] lg:w-[520px] h-auto object-contain drop-shadow-[0_10px_40px_rgba(201,169,97,0.55)]"
+              className="w-[180px] sm:w-[300px] lg:w-[480px] h-auto object-contain drop-shadow-[0_10px_40px_rgba(201,169,97,0.55)]"
               style={{ filter: "drop-shadow(0 0 30px rgba(201,169,97,0.4))" }}
             />
           </div>
 
           {/* Product name - SPARK Quality מבית SPARK AI */}
           <div
-            className="mt-5 sm:mt-6 animate-fade-in"
+            className="mt-3 sm:mt-6 animate-fade-in"
             style={{ animationDelay: "0.7s", animationDuration: "1.4s" }}
           >
-            <p className="font-brand text-2xl sm:text-3xl lg:text-4xl text-gold-light tracking-[0.18em] sm:tracking-[0.22em]">
+            <p className="font-brand text-xl sm:text-3xl lg:text-4xl text-gold-light tracking-[0.16em] sm:tracking-[0.22em]">
               <span className="font-bold">SPARK</span>{" "}
               <span className="font-medium">Quality</span>
             </p>
@@ -134,7 +134,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
           {/* Golden divider with sparkle */}
           <div
-            className="relative mt-10 sm:mt-14 animate-fade-in w-full max-w-[380px]"
+            className="relative mt-6 sm:mt-14 animate-fade-in w-full max-w-[380px]"
             style={{ animationDelay: "1.1s", animationDuration: "1s" }}
           >
             <div className="h-px w-full bg-gradient-to-r from-transparent via-gold to-transparent" />
@@ -143,10 +143,10 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
           {/* Tagline */}
           <div
-            className="mt-8 sm:mt-10 animate-fade-up max-w-3xl w-full"
+            className="mt-5 sm:mt-10 animate-fade-up max-w-3xl w-full"
             style={{ animationDelay: "1.4s", animationDuration: "1.2s" }}
           >
-            <p className="font-display-light text-2xl sm:text-3xl lg:text-4xl text-white tracking-wide leading-relaxed">
+            <p className="font-display-light text-lg sm:text-3xl lg:text-4xl text-white tracking-wide leading-relaxed px-2">
               כשהקסם של ה-AI{" "}
               <span className="text-gold font-semibold">פוגש את העוצמה שלכם</span>
             </p>
@@ -179,7 +179,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
           {/* Skip hint - inline (לא absolute) כדי שלא ייחתך במובייל */}
           <div
-            className="mt-12 mb-6 animate-fade-in"
+            className="mt-8 sm:mt-12 mb-4 sm:mb-6 animate-fade-in"
             style={{ animationDelay: "2.4s", animationDuration: "1s" }}
           >
             <p className="label-tag text-[9px] sm:text-[10px] text-white/45 tracking-[0.3em]">

@@ -216,13 +216,13 @@ export default function Home() {
                 <Play className="h-4 w-4" />
                 צפייה בדמו אינטראקטיבי
               </Link>
-              <a
-                href={loginHref}
+              <Link
+                href="/pricing"
                 className="group flex items-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-8 py-4 text-base font-bold text-white backdrop-blur-md transition-all hover:bg-white/10 hover:border-gold/60"
               >
                 בחרו תוכנית והתחילו
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              </a>
+              </Link>
             </div>
 
             <p
@@ -402,12 +402,12 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a
-                href={loginHref}
+              <Link
+                href="/pricing"
                 className="mt-8 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60"
               >
                 בחר Base
-              </a>
+              </Link>
             </div>
 
             {/* Pro */}
@@ -440,12 +440,12 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a
-                href={loginHref}
+              <Link
+                href="/pricing"
                 className="mt-8 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60"
               >
                 בחר Pro
-              </a>
+              </Link>
             </div>
 
             {/* Premium */}
@@ -483,12 +483,12 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a
-                href={loginHref}
+              <Link
+                href="/pricing"
                 className="mt-8 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30 transition-all hover:scale-[1.02]"
               >
                 בחר פרימיום
-              </a>
+              </Link>
             </div>
           </div>
         </div>

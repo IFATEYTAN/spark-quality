@@ -153,7 +153,11 @@ export default function DemoExperience() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-navy-deep">
-      {!cleanMode && <Header stage={STAGE_LABELS_DYNAMIC[stage]} onReset={reset} />}
+      {!cleanMode && (
+        <div className="hidden md:block">
+          <Header stage={STAGE_LABELS_DYNAMIC[stage]} onReset={reset} />
+        </div>
+      )}
 
       <main className="flex-1 overflow-y-auto overflow-x-hidden relative pb-32 sm:pb-24">
         {stage === "intro" && (

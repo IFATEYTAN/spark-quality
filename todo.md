@@ -380,3 +380,9 @@
 - [x] Pricing: plan cards 1-col on mobile, 2-col on tablet
 - [x] Onboarding: form fields full width, plan cards 1-col on phone
 - [x] Demo: bottom controls verified (fixed earlier)
+
+
+## CTA reroute (Choose plan)
+- [ ] Find every "בחרו תוכנית" CTA on landing/marketing pages
+- [ ] Reroute it to navigate to `/pricing` instead of OAuth
+- [ ] Pricing card "בחר/שדרוג" buttons handle the login → checkout flow
