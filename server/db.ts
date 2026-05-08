@@ -341,6 +341,27 @@ export async function listWorkspaceInvitations(workspaceId: number) {
     .orderBy(desc(invitations.createdAt));
 }
 
+export async function getInvitationById(invitationId: number, workspaceId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(invitations)
+    .where(and(eq(invitations.id, invitationId), eq(invitations.workspaceId, workspaceId)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function revokeInvitation(invitationId: number, workspaceId: number) {
+  const db = await getDb();
+  if (!db) return false;
+  await db
+    .update(invitations)
+    .set({ status: "revoked" })
+    .where(and(eq(invitations.id, invitationId), eq(invitations.workspaceId, workspaceId)));
+  return true;
+}
+
 
 // ============================================================
 // BULK CLIENT IMPORT (used after report parsing)

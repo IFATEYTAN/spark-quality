@@ -275,6 +275,56 @@ export const appRouter = router({
       return db.listWorkspaceInvitations(ctx.user.workspaceId);
     }),
 
+    /** Revoke (cancel) a pending invitation */
+    revokeInvitation: workspaceAdminProcedure
+      .input(z.object({ invitationId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const invitation = await db.getInvitationById(input.invitationId, ctx.user.workspaceId);
+        if (!invitation) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Invitation not found" });
+        }
+        await db.revokeInvitation(input.invitationId, ctx.user.workspaceId);
+        return { ok: true as const };
+      }),
+
+    /** Send the invitation link by email (Resend, best-effort) */
+    sendInvitationEmail: workspaceAdminProcedure
+      .input(z.object({
+        invitationId: z.number().int().positive(),
+        origin: z.string().url(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const invitation = await db.getInvitationById(input.invitationId, ctx.user.workspaceId);
+        if (!invitation) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Invitation not found" });
+        }
+        if (invitation.status !== "pending") {
+          throw new TRPCError({ code: "BAD_REQUEST", message: "Invitation no longer pending" });
+        }
+        const inviteUrl = `${input.origin.replace(/\/+$/, "")}/onboarding?invite=${invitation.token}`;
+        const inviterName = ctx.user.name || "צוות SPARK Quality";
+        const result = await sendEmail({
+          to: invitation.email,
+          subject: `הוזמנתם להצטרף לסוכנות ב-SPARK Quality`,
+          html: `<!doctype html><html lang="he" dir="rtl"><body style="font-family:system-ui,Segoe UI,Arial,sans-serif;background:#06101F;color:#0E1B33;padding:24px">
+            <div style="max-width:560px;margin:0 auto;background:#FFF8E5;border-radius:8px;padding:32px;border:1px solid #C8A24A33">
+              <h2 style="font-family:Georgia,serif;color:#0E1B33;margin:0 0 12px;font-size:22px">הוזמנתם להצטרף לסוכנות ב-SPARK Quality</h2>
+              <p style="line-height:1.7;margin:0 0 12px">${escapeHtml(inviterName)} הזמינו אתכם להצטרף כסוכן/ת בסביבה משותפת ב-SPARK Quality.</p>
+              <p style="line-height:1.7;margin:0 0 18px">לחצו על הכפתור והתחברו עם החשבון שלכם כדי להשלים את ההצטרפות. הקישור פעיל ל-7 ימים.</p>
+              <p style="text-align:center;margin:24px 0">
+                <a href="${inviteUrl}" style="display:inline-block;background:#C8A24A;color:#06101F;padding:14px 28px;text-decoration:none;border-radius:6px;font-weight:700">קבלת ההזמנה</a>
+              </p>
+              <p style="font-size:12px;color:#475569;margin:18px 0 0">אם הכפתור לא עובד, העתיקו את הקישור הבא:<br><span style="word-break:break-all">${inviteUrl}</span></p>
+            </div>
+          </body></html>`,
+          text: `הוזמנתם להצטרף לסוכנות ב-SPARK Quality.\nקישור הצטרפות (פעיל 7 ימים): ${inviteUrl}`,
+        });
+        if (!result.ok) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: result.error });
+        }
+        return { ok: true as const, id: result.id };
+      }),
+
     /** Complete billing details (taxId + phone) for legacy workspaces missing them */
     completeBillingDetails: workspaceAdminProcedure
       .input(

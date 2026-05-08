@@ -386,3 +386,12 @@
 - [x] Find every "בחרו תוכנית" CTA on landing/marketing pages
 - [x] Reroute it to navigate to `/pricing` instead of OAuth
 - [x] Pricing card "בחר/שדרוג" buttons handle the login → checkout flow
+
+
+## Round 44 — תיקון "הזמנות ממתינות" בעמוד /team (2026-05-09)
+- [x] לבדוק תהליך הזמנת סוכן — ההזמנה נוצרת עם token ל-7 ימים והמוזמן אמור ללחוץ על הקישור לאישור (acceptInvite mutation)
+- [x] להוסיף כפתור "העתקת קישור" / "שליחה במייל" / "ביטול הזמנה" בכרטיס ההזמנה הממתינה (PendingInvitationRow)
+- [x] לוודא שהמוזמן מקבל מייל Resend מעוצב RTL עם לינק ההזמנה
+- [x] לבדוק שגם flow ה-OAuth/registration מקבל את ההזמנה — משומר דרך Onboarding ?invite=token + acceptInvite mutation
+- [x] vitest invitations.test.ts (5/5 עוברים) — revoke + sendInvitationEmail + happy/error paths
+- [x] checkpoint

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { trpc } from "@/lib/trpc";
-import { Copy, Loader2, Mail, UserPlus, X } from "lucide-react";
+import { Copy, Loader2, Mail, MailCheck, Trash2, UserPlus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -282,38 +282,131 @@ export default function Team() {
         {/* Pending invitations */}
         {(invitationsQuery.data?.length ?? 0) > 0 && (
           <GlassCard className="p-5 sm:p-7">
-            <h2 className="font-display text-xl font-bold text-white tracking-tight mb-5">
+            <h2 className="font-display text-xl font-bold text-white tracking-tight mb-2">
               הזמנות ממתינות
             </h2>
+            <p className="text-xs text-white/55 leading-relaxed mb-5">
+              ההזמנה ממתינה שהמוזמן/ת ילחצו על הקישור ויאשרו את ההצטרפות. אפשר להעתיק שוב את הקישור, לשלוח אותו במייל, או לבטל את ההזמנה.
+            </p>
             <div className="space-y-2">
               {invitationsQuery.data?.map((inv) => (
-                <div
-                  key={inv.id}
-                  className="flex items-center justify-between gap-3 p-4 bg-white/[0.04] rounded-md border border-white/10"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-9 w-9 rounded-full bg-white/5 border border-white/15 flex items-center justify-center">
-                      <Mail className="h-4 w-4 text-white/50" />
-                    </div>
-                    <div>
-                      <div className="text-sm text-white truncate">{inv.email}</div>
-                      <div className="text-[11px] text-white/45 mt-0.5">
-                        {inv.status === "pending" && "ממתין לאישור"}
-                        {inv.status === "expired" && "פג תוקף"}
-                        {inv.status === "accepted" && "אושר"}
-                        {inv.status === "revoked" && "בוטל"}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-[11px] text-white/45 font-mono">
-                    {new Date(inv.createdAt).toLocaleDateString("he-IL")}
-                  </span>
-                </div>
+                <PendingInvitationRow key={inv.id} invitation={inv} />
               ))}
             </div>
           </GlassCard>
         )}
       </div>
     </CinematicShell>
+  );
+}
+
+type InvitationRow = {
+  id: number;
+  email: string;
+  token: string;
+  status: "pending" | "accepted" | "expired" | "revoked";
+  createdAt: Date | string;
+  expiresAt: Date | string;
+};
+
+function PendingInvitationRow({ invitation }: { invitation: InvitationRow }) {
+  const utils = trpc.useUtils();
+  const inviteUrl = `${window.location.origin}/onboarding?invite=${invitation.token}`;
+
+  const sendEmail = trpc.workspaces.sendInvitationEmail.useMutation({
+    onSuccess: () => {
+      toast.success("המייל נשלח למוזמן/ת");
+    },
+    onError: (err) => {
+      toast.error("שליחת המייל נכשלה", { description: err.message });
+    },
+  });
+
+  const revoke = trpc.workspaces.revokeInvitation.useMutation({
+    onSuccess: () => {
+      toast.success("ההזמנה בוטלה");
+      utils.workspaces.listInvitations.invalidate();
+    },
+    onError: (err) => {
+      toast.error("שגיאה בביטול ההזמנה", { description: err.message });
+    },
+  });
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(inviteUrl);
+    toast.success("הקישור הועתק ללוח");
+  };
+
+  const isPending = invitation.status === "pending";
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-white/[0.04] rounded-md border border-white/10">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="h-9 w-9 rounded-full bg-white/5 border border-white/15 flex items-center justify-center flex-shrink-0">
+          <Mail className="h-4 w-4 text-white/50" />
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm text-white truncate">{invitation.email}</div>
+          <div className="text-[11px] text-white/45 mt-0.5">
+            {invitation.status === "pending" && "ממתין לאישור"}
+            {invitation.status === "expired" && "פג תוקף"}
+            {invitation.status === "accepted" && "אושר — המוזמן/ת הצטרפו"}
+            {invitation.status === "revoked" && "בוטל"}
+            {" · נוצרה ב-"}
+            {new Date(invitation.createdAt).toLocaleDateString("he-IL")}
+          </div>
+        </div>
+      </div>
+
+      {isPending && (
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={copyLink}
+            className="border-white/25 bg-white/5 text-white hover:bg-white/10"
+          >
+            <Copy className="h-3.5 w-3.5 ml-1.5" />
+            קישור
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() =>
+              sendEmail.mutate({
+                invitationId: invitation.id,
+                origin: window.location.origin,
+              })
+            }
+            disabled={sendEmail.isPending}
+            className="bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] hover:shadow-lg hover:shadow-gold/30 font-bold disabled:opacity-50"
+          >
+            {sendEmail.isPending ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <>
+                <MailCheck className="h-3.5 w-3.5 ml-1.5" />
+                שליחה במייל
+              </>
+            )}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              if (confirm(`לבטל את ההזמנה ל-${invitation.email}?`)) {
+                revoke.mutate({ invitationId: invitation.id });
+              }
+            }}
+            disabled={revoke.isPending}
+            className="border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:text-white"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }
