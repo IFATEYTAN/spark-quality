@@ -48,6 +48,10 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  // Validation state
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const sendMutation = trpc.contact.send.useMutation({
     onSuccess: () => setSubmitState("ok"),
     onError: (err) => {
@@ -72,12 +76,57 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
 
   if (!open) return null;
 
-  const isValidPhone = (v: string) => /^[\d\s\-+()]{7,}$/.test(v.trim());
+  // Validation functions
+  const validateName = (v: string) => {
+    if (!v.trim()) return "שדה חובה";
+    if (v.trim().length < 2) return "שם קצר מדי";
+    return "";
+  };
+
+  const validatePhone = (v: string) => {
+    if (!v.trim()) return "שדה חובה";
+    // Israeli phone format: optional 972/0, then 5X, then 7 digits (with optional dashes/spaces)
+    const clean = v.replace(/[\s\-()]/g, "");
+    if (!/^(?:(?:(\+?972)|0)?5\d{8}|0[23489]\d{7})$/.test(clean)) {
+      return "מספר טלפון לא תקין";
+    }
+    return "";
+  };
+
+  const validateEmail = (v: string) => {
+    if (!v.trim()) return ""; // Optional field
+    // RFC-light email validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())) {
+      return "כתובת אימייל לא תקינה";
+    }
+    return "";
+  };
+
+  // Run validation on all fields
+  const validateAll = () => {
+    const newErrors = {
+      name: validateName(name),
+      phone: validatePhone(phone),
+      email: validateEmail(email),
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some((err) => err !== "");
+  };
+
+  // Handle blur for individual fields
+  const handleBlur = (field: string, value: string, validator: (v: string) => string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    setErrors((prev) => ({ ...prev, [field]: validator(value) }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !isValidPhone(phone)) {
-      setErrorMessage("אנא מלאו שם וטלפון תקין לפני השליחה.");
+    
+    // Mark all as touched on submit
+    setTouched({ name: true, phone: true, email: true });
+    
+    if (!validateAll()) {
+      setErrorMessage("אנא תקנו את השגיאות בטופס לפני השליחה.");
       setSubmitState("error");
       return;
     }
@@ -102,6 +151,8 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
     setInterest("");
     setErrorMessage("");
     setSubmitState("idle");
+    setTouched({});
+    setErrors({});
   };
 
   return (
@@ -257,11 +308,26 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                       id="contact-name"
                       type="text"
                       value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      onChange={(e) => {
+                        setName(e.target.value);
+                        if (touched.name) setErrors((prev) => ({ ...prev, name: validateName(e.target.value) }));
+                      }}
+                      onBlur={(e) => handleBlur("name", e.target.value, validateName)}
                       required
                       placeholder="ישראל"
-                      className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition"
+                      className={`w-full rounded border bg-white px-3 py-2.5 text-sm text-navy-deep focus:ring-2 focus:outline-none transition ${
+                        touched.name && errors.name
+                          ? "border-red-400 focus:border-red-500 focus:ring-red-500/30"
+                          : "border-border/70 focus:border-gold focus:ring-gold/30"
+                      }`}
+                      aria-invalid={touched.name && !!errors.name}
+                      aria-describedby={touched.name && errors.name ? "name-error" : undefined}
                     />
+                    {touched.name && errors.name && (
+                      <p id="name-error" className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" /> {errors.name}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label
@@ -274,12 +340,27 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                       id="contact-phone"
                       type="tel"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (touched.phone) setErrors((prev) => ({ ...prev, phone: validatePhone(e.target.value) }));
+                      }}
+                      onBlur={(e) => handleBlur("phone", e.target.value, validatePhone)}
                       required
                       placeholder="050-1234567"
                       dir="ltr"
-                      className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition text-right"
+                      className={`w-full rounded border bg-white px-3 py-2.5 text-sm text-navy-deep focus:ring-2 focus:outline-none transition text-right ${
+                        touched.phone && errors.phone
+                          ? "border-red-400 focus:border-red-500 focus:ring-red-500/30"
+                          : "border-border/70 focus:border-gold focus:ring-gold/30"
+                      }`}
+                      aria-invalid={touched.phone && !!errors.phone}
+                      aria-describedby={touched.phone && errors.phone ? "phone-error" : undefined}
                     />
+                    {touched.phone && errors.phone && (
+                      <p id="phone-error" className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" /> {errors.phone}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -314,15 +395,30 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                   >
                     אימייל <span className="text-muted-foreground/60 font-normal">(רשות)</span>
                   </label>
-                  <input
+                    <input
                     id="contact-email"
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (touched.email) setErrors((prev) => ({ ...prev, email: validateEmail(e.target.value) }));
+                    }}
+                    onBlur={(e) => handleBlur("email", e.target.value, validateEmail)}
                     placeholder="you@example.com"
                     dir="ltr"
-                    className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition text-right"
+                    className={`w-full rounded border bg-white px-3 py-2.5 text-sm text-navy-deep focus:ring-2 focus:outline-none transition text-right ${
+                      touched.email && errors.email
+                        ? "border-red-400 focus:border-red-500 focus:ring-red-500/30"
+                        : "border-border/70 focus:border-gold focus:ring-gold/30"
+                    }`}
+                    aria-invalid={touched.email && !!errors.email}
+                    aria-describedby={touched.email && errors.email ? "email-error" : undefined}
                   />
+                  {touched.email && errors.email && (
+                    <p id="email-error" className="mt-1 text-[11px] text-red-600 font-medium flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" /> {errors.email}
+                    </p>
+                  )}
                 </div>
 
                 {/* Row 4: Interest (optional) */}
