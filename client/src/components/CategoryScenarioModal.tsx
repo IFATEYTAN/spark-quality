@@ -47,7 +47,7 @@ const SCENARIOS: Record<string, CategoryScenario> = {
     pain: "לקוחות עתירי נכסים עם פוטנציאל ניוד גבוה - דורשים יחס אישי ומיידי",
     trigger: "זוהה לקוח עם צבירה ≥ 1M ₪",
     steps: [
-      { icon: FileSpreadsheet, label: "טריגר", detail: "סריקת דוח שורנס - לקוח X עם צבירה של 1.4M ₪", variant: "trigger" },
+      { icon: FileSpreadsheet, label: "טריגר", detail: "סריקת דוח מוצרים בניהול - לקוח X עם צבירה של 1.4M ₪", variant: "trigger" },
       { icon: Brain, label: "ניתוח AI", detail: "בדיקת תיק רב-יצרני · זיהוי הזדמנויות תיקון 190 · פילוח פיזור", variant: "ai" },
       { icon: Mail, label: "פעולה אוטומטית", detail: "ניסוח מייל אישי לסוכן/ת + סיכום פיננסי PDF + הצעת פגישה", variant: "action" },
       { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת רואים תקציר ומאשרת בקליק את שליחת המייל", variant: "approval" },

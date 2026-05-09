@@ -311,7 +311,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
         {/* Footer (in flow now — never clipped, scrolls with the page) */}
         <div className="mt-10 pt-6 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-muted-foreground text-center sm:text-right">
-            הדמו מבוסס על דוח "מוצרים בניהול" אמיתי משורנס. כל הנתונים אנונימיים.
+            הדמו מבוסס על דוח "מוצרים בניהול" אמיתי ממערכת surense. כל הנתונים אנונימיים.
           </p>
           <p className="text-xs text-muted-foreground">© 2026 SPARK AI</p>
         </div>

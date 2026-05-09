@@ -196,7 +196,7 @@ export default function Dashboard() {
                     העלאת דוח חדש
                   </h3>
                   <p className="text-sm text-white/65 leading-relaxed mb-4">
-                    טעינת דוח שורנס וניתוח אוטומטי תוך שניות.
+                    טעינת דוח מוצרים בניהול וניתוח אוטומטי תוך שניות.
                   </p>
                   <div className="flex items-center gap-2 text-gold text-sm font-semibold opacity-80 group-hover:opacity-100 transition-opacity">
                     התחל
@@ -270,7 +270,7 @@ export default function Dashboard() {
               מתחילים? <span className="text-gold">בואו נראה לכם איך זה עובד.</span>
             </h3>
             <p className="text-base text-white/70 mb-8 max-w-xl mx-auto leading-relaxed">
-              העלו את דוח השורנס הראשון שלכם, ותראו תוך שניות ניתוח מלא: מצב
+              העלו את דוח "מוצרים בניהול" הראשון שלכם, ותראו תוך שניות ניתוח מלא: מצב
               התיק, הזדמנויות שימור, וכל הפעולות שהמערכת מציעה.
             </p>
             <Link href="/upload">

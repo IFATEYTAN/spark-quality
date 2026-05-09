@@ -594,7 +594,7 @@ function defaultIconForType(type: FlowNodeType): LucideIcon {
 export const FLOWCHART_DATA: Record<string, FlowchartData> = {
   vip: {
     nodes: [
-      { id: "n1", type: "trigger",  label: "סריקת דוח שורנס",       detail: "מערכת קוראת דוח חודשי וזיהתה לקוח עם צבירה ≥ 1M ₪",            icon: FileSpreadsheet },
+      { id: "n1", type: "trigger",  label: "סריקת דוח מוצרים בניהול",       detail: "מערכת קוראת דוח חודשי וזיהתה לקוח עם צבירה ≥ 1M ₪",            icon: FileSpreadsheet },
       { id: "n2", type: "ai",       label: "ניתוח פרופיל לקוח",      detail: "AI בוחן פיזור תיק, וותק, מוצרי 190, פוטנציאל ניוד והתאמה",      icon: Brain },
       { id: "n3", type: "decision", label: "האם VIP אמיתי?",         detail: "בודק 3 קריטריונים: צבירה > 1M, גיל > 45, ללא מוצר 190",         icon: Filter, decisionLabels: { yes: "כן", no: "לא" } },
       { id: "n4", type: "action",   label: "ניסוח מייל אישי + PDF",  detail: "GPT מייצר מייל מותאם + סיכום פיננסי PDF + הצעת פגישת זום",      icon: Mail, metric: "≈12 שניות" },

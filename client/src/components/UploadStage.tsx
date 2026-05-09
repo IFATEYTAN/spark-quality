@@ -31,7 +31,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
       setTimeout(() => onUpload(parsed), 600);
     } catch (err: any) {
       console.error(err);
-      toast.error(err?.message || "לא הצלחנו לקרוא את הקובץ. ודאי שזה דוח שורנס תקין.", { id: t });
+      toast.error(err?.message || "לא הצלחנו לקרוא את הקובץ. ודאי שזה דוח מוצרים בניהול תקין.", { id: t });
       setIsProcessing(false);
       setFileName(null);
     }
@@ -104,7 +104,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
 
             {/* Subhead */}
             <p className="mt-7 max-w-xl text-base lg:text-lg leading-relaxed text-white/90 font-light">
-              העלו את דוח <span className="font-semibold text-white">"מוצרים בניהול"</span> מתוך שורנס.
+              העלו את דוח <span className="font-semibold text-white">"מוצרים בניהול"</span> ממערכת surense.
               <br />
               ה-AI יזהה לקוחות בריסק, הזדמנויות אאפסל וקריאות לפעולה — בפחות מדקה.
             </p>

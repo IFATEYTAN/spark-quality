@@ -199,7 +199,7 @@ export function ActionCenter({
       {totalActionable === 0 && (
         <GlassCard className="mt-5 p-5 text-center bg-white/[0.03] border-dashed border-white/15">
           <p className="text-sm text-white/55">
-            אחרי העלאת דוח שורנס, המערכת תזהה אוטומטית את הקטגוריות הפעילות ותציג את הצעדים הבאים כאן.
+            אחרי העלאת דוח מוצרים בניהול, המערכת תזהה אוטומטית את הקטגוריות הפעילות ותציג את הצעדים הבאים כאן.
           </p>
         </GlassCard>
       )}

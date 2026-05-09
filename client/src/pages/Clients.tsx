@@ -286,7 +286,7 @@ export default function Clients() {
             <p className="text-sm text-white/55 mb-6 max-w-md mx-auto">
               {search
                 ? "נסו מילת חיפוש אחרת — שם פרטי, חלק מתעודת הזהות, או הסיומת של המייל."
-                : "התחילו בהעלאת דוח שורנס כדי לראות את הלקוחות בתיק שלכם."}
+                : "התחילו בהעלאת דוח מוצרים בניהול כדי לראות את הלקוחות בתיק שלכם."}
             </p>
             {!search && (
               <Link href="/upload">

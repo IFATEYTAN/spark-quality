@@ -409,7 +409,7 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   const customers = Array.from(allCustomers.values());
   if (customers.length === 0) {
     throw new Error(
-      "לא זוהו לקוחות בקובץ. ודאי שהקובץ הוא דוח 'מוצרים בניהול' מ-שורנס.",
+      "לא זוהו לקוחות בקובץ. ודאי שהקובץ הוא דוח 'מוצרים בניהול' ממערכת surense.",
     );
   }
 

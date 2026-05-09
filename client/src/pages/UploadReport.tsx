@@ -101,10 +101,10 @@ export default function UploadReport() {
         <div className="mb-10 animate-fade-up">
           <GoldEyebrow>שלב 1 / 5 · העלאת דוח</GoldEyebrow>
           <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.1]">
-            העלאת דוח <span className="text-gold">שורנס</span>
+            העלאת דוח <span className="text-gold">מוצרים בניהול</span>
           </h1>
           <p className="mt-3 sm:mt-4 text-sm sm:text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
-            טעינת קובץ XLSX יחיד שמתפצל אוטומטית: לקוחות, פוליסות, AUM, פרמיות
+            טעינת דוח "מוצרים בניהול" ממערכת surense — קובץ XLSX יחיד שמתפצל אוטומטית: לקוחות, פוליסות, AUM, פרמיות
             ודגלים לפעולה.
           </p>
         </div>
