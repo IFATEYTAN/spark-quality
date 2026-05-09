@@ -8,7 +8,6 @@ import {
   AlertTriangle,
   Mail,
   MessageSquare,
-  CheckCircle2,
   TrendingUp,
   Calendar,
   AlertOctagon,
@@ -169,10 +168,14 @@ const VARIANT_STYLES: Record<ScenarioStep["variant"], { ring: string; bg: string
 interface CategoryScenarioModalProps {
   categoryId: string | null;
   onClose: () => void;
-  onActivate: () => void;
+  /**
+   * Optional callback when the user wants to advance the demo flow from the modal.
+   * Currently the modal is self-contained (simulation runs in-place), so this is unused.
+   */
+  onActivate?: () => void;
 }
 
-export function CategoryScenarioModal({ categoryId, onClose, onActivate }: CategoryScenarioModalProps) {
+export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioModalProps) {
   const scenario = categoryId ? SCENARIOS[categoryId] : null;
 
   // Lock body scroll while open
@@ -217,10 +220,6 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
             <h2 className="font-display text-2xl sm:text-3xl font-black text-navy-deep tracking-tight leading-tight">
               {scenario.title}
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed max-w-3xl">
-              <span className="font-semibold text-navy-deep">הכאב: </span>
-              {scenario.pain}
-            </p>
           </div>
           <button
             onClick={onClose}
@@ -233,6 +232,17 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
 
         {/* Body */}
         <div className="px-4 sm:px-10 py-5 sm:py-8 space-y-6">
+          {/* Pain Highlight */}
+          <div className="flex items-start gap-3 rounded-md bg-red-50/80 border border-red-100 p-4 sm:p-5">
+            <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="text-xs font-bold text-red-800 uppercase tracking-wider mb-1">הכאב</div>
+              <div className="text-base sm:text-lg font-medium text-red-950 leading-snug">
+                {scenario.pain}
+              </div>
+            </div>
+          </div>
+
           {/* Trigger banner */}
           <div className="flex items-center gap-3 rounded-md border border-gold/30 bg-gradient-to-l from-gold/10 to-transparent px-4 py-3">
             <Sparkles className="h-5 w-5 text-gold flex-shrink-0" />
@@ -377,14 +387,6 @@ export function CategoryScenarioModal({ categoryId, onClose, onActivate }: Categ
 
           {/* Footer CTA */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t border-border/60">
-            <button
-              onClick={onActivate}
-              className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-navy-deep px-6 py-3 text-sm font-bold text-cream transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
-            >
-              <CheckCircle2 className="h-4 w-4" />
-              הפעל את הסנריו עכשיו
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            </button>
             <button
               onClick={onClose}
               className="flex-1 sm:flex-initial rounded-md border-2 border-navy-deep bg-transparent px-6 py-3 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream"

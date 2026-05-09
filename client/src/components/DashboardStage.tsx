@@ -90,7 +90,7 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
                 onClick={onAction}
                 className="group flex items-center gap-2 rounded-sm bg-navy-deep px-6 py-3 text-sm font-semibold text-cream transition-all hover:bg-navy hover:shadow-lg"
               >
-                הפעל פעולות אוטומטיות
+                מעבר לפעולות מיידיות
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
               </button>
             </div>

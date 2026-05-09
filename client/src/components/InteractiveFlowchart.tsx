@@ -17,6 +17,8 @@ import {
   Send,
   Clock,
   ArrowRight,
+  ChevronLeft,
+  ChevronRight,
   Zap,
   RotateCcw,
   Pause,
@@ -90,18 +92,19 @@ export function InteractiveFlowchart({
   const [expandedNode, setExpandedNode] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(autoPlay);
 
-  // אנימציה: כל 1.4 שניות עוברים לשלב הבא
+  // אנימציה איטית: כל 2.2 שניות עוברים לשלב הבא (כדי לאפשר להסביר כל שלב)
   useEffect(() => {
     if (!isPlaying) return;
     if (activeStep >= data.nodes.length - 1) {
-      const timeout = setTimeout(() => setIsPlaying(false), 1800);
+      const timeout = setTimeout(() => setIsPlaying(false), 2200);
       return () => clearTimeout(timeout);
     }
-    const timer = setTimeout(() => setActiveStep((s) => s + 1), 1400);
+    const timer = setTimeout(() => setActiveStep((s) => s + 1), 2200);
     return () => clearTimeout(timer);
   }, [isPlaying, activeStep, data.nodes.length]);
 
   const startSimulation = () => {
+    // מציג רק את השלב הראשון, ולא משחרר אוטומטית את כל הצמתים בבת אחת
     setActiveStep(activeStep === -1 ? 0 : activeStep);
     setIsPlaying(true);
   };
@@ -110,6 +113,14 @@ export function InteractiveFlowchart({
     setIsPlaying(false);
     setActiveStep(-1);
     setExpandedNode(null);
+  };
+  const stepForward = () => {
+    setIsPlaying(false);
+    setActiveStep((s) => Math.min(s + 1, data.nodes.length - 1));
+  };
+  const stepBackward = () => {
+    setIsPlaying(false);
+    setActiveStep((s) => Math.max(s - 1, 0));
   };
 
   const isNodeActive = (i: number) => activeStep >= i && activeStep !== -1;
@@ -135,6 +146,8 @@ export function InteractiveFlowchart({
         onStart={startSimulation}
         onPause={pauseSimulation}
         onReset={resetSimulation}
+        onStepForward={stepForward}
+        onStepBackward={stepBackward}
       />
 
       {/* Mobile vertical timeline (under lg breakpoint) */}
@@ -177,6 +190,8 @@ function ControlsBar({
   onStart,
   onPause,
   onReset,
+  onStepForward,
+  onStepBackward,
 }: {
   activeStep: number;
   total: number;
@@ -184,23 +199,71 @@ function ControlsBar({
   onStart: () => void;
   onPause: () => void;
   onReset: () => void;
+  onStepForward: () => void;
+  onStepBackward: () => void;
 }) {
+  const hasStarted = activeStep >= 0;
+  const isFinished = hasStarted && activeStep >= total - 1;
+  const canStepBack = hasStarted && activeStep > 0;
+  const canStepForward = hasStarted && activeStep < total - 1;
+
   return (
-    <div className="flex items-center justify-between gap-2 flex-wrap">
-      <div className="flex items-center gap-1.5 text-[11px] sm:text-xs text-muted-foreground">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Left side: hint + step indicator */}
+      <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground">
         <Zap className="h-3.5 w-3.5 text-gold flex-shrink-0" />
-        <span className="hidden sm:inline">תרשים זרימה אינטראקטיבי · לחצו על כל שלב לפרטים מלאים</span>
-        <span className="sm:hidden">הקישו על כל שלב לפרטים</span>
+        {hasStarted ? (
+          <span className="font-bold text-navy-deep">
+            שלב <span className="text-gold text-sm">{activeStep + 1}</span> מתוך {total}
+          </span>
+        ) : (
+          <>
+            <span className="hidden sm:inline">לחצו "הפעלו סימולציה" ← כל שלב מתגלה בתורו</span>
+            <span className="sm:hidden">לחצו להפעלת הסימולציה</span>
+          </>
+        )}
       </div>
-      <div className="flex items-center gap-2">
+
+      {/* Right side: controls */}
+      <div className="flex items-center gap-2 flex-wrap justify-end">
+        {/* Step-by-step navigation (visible after start) */}
+        {hasStarted && (
+          <div className="flex items-center gap-1 rounded-md border border-border/70 bg-white p-0.5">
+            <button
+              type="button"
+              onClick={onStepBackward}
+              disabled={!canStepBack}
+              aria-label="שלב קודם"
+              className="inline-flex items-center justify-center h-8 w-8 rounded text-navy-deep hover:bg-navy-deep/5 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <span className="px-2 text-[11px] font-bold text-navy-deep tabular-nums">
+              {String(activeStep + 1).padStart(2, "0")}
+              <span className="text-muted-foreground/60">/{String(total).padStart(2, "0")}</span>
+            </span>
+            <button
+              type="button"
+              onClick={onStepForward}
+              disabled={!canStepForward}
+              aria-label="שלב הבא"
+              className="inline-flex items-center justify-center h-8 w-8 rounded text-navy-deep hover:bg-navy-deep/5 disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+
+        {/* Play / Pause / Restart */}
         {!isPlaying ? (
           <button
             type="button"
             onClick={onStart}
-            className="group flex items-center gap-1.5 rounded-md bg-navy-deep px-4 py-2 text-xs font-semibold text-cream shadow-sm transition-all hover:bg-navy hover:shadow-lg min-h-[40px]"
+            disabled={isFinished ? false : !canStepForward && hasStarted}
+            className="group flex items-center gap-1.5 rounded-md bg-navy-deep px-4 py-2 text-xs font-semibold text-cream shadow-sm transition-all hover:bg-navy hover:shadow-lg min-h-[40px] disabled:opacity-50"
           >
             <Play className="h-3.5 w-3.5 text-gold" />
-            {activeStep === -1 ? "הפעלו סימולציה" : activeStep >= total - 1 ? "הפעלו שוב" : "המשך"}
+            {activeStep === -1 ? "הפעלו סימולציה" : isFinished ? "הפעלו שוב" : "המשך אוטומטית"}
           </button>
         ) : (
           <button
@@ -213,7 +276,8 @@ function ControlsBar({
             שלב {activeStep + 1}/{total}
           </button>
         )}
-        {(activeStep >= 0 && !isPlaying) && (
+
+        {hasStarted && !isPlaying && (
           <button
             type="button"
             onClick={onReset}
