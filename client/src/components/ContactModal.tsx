@@ -227,46 +227,21 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
             </div>
           </div>
 
-          {/* Light intro form */}
+          {/* Light intro form OR success panel */}
           <div>
             <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
               <div className="h-px w-6 bg-gold" />
-              השאירו פרטים לשיחה קצרה
+              {submitState === "ok" ? "ההודעה נשלחה בהצלחה" : "השאירו פרטים לשיחה קצרה"}
             </h3>
 
             {submitState === "ok" ? (
-              <div className="rounded-md border border-emerald-300 bg-emerald-50 p-5 text-center space-y-3">
-                <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto" />
-                <h4 className="font-display text-lg font-bold text-emerald-800">
-                  קיבלנו! נחזור אליכם תוך יום עסקים ✨
-                </h4>
-                <p className="text-sm text-emerald-700/90 max-w-md mx-auto leading-relaxed">
-                  ניצור איתכם קשר לתיאום שיחת {contactMethod === "phone" ? "טלפון" : "Zoom"} של 30 דקות. אם זה דחוף — אפשר לפנות ישירות:
-                </p>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
-                  <a
-                    href={`mailto:${ANAT_EMAIL}`}
-                    className="rounded bg-navy-deep text-cream px-4 py-2 text-xs font-bold hover:bg-navy transition"
-                  >
-                    שליחת מייל ישירה
-                  </a>
-                  <a
-                    href={`https://wa.me/${ANAT_WHATSAPP_DIGITS}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded bg-emerald-700 text-white px-4 py-2 text-xs font-bold hover:bg-emerald-800 transition"
-                  >
-                    WhatsApp לענת
-                  </a>
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="rounded border border-border/70 bg-white px-4 py-2 text-xs font-bold text-navy-deep hover:bg-cream transition"
-                  >
-                    שליחת בקשה נוספת
-                  </button>
-                </div>
-              </div>
+              <SuccessPanel
+                contactMethod={contactMethod}
+                anatEmail={ANAT_EMAIL}
+                anatWhatsappDigits={ANAT_WHATSAPP_DIGITS}
+                onClose={onClose}
+                onReset={handleReset}
+              />
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3">
                 {/* Row 1: Name + Phone */}
@@ -418,6 +393,135 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
   );
 }
 
+/* -------------------------------------------- */
+/* Success panel — animated celebration         */
+/* -------------------------------------------- */
+function SuccessPanel({
+  contactMethod,
+  anatEmail,
+  anatWhatsappDigits,
+  onClose,
+  onReset,
+}: {
+  contactMethod: ContactMethod;
+  anatEmail: string;
+  anatWhatsappDigits: string;
+  onClose: () => void;
+  onReset: () => void;
+}) {
+  // Eight little confetti specks bursting outward in a circle
+  const confetti = [
+    { x: 60, y: -70, rot: 220, color: "bg-gold", delay: 0 },
+    { x: -65, y: -50, rot: -180, color: "bg-emerald-500", delay: 60 },
+    { x: 80, y: 30, rot: 140, color: "bg-navy-deep", delay: 120 },
+    { x: -80, y: 20, rot: -110, color: "bg-gold", delay: 40 },
+    { x: 30, y: -90, rot: 260, color: "bg-emerald-600", delay: 100 },
+    { x: -30, y: -85, rot: -240, color: "bg-gold/80", delay: 80 },
+    { x: 95, y: -10, rot: 200, color: "bg-emerald-500", delay: 140 },
+    { x: -95, y: -15, rot: -200, color: "bg-navy", delay: 20 },
+  ];
+
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="relative overflow-hidden rounded-md border-2 border-emerald-300 bg-gradient-to-br from-emerald-50 via-cream to-emerald-50/40 p-6 sm:p-8 text-center animate-success-pop"
+    >
+      {/* Decorative confetti */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        {confetti.map((c, i) => (
+          <span
+            key={i}
+            className={`absolute h-2 w-2 rounded-sm ${c.color} animate-confetti`}
+            style={{
+              ["--confetti-x" as string]: `${c.x}px`,
+              ["--confetti-y" as string]: `${c.y}px`,
+              ["--confetti-rot" as string]: `${c.rot}deg`,
+              animationDelay: `${c.delay + 350}ms`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Animated check */}
+      <div className="relative mx-auto mb-4 h-20 w-20 sm:h-24 sm:w-24">
+        {/* Concentric pulse rings */}
+        <span className="absolute inset-0 rounded-full bg-emerald-400/30 animate-success-ring" />
+        <span
+          className="absolute inset-0 rounded-full bg-emerald-400/20 animate-success-ring"
+          style={{ animationDelay: "350ms" }}
+        />
+        {/* Inner solid disc */}
+        <div className="relative flex h-full w-full items-center justify-center rounded-full bg-emerald-600 shadow-lg shadow-emerald-600/40 animate-check-circle">
+          <svg viewBox="0 0 52 52" className="h-12 w-12 sm:h-14 sm:w-14">
+            <path
+              d="M14 27 L23 36 L40 18"
+              fill="none"
+              stroke="white"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="animate-check-draw"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <div className="animate-success-text space-y-2">
+        <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-white/70 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+          <CheckCircle2 className="h-3 w-3" />
+          ההודעה התקבלה
+        </div>
+        <h4 className="font-display text-2xl sm:text-3xl font-black text-emerald-900 tracking-tight leading-tight">
+          תודה! קיבלנו את הפרטים.
+        </h4>
+        <p className="text-sm text-emerald-800/90 max-w-md mx-auto leading-relaxed">
+          נחזור אליכם תוך <span className="font-bold">יום עסקים</span> לתיאום שיחת{" "}
+          {contactMethod === "phone" ? "טלפון" : "Zoom"} של 30 דקות.
+        </p>
+        <p className="text-xs text-emerald-700/80 max-w-md mx-auto leading-relaxed">
+          אישור על הפנייה נשלח לתיבת הצוות שלנו · אם זה דחוף, אפשר לפנות ישירות:
+        </p>
+      </div>
+
+      {/* CTAs */}
+      <div className="relative mt-5 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2 animate-success-text" style={{ animationDelay: "0.85s" }}>
+        <a
+          href={`mailto:${anatEmail}`}
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-navy-deep text-cream px-4 py-2.5 text-xs font-bold hover:bg-navy hover:shadow-lg hover:shadow-navy-deep/30 transition"
+        >
+          <Mail className="h-3.5 w-3.5 text-gold" />
+          שליחת מייל ישירה
+        </a>
+        <a
+          href={`https://wa.me/${anatWhatsappDigits}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-700 text-white px-4 py-2.5 text-xs font-bold hover:bg-emerald-800 hover:shadow-lg hover:shadow-emerald-700/30 transition"
+        >
+          <Phone className="h-3.5 w-3.5" />
+          WhatsApp לענת
+        </a>
+        <button
+          type="button"
+          onClick={onReset}
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-emerald-300 bg-white px-4 py-2.5 text-xs font-bold text-emerald-800 hover:bg-emerald-50 transition"
+        >
+          שליחת בקשה נוספת
+        </button>
+        <button
+          type="button"
+          onClick={onClose}
+          className="inline-flex items-center justify-center gap-2 rounded-md border border-border/70 bg-white px-4 py-2.5 text-xs font-bold text-navy-deep hover:bg-cream transition"
+        >
+          <X className="h-3.5 w-3.5" />
+          סגירה
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ValueBullet({ text }: { text: string }) {
   return (
     <div className="flex items-start gap-2 rounded border border-gold/25 bg-gold/5 px-3 py-2 text-[12px] text-navy-deep leading-snug">
@@ -472,11 +576,13 @@ function SocialLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center gap-2 rounded-md border border-border/70 bg-white px-3 py-2.5 text-xs font-semibold text-navy-deep transition-all hover:border-gold hover:bg-gold/10 hover:shadow-md min-h-[44px]"
+      className="group flex items-center justify-between gap-2 rounded border border-border/60 bg-white px-3 py-2.5 text-xs font-bold text-navy-deep hover:border-gold hover:bg-gold/5 transition-all min-h-[40px]"
     >
-      <Icon className="h-4 w-4 text-gold flex-shrink-0" />
-      <span className="flex-1 truncate">{label}</span>
-      <ExternalLink className="h-3 w-3 opacity-40 group-hover:opacity-100 transition" />
+      <span className="flex items-center gap-2">
+        <Icon className="h-3.5 w-3.5 text-gold" />
+        {label}
+      </span>
+      <ExternalLink className="h-3 w-3 text-muted-foreground/60 group-hover:text-gold transition" />
     </a>
   );
 }
