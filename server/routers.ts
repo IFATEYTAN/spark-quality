@@ -66,35 +66,43 @@ export const appRouter = router({
       .input(
         z.object({
           name: z.string().trim().min(2).max(120),
-          email: z.string().trim().email().max(200),
-          phone: z.string().trim().min(7).max(40).optional().or(z.literal("")),
-          message: z.string().trim().min(5).max(2000),
+          email: z.string().trim().email().max(200).optional().or(z.literal("")),
+          phone: z.string().trim().min(7).max(40),
+          contactMethod: z.string().trim().max(50).optional(),
+          interest: z.string().trim().max(200).optional(),
+          message: z.string().trim().max(2000).optional().or(z.literal("")),
           source: z.string().trim().max(80).optional(),
         })
       )
       .mutation(async ({ input }) => {
-        const phoneLine = input.phone && input.phone.length > 0 ? `טלפון: ${input.phone}\n` : "";
+        const phoneLine = `טלפון: ${input.phone}\n`;
+        const emailLine = input.email ? `מייל: ${input.email}\n` : "";
+        const methodLine = input.contactMethod ? `איך נוח לדבר: ${input.contactMethod}\n` : "";
+        const interestLine = input.interest ? `מעניין אותם: ${input.interest}\n` : "";
         const sourceLine = input.source ? `מקור: ${input.source}\n` : "";
-        const title = `✨ בקשת פגישה חדשה — ${input.name}`;
-        const content = `מילוא טופס צור קשר בדמו של SPARK Quality:\n\nשם: ${input.name}\nמייל: ${input.email}\n${phoneLine}${sourceLine}\n---\n${input.message}`;
+        const messageLine = input.message ? `\n---\n${input.message}` : "";
+        
+        const title = `✨ בקשת שיחת היכרות — ${input.name}`;
+        const content = `מילוא טופס צור קשר בדמו של SPARK Quality:\n\nשם: ${input.name}\n${phoneLine}${emailLine}${methodLine}${interestLine}${sourceLine}${messageLine}`;
         const delivered = await notifyOwner({ title, content });
 
         // Real email to Anat via Resend (best-effort, do not block on failure).
         const html = `<div dir="rtl" style="font-family:Heebo,Arial,sans-serif;line-height:1.7;color:#1f2233">
-          <h2 style="margin:0 0 12px 0;color:#1f2233">✨ בקשת פגישה חדשה — SPARK Quality</h2>
+          <h2 style="margin:0 0 12px 0;color:#1f2233">✨ בקשת שיחת היכרות — SPARK Quality</h2>
           <p><strong>שם:</strong> ${escapeHtml(input.name)}</p>
-          <p><strong>מייל:</strong> <a href="mailto:${encodeURIComponent(input.email)}">${escapeHtml(input.email)}</a></p>
-          ${input.phone ? `<p><strong>טלפון:</strong> ${escapeHtml(input.phone)}</p>` : ""}
+          <p><strong>טלפון:</strong> ${escapeHtml(input.phone)}</p>
+          ${input.email ? `<p><strong>מייל:</strong> <a href="mailto:${encodeURIComponent(input.email)}">${escapeHtml(input.email)}</a></p>` : ""}
+          ${input.contactMethod ? `<p><strong>איך נוח לדבר:</strong> ${escapeHtml(input.contactMethod)}</p>` : ""}
+          ${input.interest ? `<p><strong>מעניין אותם:</strong> ${escapeHtml(input.interest)}</p>` : ""}
           ${input.source ? `<p><strong>מקור:</strong> ${escapeHtml(input.source)}</p>` : ""}
-          <hr style="border:none;border-top:1px solid #c8a96a33;margin:16px 0"/>
-          <p style="white-space:pre-wrap">${escapeHtml(input.message)}</p>
+          ${input.message ? `<hr style="border:none;border-top:1px solid #c8a96a33;margin:16px 0"/><p style="white-space:pre-wrap">${escapeHtml(input.message)}</p>` : ""}
           <p style="margin-top:24px;font-size:12px;color:#6b6f80">נשלח אוטומטית מ-SPARK Quality Demo</p>
         </div>`;
         const emailResult = await sendEmail({
           to: "anathemell@gmail.com",
           subject: title,
           html,
-          replyTo: input.email,
+          replyTo: input.email || undefined,
         });
         if (!emailResult.ok) {
           console.warn("[contact.send] Resend failed:", emailResult.error);
@@ -103,9 +111,9 @@ export const appRouter = router({
         try {
           await db.createContactSubmission({
             name: input.name,
-            email: input.email,
-            phone: input.phone || null,
-            message: input.message,
+            email: input.email || "no-email@provided.com",
+            phone: input.phone,
+            message: `${input.contactMethod ? `[${input.contactMethod}] ` : ""}${input.interest ? `[${input.interest}] ` : ""}${input.message || ""}`,
             source: input.source || "SPARK Quality Demo",
             notified: !!delivered,
           });

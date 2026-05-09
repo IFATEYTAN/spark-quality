@@ -1,6 +1,6 @@
-// Editorial Fintech | מודאל "קבעו פגישת אפיון" — פרטי קשר + טופס יצירת קשר אמיתי (tRPC + notifyOwner)
-// פרטים: ענת (anathemell@gmail.com, 054-739-5570), יפעת (0545633661)
-// קישורים: SPARK AI website, Facebook, כרטיס ביקור דיגיטלי (LinkedIn הוסר עד מתן URL מאומת)
+// Editorial Fintech | מודאל "קבעו שיחת היכרות של 30 דקות" — שיחת היכרות קצרה ולא פורמלית
+// פרטים: ענת גרינברג (anathemell@gmail.com, 054-739-5570), יפעת איתן (054-563-3661)
+// קישורים: SPARK AI website, Facebook, כרטיס ביקור דיגיטלי
 import { useEffect, useState } from "react";
 import {
   X,
@@ -14,6 +14,8 @@ import {
   Globe,
   CreditCard,
   Sparkles,
+  Clock,
+  ShieldCheck,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
@@ -35,19 +37,21 @@ const SOCIAL_LINKS = {
 };
 
 type SubmitState = "idle" | "submitting" | "ok" | "error";
+type ContactMethod = "phone" | "zoom";
 
 export function ContactModal({ open, onClose }: ContactModalProps) {
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("");
+  const [contactMethod, setContactMethod] = useState<ContactMethod>("phone");
+  const [email, setEmail] = useState("");
+  const [interest, setInterest] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
 
   const sendMutation = trpc.contact.send.useMutation({
     onSuccess: () => setSubmitState("ok"),
     onError: (err) => {
-      setErrorMessage(err.message ?? "שליחת ההודעה נכשלה. נסה שוב או שלחו וואטסאפ ישירות.");
+      setErrorMessage(err.message ?? "שליחת ההודעה נכשלה. נסו שוב או שלחו וואטסאפ ישירות.");
       setSubmitState("error");
     },
   });
@@ -68,12 +72,12 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
 
   if (!open) return null;
 
-  const isValidEmail = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim());
+  const isValidPhone = (v: string) => /^[\d\s\-+()]{7,}$/.test(v.trim());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !isValidEmail(email) || !message.trim() || message.trim().length < 5) {
-      setErrorMessage("אנא מלאו שם, מייל תקין והודעה (לפחות 5 תווים) לפני השליחה.");
+    if (!name.trim() || !isValidPhone(phone)) {
+      setErrorMessage("אנא מלאו שם וטלפון תקין לפני השליחה.");
       setSubmitState("error");
       return;
     }
@@ -82,18 +86,20 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
     setErrorMessage("");
     sendMutation.mutate({
       name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim() || undefined,
-      message: message.trim(),
+      phone: phone.trim(),
+      contactMethod: contactMethod === "phone" ? "טלפון" : "Zoom",
+      email: email.trim() || undefined,
+      interest: interest.trim() || undefined,
       source: "SPARK Quality Demo · ContactModal",
     });
   };
 
   const handleReset = () => {
     setName("");
-    setEmail("");
     setPhone("");
-    setMessage("");
+    setContactMethod("phone");
+    setEmail("");
+    setInterest("");
     setErrorMessage("");
     setSubmitState("idle");
   };
@@ -126,10 +132,10 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
               id="contact-modal-title"
               className="font-display text-2xl sm:text-3xl font-black text-navy-deep tracking-tight leading-tight"
             >
-              קבעו פגישת אפיון
+              קבעו שיחת היכרות של 30 דקות
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
-              שיחה קצרה (30 דקות) להבנת הצרכים שלכם והתאמת SPARK AI לסוכנות שלכם.
+              שיחת טלפון או Zoom קצרה כדי להבין את הצרכים שלכם ולבדוק התאמה ל-SPARK AI.
             </p>
           </div>
           <button
@@ -144,6 +150,13 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
 
         {/* Body */}
         <div className="px-5 sm:px-8 py-5 sm:py-6 space-y-6">
+          {/* Value bullets */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <ValueBullet text="מבט-על על פוטנציאל הערך אצלכם" />
+            <ValueBullet text="בדיקת התאמה לפיילוט של 5–10 סוכנים" />
+            <ValueBullet text="כיוון פרקטי ל-2 תהליכים שכדאי לאוטומט" />
+          </div>
+
           {/* Direct contact cards */}
           <div>
             <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
@@ -157,9 +170,11 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                   <div className="h-9 w-9 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center text-navy-deep font-display font-black text-sm">
                     ענ
                   </div>
-                  <div>
-                    <div className="font-display text-base font-bold text-navy-deep">ענת המל</div>
-                    <div className="text-[11px] text-muted-foreground">מייסדת · SPARK AI</div>
+                  <div className="min-w-0">
+                    <div className="font-display text-base font-bold text-navy-deep">ענת גרינברג</div>
+                    <div className="text-[11px] text-muted-foreground leading-tight">
+                      מנכ״לית · מומחית אוטומציה ו-AI
+                    </div>
                   </div>
                 </div>
                 <a
@@ -189,9 +204,11 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                   <div className="h-9 w-9 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center text-navy-deep font-display font-black text-sm">
                     יפ
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <div className="font-display text-base font-bold text-navy-deep">יפעת איתן</div>
-                    <div className="text-[11px] text-muted-foreground">שותפה · SPARK AI</div>
+                    <div className="text-[11px] text-muted-foreground leading-tight">
+                      מייסדת ומנכ״לית שותפה
+                    </div>
                   </div>
                 </div>
                 <a
@@ -210,21 +227,21 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
             </div>
           </div>
 
-          {/* Contact form */}
+          {/* Light intro form */}
           <div>
             <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
               <div className="h-px w-6 bg-gold" />
-              שלחו לנו הודעה
+              השאירו פרטים לשיחה קצרה
             </h3>
 
             {submitState === "ok" ? (
               <div className="rounded-md border border-emerald-300 bg-emerald-50 p-5 text-center space-y-3">
                 <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto" />
                 <h4 className="font-display text-lg font-bold text-emerald-800">
-                  ההודעה נשלחה בהצלחה לצוות SPARK AI ✨
+                  קיבלנו! נחזור אליכם תוך יום עסקים ✨
                 </h4>
                 <p className="text-sm text-emerald-700/90 max-w-md mx-auto leading-relaxed">
-                  נחזור אליך בתוך 24 שעות. אם זה דחוף — אפשר לפנות ישירות:
+                  ניצור איתכם קשר לתיאום שיחת {contactMethod === "phone" ? "טלפון" : "Zoom"} של 30 דקות. אם זה דחוף — אפשר לפנות ישירות:
                 </p>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
                   <a
@@ -246,19 +263,20 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                     onClick={handleReset}
                     className="rounded border border-border/70 bg-white px-4 py-2 text-xs font-bold text-navy-deep hover:bg-cream transition"
                   >
-                    שליחת הודעה נוספת
+                    שליחת בקשה נוספת
                   </button>
                 </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-3">
+                {/* Row 1: Name + Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label
                       htmlFor="contact-name"
                       className="block text-[11px] font-bold tracking-wider text-navy-deep/70 mb-1.5"
                     >
-                      שם מלא <span className="text-gold">*</span>
+                      שם פרטי <span className="text-gold">*</span>
                     </label>
                     <input
                       id="contact-name"
@@ -266,67 +284,94 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      placeholder="ישראל ישראלי"
+                      placeholder="ישראל"
                       className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition"
                     />
                   </div>
                   <div>
                     <label
-                      htmlFor="contact-email"
+                      htmlFor="contact-phone"
                       className="block text-[11px] font-bold tracking-wider text-navy-deep/70 mb-1.5"
                     >
-                      מייל <span className="text-gold">*</span>
+                      טלפון <span className="text-gold">*</span>
                     </label>
                     <input
-                      id="contact-email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="contact-phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       required
-                      placeholder="you@example.com"
+                      placeholder="050-1234567"
                       dir="ltr"
                       className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition text-right"
                     />
                   </div>
                 </div>
+
+                {/* Row 2: How to talk (phone/zoom) */}
+                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-navy-deep/70 mb-1.5">
+                    איך נוח לכם לדבר? <span className="text-gold">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <ContactMethodOption
+                      value="phone"
+                      current={contactMethod}
+                      onSelect={setContactMethod}
+                      label="טלפון"
+                      icon={Phone}
+                    />
+                    <ContactMethodOption
+                      value="zoom"
+                      current={contactMethod}
+                      onSelect={setContactMethod}
+                      label="Zoom"
+                      icon={Sparkles}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 3: Email (optional) */}
                 <div>
                   <label
-                    htmlFor="contact-phone"
+                    htmlFor="contact-email"
                     className="block text-[11px] font-bold tracking-wider text-navy-deep/70 mb-1.5"
                   >
-                    טלפון (לא חובה)
+                    אימייל <span className="text-muted-foreground/60 font-normal">(רשות)</span>
                   </label>
                   <input
-                    id="contact-phone"
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="050-1234567"
+                    id="contact-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
                     dir="ltr"
                     className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition text-right"
                   />
                 </div>
+
+                {/* Row 4: Interest (optional) */}
                 <div>
                   <label
-                    htmlFor="contact-message"
+                    htmlFor="contact-interest"
                     className="block text-[11px] font-bold tracking-wider text-navy-deep/70 mb-1.5"
                   >
-                    איך נוכל לעזור?
+                    מה תרצו לבדוק בשיחה? <span className="text-muted-foreground/60 font-normal">(רשות)</span>
                   </label>
-                  <textarea
-                    id="contact-message"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={4}
-                    placeholder="ספרו לנו על הסוכנות שלכם, גודל הצוות והאתגרים העיקריים..."
-                    className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition resize-none"
+                  <input
+                    id="contact-interest"
+                    type="text"
+                    value={interest}
+                    onChange={(e) => setInterest(e.target.value)}
+                    placeholder="ניתוח דוחות / סיכומי פגישות / אוטומציות / אחר"
+                    className="w-full rounded border border-border/70 bg-white px-3 py-2.5 text-sm text-navy-deep focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition"
                   />
                 </div>
 
                 {submitState === "error" && (
                   <div className="flex items-start gap-2 rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800">
                     <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                    <span>{errorMessage || "אנא מלאו שם, מייל תקין והודעה לפני השליחה."}</span>
+                    <span>{errorMessage || "אנא מלאו שם וטלפון לפני השליחה."}</span>
                   </div>
                 )}
 
@@ -344,37 +389,72 @@ export function ContactModal({ open, onClose }: ContactModalProps) {
                     ) : (
                       <>
                         <Send className="h-4 w-4 text-gold" />
-                        שלחו את ההודעה
+                        תאמו שיחה קצרה
                       </>
                     )}
                   </button>
-                  <p className="text-[11px] text-muted-foreground sm:flex-1 leading-relaxed">
-                    ההודעה תגיע ישירות לצוות SPARK AI — אנחנו נחזור אליכם תוך 24 שעות.
+                  <p className="text-[11px] text-muted-foreground sm:flex-1 leading-relaxed flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-gold flex-shrink-0" />
+                    ללא התחייבות, עם חזרה תוך יום עסקים.
                   </p>
                 </div>
               </form>
             )}
           </div>
 
-          {/* Social links */}
-          <div>
-            <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
-              <div className="h-px w-6 bg-gold" />
-              רשת SPARK AI
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <SocialLink href={SOCIAL_LINKS.website} icon={Globe} label="אתר רשמי" />
-              <SocialLink
-                href={SOCIAL_LINKS.digitalCard}
-                icon={CreditCard}
-                label="כרטיס דיגיטלי"
-              />
-              <SocialLink href={SOCIAL_LINKS.facebook} icon={Facebook} label="Facebook" />
-            </div>
+          {/* Footer links — clean, no header label */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-border/40">
+            <SocialLink href={SOCIAL_LINKS.website} icon={Globe} label="אתר רשמי" />
+            <SocialLink
+              href={SOCIAL_LINKS.digitalCard}
+              icon={CreditCard}
+              label="כרטיס דיגיטלי"
+            />
+            <SocialLink href={SOCIAL_LINKS.facebook} icon={Facebook} label="Facebook" />
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function ValueBullet({ text }: { text: string }) {
+  return (
+    <div className="flex items-start gap-2 rounded border border-gold/25 bg-gold/5 px-3 py-2 text-[12px] text-navy-deep leading-snug">
+      <Clock className="h-3.5 w-3.5 text-gold flex-shrink-0 mt-0.5" />
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function ContactMethodOption({
+  value,
+  current,
+  onSelect,
+  label,
+  icon: Icon,
+}: {
+  value: ContactMethod;
+  current: ContactMethod;
+  onSelect: (v: ContactMethod) => void;
+  label: string;
+  icon: typeof Phone;
+}) {
+  const active = current === value;
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      className={`flex items-center justify-center gap-2 rounded border-2 px-3 py-2.5 text-sm font-bold transition-all min-h-[44px] ${
+        active
+          ? "border-gold bg-gold/15 text-navy-deep shadow-md shadow-gold/20"
+          : "border-border/60 bg-white text-navy-deep/70 hover:border-gold/50 hover:bg-gold/5"
+      }`}
+      aria-pressed={active}
+    >
+      <Icon className={`h-4 w-4 ${active ? "text-gold" : "text-muted-foreground"}`} />
+      {label}
+    </button>
   );
 }
 
