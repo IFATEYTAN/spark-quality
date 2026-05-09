@@ -178,4 +178,43 @@ export const adminRouter = router({
     .query(async ({ input }) => {
       return db.listAuditLog(input);
     }),
+
+  // ============================================================
+  // Leads — unified inbox: open payment attempts + contact form submissions
+  // ============================================================
+  listLeads: superAdminProcedure
+    .input(
+      z
+        .object({
+          paymentStatus: z
+            .enum(["pending", "abandoned", "failed", "all_open"])
+            .optional(),
+          limit: z.number().int().min(1).max(500).optional(),
+        })
+        .optional()
+    )
+    .query(async ({ input }) => {
+      const limit = input?.limit ?? 200;
+      const [paymentAttempts, contacts] = await Promise.all([
+        db.listOpenPaymentAttempts({
+          status: input?.paymentStatus ?? "all_open",
+          limit,
+        }),
+        db.listContactSubmissions({ limit }),
+      ]);
+      return { paymentAttempts, contacts } as const;
+    }),
+
+  archiveLeadPaymentAttempt: superAdminProcedure
+    .input(z.object({ requestId: z.string().min(1).max(64) }))
+    .mutation(async ({ ctx, input }) => {
+      await db.adminArchivePaymentAttempt(input.requestId);
+      await db.writeAudit({
+        actorUserId: ctx.user.id,
+        action: "lead.payment_attempt.archive",
+        entityType: "payment_attempt",
+        detail: `requestId=${input.requestId}`,
+      });
+      return { ok: true } as const;
+    }),
 });

@@ -33,6 +33,8 @@ import {
   Play,
   Phone,
   ScrollText,
+  Sparkles,
+  Download,
   ShieldCheck,
   ShieldOff,
   Users as UsersIcon,
@@ -148,6 +150,13 @@ export default function AdminPanel() {
               פניות
             </TabsTrigger>
             <TabsTrigger
+              value="leads"
+              className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold data-[state=active]:border-gold/40 border border-transparent text-white/70 hover:text-white hover:bg-white/[0.06] transition px-4 py-2 rounded-md"
+            >
+              <Sparkles className="h-4 w-4 ml-2" />
+              לידים
+            </TabsTrigger>
+            <TabsTrigger
               value="audit"
               className="data-[state=active]:bg-gold/20 data-[state=active]:text-gold data-[state=active]:border-gold/40 border border-transparent text-white/70 hover:text-white hover:bg-white/[0.06] transition px-4 py-2 rounded-md"
             >
@@ -164,6 +173,9 @@ export default function AdminPanel() {
           </TabsContent>
           <TabsContent value="contacts" className="mt-6">
             <ContactsTab />
+          </TabsContent>
+          <TabsContent value="leads" className="mt-6">
+            <LeadsTab />
           </TabsContent>
           <TabsContent value="audit" className="mt-6">
             <AuditTab />
@@ -726,5 +738,370 @@ function SkeletonRows() {
         <div key={i} className="h-10 bg-white/5 animate-pulse rounded" />
       ))}
     </GlassCard>
+  );
+}
+
+
+// ============================================================
+// Leads Tab — open payment attempts + contact form submissions
+// ============================================================
+type LeadStatusFilter = "all_open" | "pending" | "abandoned" | "failed";
+
+const LEAD_STATUS_HE: Record<string, string> = {
+  pending: "ממתין לתשלום",
+  abandoned: "עגלה נטושה",
+  failed: "תשלום נכשל",
+  succeeded: "שולם",
+};
+
+const PERIOD_HE: Record<string, string> = {
+  monthly: "חודשי",
+  yearly: "שנתי",
+};
+
+function LeadsTab() {
+  const utils = trpc.useUtils();
+  const [statusFilter, setStatusFilter] = useState<LeadStatusFilter>("all_open");
+  const [search, setSearch] = useState("");
+
+  const { data, isLoading } = trpc.admin.listLeads.useQuery({
+    paymentStatus: statusFilter,
+    limit: 200,
+  });
+
+  const archiveMut = trpc.admin.archiveLeadPaymentAttempt.useMutation({
+    onSuccess: () => {
+      toast.success("הליד סומן כטופל");
+      utils.admin.listLeads.invalidate();
+      utils.admin.dashboard.invalidate();
+    },
+    onError: e => toast.error(e.message),
+  });
+
+  const filteredAttempts = useMemo(() => {
+    if (!data?.paymentAttempts) return [];
+    if (!search.trim()) return data.paymentAttempts;
+    const q = search.trim().toLowerCase();
+    return data.paymentAttempts.filter(a => {
+      const snap =
+        (a.customerSnapshot as { name?: string; email?: string; phone?: string } | null) ?? null;
+      const haystacks = [
+        a.workspaceName,
+        a.initiatedByName,
+        a.initiatedByEmail,
+        snap?.name,
+        snap?.email,
+        snap?.phone,
+        a.requestId,
+      ];
+      return haystacks.filter(Boolean).some(s => s!.toLowerCase().includes(q));
+    });
+  }, [data?.paymentAttempts, search]);
+
+  const filteredContacts = useMemo(() => {
+    if (!data?.contacts) return [];
+    if (!search.trim()) return data.contacts;
+    const q = search.trim().toLowerCase();
+    return data.contacts.filter(
+      c =>
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.phone ?? "").toLowerCase().includes(q) ||
+        c.message.toLowerCase().includes(q)
+    );
+  }, [data?.contacts, search]);
+
+  const exportCsv = () => {
+    const rows: Array<Record<string, string>> = [];
+
+    filteredAttempts.forEach(a => {
+      const snap =
+        (a.customerSnapshot as { name?: string; email?: string; phone?: string } | null) ?? null;
+      rows.push({
+        מקור: "ניסיון תשלום",
+        סטטוס: LEAD_STATUS_HE[a.status] ?? a.status,
+        שם:
+          snap?.name ??
+          a.initiatedByName ??
+          "",
+        אימייל: snap?.email ?? a.initiatedByEmail ?? "",
+        טלפון: snap?.phone ?? "",
+        תוכנית: PLAN_HE[a.plan] ?? a.plan,
+        תקופה: PERIOD_HE[a.billingPeriod] ?? a.billingPeriod,
+        סכום: String(a.amount),
+        סוכנות: a.workspaceName ?? "",
+        תאריך: new Date(a.createdAt).toLocaleString("he-IL"),
+        מזהה: a.requestId,
+      });
+    });
+
+    filteredContacts.forEach(c => {
+      rows.push({
+        מקור: "צרו קשר",
+        סטטוס: STATUS_HE[c.status] ?? c.status,
+        שם: c.name,
+        אימייל: c.email,
+        טלפון: c.phone ?? "",
+        תוכנית: "",
+        תקופה: "",
+        סכום: "",
+        סוכנות: "",
+        תאריך: new Date(c.createdAt).toLocaleString("he-IL"),
+        מזהה: `contact-${c.id}`,
+      });
+    });
+
+    if (rows.length === 0) {
+      toast.error("אין לידים לייצוא");
+      return;
+    }
+
+    const headers = Object.keys(rows[0]);
+    const escape = (v: string) => {
+      const s = String(v ?? "");
+      if (s.includes(",") || s.includes("\"") || s.includes("\n")) {
+        return `"${s.replace(/"/g, '""')}"`;
+      }
+      return s;
+    };
+    const csv =
+      "\uFEFF" + // BOM for Excel UTF-8
+      [headers.join(","), ...rows.map(r => headers.map(h => escape(r[h])).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `spark-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  if (isLoading) return <SkeletonRows />;
+
+  const totalLeads = filteredAttempts.length + filteredContacts.length;
+
+  return (
+    <div className="space-y-4">
+      {/* Toolbar */}
+      <GlassCard className="p-4 flex flex-col lg:flex-row gap-3 lg:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-2 flex-1 min-w-0">
+          <Input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="חיפוש לפי שם / אימייל / טלפון / סוכנות"
+            className="bg-white/5 border-white/10 text-white placeholder:text-white/40"
+          />
+          <Select value={statusFilter} onValueChange={v => setStatusFilter(v as LeadStatusFilter)}>
+            <SelectTrigger className="bg-white/5 border-white/10 text-white sm:w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all_open">כל הלידים הפתוחים</SelectItem>
+              <SelectItem value="pending">ממתין לתשלום</SelectItem>
+              <SelectItem value="abandoned">עגלה נטושה</SelectItem>
+              <SelectItem value="failed">תשלום נכשל</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-white/50 whitespace-nowrap">
+            {totalLeads.toLocaleString("he-IL")} לידים
+          </span>
+          <Button
+            onClick={exportCsv}
+            variant="outline"
+            className="border-white/20 text-white/80 hover:bg-white/10"
+          >
+            <Download className="h-4 w-4 ml-2" />
+            ייצוא CSV
+          </Button>
+        </div>
+      </GlassCard>
+
+      <p className="text-xs text-white/50 leading-relaxed px-1">
+        טבלת הלידים מאחדת שני מקורות — <strong className="text-white/80">ניסיונות תשלום פתוחים</strong> (מי שהתחיל הזמנה ולא השלים סליקה דרך iCount) ו-<strong className="text-white/80">פניות מטופס "צרו קשר"</strong> ב-Landing. סטטוס "ממתין" מתחלף ל"עגלה נטושה" אוטומטית 15 דקות לאחר תחילת תשלום ללא callback מ-Make. לחיצה על "סמן כטופל" מעלימה את הליד מהרשימה הפתוחה.
+      </p>
+
+      {/* Open payment attempts */}
+      <GlassCard className="overflow-hidden">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h3 className="text-white font-medium">ניסיונות תשלום פתוחים ({filteredAttempts.length})</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-right">
+            <thead className="bg-white/5 text-white/60 text-xs">
+              <tr>
+                <th className="px-4 py-3 font-normal">שם</th>
+                <th className="px-4 py-3 font-normal">אימייל</th>
+                <th className="px-4 py-3 font-normal">טלפון</th>
+                <th className="px-4 py-3 font-normal">תוכנית</th>
+                <th className="px-4 py-3 font-normal">סכום</th>
+                <th className="px-4 py-3 font-normal">סוכנות</th>
+                <th className="px-4 py-3 font-normal">סטטוס</th>
+                <th className="px-4 py-3 font-normal">מתי</th>
+                <th className="px-4 py-3 font-normal">פעולה</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredAttempts.length === 0 && (
+                <tr>
+                  <td colSpan={9} className="text-center py-12 text-white/40">
+                    אין ניסיונות תשלום פתוחים. כל הכבוד — אף אחד לא נשאר תקוע באמצע.
+                  </td>
+                </tr>
+              )}
+              {filteredAttempts.map(a => {
+                const snap =
+                  (a.customerSnapshot as
+                    | { name?: string; email?: string; phone?: string }
+                    | null) ?? null;
+                const displayName = snap?.name ?? a.initiatedByName ?? "—";
+                const displayEmail = snap?.email ?? a.initiatedByEmail ?? "—";
+                const displayPhone = snap?.phone ?? "—";
+                return (
+                  <tr key={a.id} className="border-t border-white/5 hover:bg-white/5">
+                    <td className="px-4 py-3 text-white">{displayName}</td>
+                    <td className="px-4 py-3 text-white/70 ltr-num">
+                      {displayEmail !== "—" ? (
+                        <a
+                          href={`mailto:${displayEmail}`}
+                          className="hover:text-gold inline-flex items-center gap-1"
+                        >
+                          <Mail className="h-3 w-3" /> {displayEmail}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-white/70 ltr-num">
+                      {displayPhone !== "—" ? (
+                        <a
+                          href={`tel:${displayPhone}`}
+                          className="hover:text-gold inline-flex items-center gap-1"
+                        >
+                          <Phone className="h-3 w-3" /> {displayPhone}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-white/80 text-xs">
+                      {PLAN_HE[a.plan] ?? a.plan} · {PERIOD_HE[a.billingPeriod] ?? a.billingPeriod}
+                    </td>
+                    <td className="px-4 py-3 text-white ltr-num">{ILS.format(a.amount)}</td>
+                    <td className="px-4 py-3 text-white/60 text-xs">{a.workspaceName ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        className={
+                          a.status === "pending"
+                            ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                            : a.status === "abandoned"
+                              ? "bg-red-500/20 text-red-300 border-red-500/30"
+                              : a.status === "failed"
+                                ? "bg-rose-500/20 text-rose-300 border-rose-500/30"
+                                : "bg-white/10 text-white/70 border-white/20"
+                        }
+                      >
+                        {LEAD_STATUS_HE[a.status] ?? a.status}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3 text-white/50 text-xs whitespace-nowrap">
+                      {new Date(a.createdAt).toLocaleString("he-IL")}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-white/20 text-white/80 hover:bg-white/10 h-7 text-xs"
+                        disabled={archiveMut.isPending}
+                        onClick={() =>
+                          archiveMut.mutate({ requestId: a.requestId })
+                        }
+                      >
+                        סמן כטופל
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+
+      {/* Contact submissions */}
+      <GlassCard className="overflow-hidden">
+        <div className="p-4 border-b border-white/10 flex items-center justify-between">
+          <h3 className="text-white font-medium">
+            פניות מטופס "צרו קשר" ({filteredContacts.length})
+          </h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-right">
+            <thead className="bg-white/5 text-white/60 text-xs">
+              <tr>
+                <th className="px-4 py-3 font-normal">שם</th>
+                <th className="px-4 py-3 font-normal">אימייל</th>
+                <th className="px-4 py-3 font-normal">טלפון</th>
+                <th className="px-4 py-3 font-normal">סטטוס</th>
+                <th className="px-4 py-3 font-normal">מתי</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContacts.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="text-center py-12 text-white/40">
+                    אין פניות חדשות בתור. הטאב "פניות" מציג גם פניות שכבר טופלו.
+                  </td>
+                </tr>
+              )}
+              {filteredContacts.map(c => (
+                <tr key={c.id} className="border-t border-white/5 hover:bg-white/5">
+                  <td className="px-4 py-3 text-white">{c.name}</td>
+                  <td className="px-4 py-3 text-white/70 ltr-num">
+                    <a
+                      href={`mailto:${c.email}`}
+                      className="hover:text-gold inline-flex items-center gap-1"
+                    >
+                      <Mail className="h-3 w-3" /> {c.email}
+                    </a>
+                  </td>
+                  <td className="px-4 py-3 text-white/70 ltr-num">
+                    {c.phone ? (
+                      <a
+                        href={`tel:${c.phone}`}
+                        className="hover:text-gold inline-flex items-center gap-1"
+                      >
+                        <Phone className="h-3 w-3" /> {c.phone}
+                      </a>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge
+                      className={
+                        c.status === "new"
+                          ? "bg-gold/20 text-gold border-gold/30"
+                          : c.status === "replied"
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                            : "bg-white/10 text-white/60 border-white/20"
+                      }
+                    >
+                      {STATUS_HE[c.status] ?? c.status}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-white/50 text-xs whitespace-nowrap">
+                    {new Date(c.createdAt).toLocaleString("he-IL")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
+    </div>
   );
 }

@@ -421,11 +421,11 @@
 - [x] checkpoint
 
 
-## Round 48 — Bugfix: דף הסליקה לא נפתח בחלון חדש (2026-05-09)
-- [ ] לבדוק logs של השרת לראות אם Make מחזיר paymentUrl או רק "Accepted"
-- [ ] לפתוח tab סינכרונית בלחיצה (about:blank) ולנווט אותו אחרי שה-mutation מסתיימת — דפדפנים חוסמים window.open אסינכרוני
-- [ ] להוסיף ENV `ICOUNT_DIRECT_PAYMENT_URL` כ-fallback מיידי אם אין paymentUrl מ-Make (השרת יחזיר אותו)
-- [ ] vitest + checkpoint
+## Round 48 — Bugfix: דף הסליקה לא נפתח בחלון חדש (2026-05-09) — **SUPERSEDED by Round 49**
+- [x] לבדוק logs של השרת לראות אם Make מחזיר paymentUrl או רק "Accepted"
+- [x] לפתוח tab סינכרונית בלחיצה (about:blank) ולנווט אותו אחרי שה-mutation מסתיימת — דפדפנים חוסמים window.open אסינכרוני
+- [x] להוסיף ENV `ICOUNT_DIRECT_PAYMENT_URL` כ-fallback מיידי אם אין paymentUrl מ-Make (השרת יחזיר אותו) — **superseded** by HTML parsing in Round 49.
+- [x] vitest + checkpoint
 
 
 ## Round 49 — Bugfix: pre-open about:blank + parse HTML meta-refresh (2026-05-09)
@@ -447,3 +447,14 @@
 - [x] vitest: יצירת payment_attempt + transition pending→succeeded + watchdog 15min (4/4 עוברים)
 - [x] עדכון `MAKE_BILLING_CALLBACK.md` עם הוראות מפורטות + דוגמת JSON
 - [x] checkpoint + הודעה לבדיקה
+
+
+## Round 51 — Admin: Leads Tab (2026-05-09)
+- [x] שרת: `admin.listLeads` — מאחד contact_submissions + payment_attempts (pending/abandoned/failed) למבנה אחיד
+- [x] שרת: פילטרים — סוג (contact/checkout), סטטוס, חיפוש טקסט
+- [x] שרת: `admin.archiveLead` — מסמן payment_attempt כ"טופל" (status=abandoned ידני) או contact_submission כ-archived
+- [x] שרת: vitest מינימלי לאיחוד הלידים
+- [x] לקוח: טאב "לידים" חדש ב-AdminPanel + טבלה אחידה
+- [x] לקוח: כפתור "ייצוא ל-CSV" בצד הלקוח
+- [x] לקוח: סטטוס Badges + כפתור "סמן כטופל"
+- [ ] checkpoint

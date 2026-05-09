@@ -919,3 +919,77 @@ export async function markPaymentAttemptAbandoned(
     })
     .where(eq(paymentAttempts.requestId, requestId));
 }
+
+// ============================================================
+// LEADS — תצוגה מאוחדת לפאנל אדמין (ניסיונות תשלום פתוחים)
+// ============================================================
+/**
+ * Returns abandoned/failed/pending checkout attempts joined with the
+ * workspace + initiating user, so the admin "Leads" tab can show real
+ * leads that almost completed payment but didn't.
+ *
+ * succeeded attempts are NOT returned — those are paying customers.
+ */
+export async function listOpenPaymentAttempts(opts?: {
+  status?: "pending" | "abandoned" | "failed" | "all_open";
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const limit = opts?.limit ?? 200;
+  const status = opts?.status ?? "all_open";
+  const { inArray } = await import("drizzle-orm");
+
+  const baseSelect = db
+    .select({
+      id: paymentAttempts.id,
+      requestId: paymentAttempts.requestId,
+      workspaceId: paymentAttempts.workspaceId,
+      workspaceName: workspaces.name,
+      initiatedByUserId: paymentAttempts.initiatedByUserId,
+      initiatedByName: users.name,
+      initiatedByEmail: users.email,
+      plan: paymentAttempts.plan,
+      billingPeriod: paymentAttempts.billingPeriod,
+      amount: paymentAttempts.amount,
+      status: paymentAttempts.status,
+      customerSnapshot: paymentAttempts.customerSnapshot,
+      paymentUrl: paymentAttempts.paymentUrl,
+      errorMessage: paymentAttempts.errorMessage,
+      abandonedNotifiedAt: paymentAttempts.abandonedNotifiedAt,
+      createdAt: paymentAttempts.createdAt,
+      updatedAt: paymentAttempts.updatedAt,
+    })
+    .from(paymentAttempts)
+    .leftJoin(workspaces, eq(paymentAttempts.workspaceId, workspaces.id))
+    .leftJoin(users, eq(paymentAttempts.initiatedByUserId, users.id));
+
+  if (status === "all_open") {
+    return baseSelect
+      .where(inArray(paymentAttempts.status, ["pending", "abandoned", "failed"]))
+      .orderBy(desc(paymentAttempts.createdAt))
+      .limit(limit);
+  }
+  return baseSelect
+    .where(eq(paymentAttempts.status, status))
+    .orderBy(desc(paymentAttempts.createdAt))
+    .limit(limit);
+}
+
+/**
+ * Admin marks an open payment attempt as handled. The status enum doesn't
+ * have a dedicated "archived" value, so we mark it as `abandoned` and set
+ * abandonedNotifiedAt so the watchdog skips it and the admin UI can treat
+ * it as triaged.
+ */
+export async function adminArchivePaymentAttempt(requestId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(paymentAttempts)
+    .set({
+      status: "abandoned",
+      abandonedNotifiedAt: new Date(),
+    })
+    .where(eq(paymentAttempts.requestId, requestId));
+}

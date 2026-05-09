@@ -33,6 +33,28 @@ vi.mock("./db", () => ({
   setUserWorkspaceRole: vi.fn(async () => undefined),
   updateContactSubmissionStatus: vi.fn(async () => undefined),
   writeAudit: vi.fn(async () => undefined),
+  listOpenPaymentAttempts: vi.fn(async () => [
+    {
+      id: 11,
+      requestId: "req-abandoned-1",
+      workspaceId: 1,
+      workspaceName: "Sample Agency",
+      initiatedByUserId: 99,
+      initiatedByName: "Lead Person",
+      initiatedByEmail: "lead@example.com",
+      plan: "basic",
+      billingPeriod: "monthly",
+      amount: 199,
+      status: "abandoned",
+      customerSnapshot: { name: "Lead Person", email: "lead@example.com", phone: "050-1234567", taxId: "" },
+      paymentUrl: "https://example.com/pay",
+      errorMessage: null,
+      abandonedNotifiedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    },
+  ]),
+  adminArchivePaymentAttempt: vi.fn(async () => undefined),
 }));
 
 import { adminRouter } from "./adminRouter";
@@ -124,6 +146,33 @@ describe("admin router gating", () => {
   it("allows super-admin to suspend a workspace", async () => {
     const caller = makeCaller({ isSuperAdmin: true });
     const res = await caller.setWorkspaceSuspended({ workspaceId: 1, suspended: true });
+    expect(res.ok).toBe(true);
+  });
+
+  // Leads tab
+  it("rejects non-super-admin from listLeads", async () => {
+    const caller = makeCaller({ isSuperAdmin: false });
+    await expect(caller.listLeads()).rejects.toThrow();
+  });
+
+  it("returns paymentAttempts + contacts for super-admin", async () => {
+    const caller = makeCaller({ isSuperAdmin: true });
+    const res = await caller.listLeads();
+    expect(res.paymentAttempts).toHaveLength(1);
+    expect(res.paymentAttempts[0].requestId).toBe("req-abandoned-1");
+    expect(Array.isArray(res.contacts)).toBe(true);
+  });
+
+  it("rejects non-super-admin from archiveLeadPaymentAttempt", async () => {
+    const caller = makeCaller({ isSuperAdmin: false });
+    await expect(
+      caller.archiveLeadPaymentAttempt({ requestId: "req-x" })
+    ).rejects.toThrow();
+  });
+
+  it("super-admin can archive a payment attempt", async () => {
+    const caller = makeCaller({ isSuperAdmin: true });
+    const res = await caller.archiveLeadPaymentAttempt({ requestId: "req-abandoned-1" });
     expect(res.ok).toBe(true);
   });
 });
