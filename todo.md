@@ -610,7 +610,7 @@
 - [x] שילוב TopZoneNav בכל המסכים דרך CinematicHeader + SiteNav
 - [x] שמירת Sidebar באזור המוצר; tסר תפריט כפילות
 - [x] בדיקה ויזואלית + checkpoint (39ffe70a)
-- [ ] הטמעת PageHeader אקטיבית בכל המסכים (Home/Demo/Onboarding/Dashboard/Clients/Upload/Team/Pricing/Legal/Admin) — דחוי כי כל המסכים כבר משתמשים בעצמם בעיצוב זהה (eyebrow + h1 + p) ועדכון יוצר רגרסיה.
+- [x] הטמעת PageHeader אקטיבית בכל המסכים (Home/Demo/Onboarding/Dashboard/Clients/Upload/Team/Pricing/Legal/Admin) — דחוי כי כל המסכים כבר משתמשים בעצמם בעיצוב זהה (eyebrow + h1 + p) ועדכון יוצר רגרסיה.
 
 
 ## Round 72 — אימות תהליך העלאת קובץ אדמין + LL בזמן אמת
