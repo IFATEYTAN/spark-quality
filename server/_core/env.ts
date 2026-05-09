@@ -23,9 +23,11 @@ export const ENV = {
     process.env.MAKE_PAYMENT_WEBHOOK_URL ??
     "https://hook.eu1.make.com/35kisdafvvmvnm1dbezy2bg8wridh0hw",
   // Shared secret used to (a) sign the JSON we POST to Make and (b) verify the
-  // activation callback Make POSTs back to us. The user can override it via
-  // the MAKE_WEBHOOK_SECRET env. Until they do, the default value is used so
-  // the integration works out of the box on staging.
+  // activation callback Make POSTs back to us. Primary env is
+  // MAKE_BILLING_SHARED_SECRET (matches the docs in MAKE_BILLING_CALLBACK.md);
+  // legacy MAKE_WEBHOOK_SECRET kept as fallback for older deployments.
   makeWebhookSecret:
-    process.env.MAKE_WEBHOOK_SECRET ?? "spark-quality-make-shared-secret",
+    process.env.MAKE_BILLING_SHARED_SECRET ??
+    process.env.MAKE_WEBHOOK_SECRET ??
+    "spark-quality-make-shared-secret",
 };

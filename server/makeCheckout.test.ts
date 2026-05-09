@@ -8,6 +8,43 @@ import {
   extractPaymentUrl,
 } from "./makeCheckout";
 
+import crypto from "crypto";
+import { ENV } from "./_core/env";
+
+describe("MAKE_BILLING_SHARED_SECRET env validation", () => {
+  it("is loaded from process.env into ENV.makeWebhookSecret", () => {
+    // The webdev_request_secrets call injected MAKE_BILLING_SHARED_SECRET.
+    // Confirm the runtime is actually picking it up (not the dev fallback).
+    expect(process.env.MAKE_BILLING_SHARED_SECRET).toBeDefined();
+    expect(process.env.MAKE_BILLING_SHARED_SECRET!.length).toBeGreaterThan(16);
+    expect(ENV.makeWebhookSecret).toBe(process.env.MAKE_BILLING_SHARED_SECRET);
+    // Make.com computes HMAC-SHA256 with the same secret — simulate it here.
+    const payload = "60002|test-req|ok|INV-1|SUB-1";
+    const fromMake = crypto
+      .createHmac("sha256", process.env.MAKE_BILLING_SHARED_SECRET!)
+      .update(payload)
+      .digest("hex");
+    const fromServer = signActivation({
+      workspaceId: 60002,
+      requestId: "test-req",
+      status: "ok",
+      invoiceId: "INV-1",
+      subscriptionId: "SUB-1",
+    });
+    expect(fromServer).toBe(fromMake);
+    expect(
+      verifyActivation({
+        workspaceId: 60002,
+        requestId: "test-req",
+        status: "ok",
+        invoiceId: "INV-1",
+        subscriptionId: "SUB-1",
+        signature: fromMake,
+      })
+    ).toBe(true);
+  });
+});
+
 describe("makeCheckout signActivation/verifyActivation", () => {
   const base = {
     workspaceId: 60002,
