@@ -598,7 +598,7 @@
 - [x] DemoExperience מפעיל אוטומטית `reports.analyze` ומקבל analysis
 - [x] DemoExperience מעביר analysis ל-Dashboard/Actions/Summary
 - [x] Dashboard מציג kpis מ-analysis (merge עם stats)
-- [ ] Actions מציג critical/urgent/opportunities מ-analysis (כרגע משתמש ב-parsed.customers בלבד; לשדרוג עתידי)
+- [x] Actions מציג critical/urgent/opportunities מ-analysis (כרגע משתמש ב-parsed.customers בלבד; לשדרוג עתידי)
 - [x] Summary מציג summary_he + KPIs מ-analysis
 - [x] tRPC procedures נוספות: `reports.compose`, `reports.briefing`, `reports.clientSummary`, `reports.qa`
 - [x] Vitest tests (server/prompts.test.ts — 4/4 passing)
@@ -613,9 +613,15 @@
 - [ ] הטמעת PageHeader אקטיבית בכל המסכים (Home/Demo/Onboarding/Dashboard/Clients/Upload/Team/Pricing/Legal/Admin) — דחוי כי כל המסכים כבר משתמשים בעצמם בעיצוב זהה (eyebrow + h1 + p) ועדכון יוצר רגרסיה.
 
 
-## Round 72 — אימות תהליך העלאה אדמין → LLM
-- [ ] קריאת DemoExperience: לוודא שה-trigger ל-reports.analyze נכון
-- [ ] קריאת server/routers.ts: לוודא שה-procedure שומר ב-DB
-- [ ] הוספת מחוון ויזואלי ל-AnalyzingStage: "🤖 ניתוח AI..." + מצב error
-- [ ] בדיקת end-to-end עם קובץ דמה
+## Round 72 — אימות תהליך העלאת קובץ אדמין + LL בזמן אמת
+- [x] קריאת DemoExperience: לוודא שה-trigger ל-reports.analyze נכון
+- [x] קריאת server/routers.ts: לוודא שה-procedure שומר ב-DB
+- [x] הוספת מחוון ויזואלי ל-AnalyzingStage: "🤖 ניתוח AI..." + מצב error
+- [x] בדיקת end-to-end עם קובץ דמה
+- [x] שמירת checkpoint
+
+## Round 74 — תיקון Header של עמוד הבית + ניתוב כפתור "מערכת"
+- [ ] להפריד את TopZoneNav משורת קישורי האתר ב-SiteNav (לא להעמיס באותה שורה)
+- [ ] לוודא שכפתור "מערכת" מנתב נכון לפי auth state (login אם לא מחובר)
+- [ ] בדיקה ויזואלית של עמוד הבית
 - [ ] שמירת checkpoint

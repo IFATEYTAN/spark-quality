@@ -87,6 +87,13 @@ export function SiteNav({ available }: SiteNavProps) {
           : "bg-transparent"
       }`}
     >
+      {/* Top Bar: 3-zone unified nav (Site / Demo / Product) */}
+      <div className="border-b border-gold/10 bg-black/20">
+        <div className="container flex items-center justify-center py-1.5">
+          <TopZoneNav />
+        </div>
+      </div>
+
       <nav className="container flex items-center justify-between gap-4 py-3">
         {/* Logo + brand */}
         <a
@@ -97,9 +104,6 @@ export function SiteNav({ available }: SiteNavProps) {
         >
           <img src={LOGO.clear} alt="SPARK AI" className="h-9 w-auto" />
         </a>
-        {/* 3-zone unified nav (Site / Demo / Product) */}
-        <TopZoneNav />
-
         {/* Desktop tabs */}
         <ul className="hidden lg:flex items-center gap-1 mx-auto">
           {SECTIONS.map(section => {

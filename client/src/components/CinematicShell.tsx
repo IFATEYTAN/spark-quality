@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { AccessGuard } from "./AccessGuard";
 
 interface CinematicShellProps {
@@ -277,7 +278,7 @@ export function TopZoneNav() {
   const isDemoZone = location.startsWith("/demo");
   const isSiteZone = !isProductZone && !isDemoZone;
 
-  const productHref = isAuthenticated ? "/dashboard" : "/onboarding";
+  const productHref = isAuthenticated ? "/dashboard" : getLoginUrl();
 
   const zones = [
     { href: "/", label: "אתר", icon: Globe, active: isSiteZone },
