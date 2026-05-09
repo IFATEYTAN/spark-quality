@@ -465,10 +465,16 @@
 - [x] שרת: makeRoutes — להחליף `req.protocol://req.host` בלינק הפעלה ל-`PUBLIC_APP_URL`
 - [x] שרת: iCountRoutes — אותו תיקון לעקביות
 - [x] טסט: vitest שמוודא שלינק ההפעלה בנוי על PUBLIC_APP_URL ולא על host header
-- [ ] checkpoint + publish
+- [x] checkpoint + publish
 
 
 ## Round 53 — Pricing: כניסה למערכת בפינה השמאלית (2026-05-09)
 - [x] לקוח: בעמוד Pricing להוסיף בפינה השמאלית-עליונה "אם יש לכם חשבון — כניסה למערכת" עם קישור ל-`/dashboard` (יזניק OAuth אם לא מחובר)
 - [x] לקוח: לוודא שכשמשתמש כבר מחובר הקישור מוביל ישירות ל-`/dashboard`
-- [ ] checkpoint + publish
+- [x] checkpoint + publish
+
+
+## Round 54 — הסרת רמז "למעבר בין מסכים" (2026-05-09)
+- [x] לאתר את הרכיב KeyboardHint שמציג גלולת "טיפ ← למעבר בין מסכים · F למסך מלא" בתחתית מסכי הדמו (DemoExperience.tsx)
+- [x] להסיר את ה-usage `<KeyboardHint />` ואת הגדרת הרכיב כליל
+- [x] tsc clean + checkpoint

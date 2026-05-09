@@ -231,41 +231,6 @@ export default function DemoExperience() {
         </button>
       </div>
 
-      {/* Keyboard hint - first time only, fades after a few seconds */}
-      <KeyboardHint />
-    </div>
-  );
-}
-
-function KeyboardHint() {
-  const [visible, setVisible] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setVisible(false), 6000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (!visible) return null;
-
-  return (
-    <div
-      className="fixed bottom-20 sm:bottom-7 left-1/2 -translate-x-1/2 z-40 pointer-events-none animate-fade-in w-max max-w-[90vw]"
-      style={{ animationDelay: "1s" }}
-    >
-      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 rounded-full bg-navy-deep/90 backdrop-blur-md border border-gold/20 shadow-lg">
-        <span className="hidden sm:inline-block label-tag text-[10px] text-white/60 tracking-widest">
-          טיפ
-        </span>
-        <kbd className="px-1.5 sm:px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
-          ←
-        </kbd>
-        <span className="text-[10px] sm:text-[11px] text-white/70">למעבר בין מסכים</span>
-        <span className="hidden sm:inline-block text-white/30">·</span>
-        <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono rounded bg-white/10 text-gold-soft border border-white/20">
-          F
-        </kbd>
-        <span className="hidden sm:inline-block text-[11px] text-white/70">למסך מלא</span>
-      </div>
     </div>
   );
 }
