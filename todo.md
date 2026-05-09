@@ -529,3 +529,12 @@
 - [x] להסיר את הבלוק "זיהוי הזדמנויות פיננסיות" (54 / 186 / 42)
 - [x] לכווץ את הפריסה כך שהמסך ישב על 100vh ללא גלילה
 - [x] TS check + checkpoint
+
+## Round 61 — פיצול DashboardStage ל-3 שקפים (3א/3ב/3ג) (2026-05-09)
+- [x] הרחבת `Stage` ב-demoData.ts ל-`dashboard | dashboard2 | dashboard3`
+- [x] DashboardStage מקבל prop `slide: 1|2|3` ומרנדר רק את החלק הרלוונטי בגובה 100vh
+- [x] שקף 3א — Hero KPIs (AUM + פוטנציאל הכנסה)
+- [x] שקף 3ב — 6 דגלים + 2 גרפים (יצרן/גיל)
+- [x] שקף 3ג — טבלת לקוחות + ייצוא + CTA לפעולות
+- [x] DemoExperience — STAGE_ORDER מורחב, תוויות 3א/3ב/3ג / N
+- [x] tsc נקי, צ'קפוינט נשמר

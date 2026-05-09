@@ -12,7 +12,7 @@ export const ASSETS = {
   summary: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_summary_v2-Kf7bPwjNXxfHimS7o3PJHf.webp",
 };
 
-export type Stage = "splash" | "intro" | "upload" | "analyzing" | "dashboard" | "actions" | "summary";
+export type Stage = "splash" | "intro" | "upload" | "analyzing" | "dashboard" | "dashboard2" | "dashboard3" | "actions" | "summary";
 
 export interface Customer {
   id: string;

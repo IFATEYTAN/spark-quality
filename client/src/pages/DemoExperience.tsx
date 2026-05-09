@@ -16,13 +16,15 @@ import type { ParsedReport } from "@/lib/parseReport";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const STAGE_LABELS: Record<Stage, string> = {
-  splash: "0 / 5 · פתיחה",
-  intro: "0 / 5 · פתיחה",
-  upload: "1 / 5 · העלאת דוח",
-  analyzing: "2 / 5 · ניתוח AI",
-  dashboard: "3 / 5 · תוצאות",
-  actions: "4 / 5 · פעולות אוטומטיות",
-  summary: "5 / 5 · סיכום",
+  splash: "0 / 7 · פתיחה",
+  intro: "0 / 7 · פתיחה",
+  upload: "1 / 7 · העלאת דוח",
+  analyzing: "2 / 7 · ניתוח AI",
+  dashboard: "3א / 7 · תוצאות",
+  dashboard2: "3ב / 7 · תוצאות",
+  dashboard3: "3ג / 7 · תוצאות",
+  actions: "4 / 7 · פעולות אוטומטיות",
+  summary: "5 / 7 · סיכום",
 };
 
 // Linear navigation order. UploadStage — admin-only.
@@ -32,6 +34,8 @@ const STAGE_ORDER_FULL: Stage[] = [
   "upload",
   "analyzing",
   "dashboard",
+  "dashboard2",
+  "dashboard3",
   "actions",
   "summary",
 ];
@@ -39,6 +43,8 @@ const STAGE_ORDER_GUEST: Stage[] = [
   "intro",
   "analyzing",
   "dashboard",
+  "dashboard2",
+  "dashboard3",
   "actions",
   "summary",
 ];
@@ -61,11 +67,13 @@ export default function DemoExperience() {
     ? STAGE_LABELS
     : {
         ...STAGE_LABELS,
-        intro: "0 / 4 · פתיחה",
-        analyzing: "1 / 4 · ניתוח AI",
-        dashboard: "2 / 4 · תוצאות",
-        actions: "3 / 4 · פעולות אוטומטיות",
-        summary: "4 / 4 · סיכום",
+        intro: "0 / 6 · פתיחה",
+        analyzing: "1 / 6 · ניתוח AI",
+        dashboard: "2א / 6 · תוצאות",
+        dashboard2: "2ב / 6 · תוצאות",
+        dashboard3: "2ג / 6 · תוצאות",
+        actions: "3 / 6 · פעולות אוטומטיות",
+        summary: "4 / 6 · סיכום",
       };
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -185,7 +193,13 @@ export default function DemoExperience() {
           <AnalyzingStage onComplete={() => setStage("dashboard")} />
         )}
         {stage === "dashboard" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} />
+          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} slide={1} />
+        )}
+        {stage === "dashboard2" && (
+          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} slide={2} />
+        )}
+        {stage === "dashboard3" && (
+          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} slide={3} />
         )}
         {stage === "actions" && (
           <ActionsStage onComplete={() => setStage("summary")} />
