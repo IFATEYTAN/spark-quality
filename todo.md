@@ -611,3 +611,11 @@
 - [x] שמירת Sidebar באזור המוצר; tסר תפריט כפילות
 - [x] בדיקה ויזואלית + checkpoint (39ffe70a)
 - [ ] הטמעת PageHeader אקטיבית בכל המסכים (Home/Demo/Onboarding/Dashboard/Clients/Upload/Team/Pricing/Legal/Admin) — דחוי כי כל המסכים כבר משתמשים בעצמם בעיצוב זהה (eyebrow + h1 + p) ועדכון יוצר רגרסיה.
+
+
+## Round 72 — אימות תהליך העלאה אדמין → LLM
+- [ ] קריאת DemoExperience: לוודא שה-trigger ל-reports.analyze נכון
+- [ ] קריאת server/routers.ts: לוודא שה-procedure שומר ב-DB
+- [ ] הוספת מחוון ויזואלי ל-AnalyzingStage: "🤖 ניתוח AI..." + מצב error
+- [ ] בדיקת end-to-end עם קובץ דמה
+- [ ] שמירת checkpoint

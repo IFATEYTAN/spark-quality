@@ -5,11 +5,16 @@ import { ANALYSIS_STEPS, ASSETS } from "@/lib/demoData";
 
 interface AnalyzingStageProps {
   onComplete: () => void;
+  /** Admin path: a real uploaded file is being analyzed by the LLM. */
+  hasRealFile?: boolean;
+  /** Live status of the LLM analysis (admin only). */
+  llmStatus?: "idle" | "running" | "done" | "error";
 }
 
-export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
+export function AnalyzingStage({ onComplete, hasRealFile = false, llmStatus = "idle" }: AnalyzingStageProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [stepsDone, setStepsDone] = useState(false);
 
   useEffect(() => {
     let timeoutId: NodeJS.Timeout;
@@ -18,7 +23,9 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
     const runStep = (idx: number) => {
       if (!mounted) return;
       if (idx >= ANALYSIS_STEPS.length) {
-        timeoutId = setTimeout(() => mounted && onComplete(), 600);
+        // Mark canned animation as finished; gating to onComplete is decided in a
+        // dedicated effect that also waits for the LLM (admin path) when relevant.
+        setStepsDone(true);
         return;
       }
       setCurrentStep(idx);
@@ -39,7 +46,21 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
       clearTimeout(timeoutId);
       clearInterval(progressInterval);
     };
-  }, [onComplete]);
+    // We intentionally only run this once on mount — onComplete is invoked from
+    // the gating effect below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Gate the transition to the next stage. Guests advance as soon as the canned
+  // animation finishes. Admins running a real file must also wait for the LLM
+  // (or its error) before advancing, so the dashboard reflects real analysis.
+  useEffect(() => {
+    if (!stepsDone) return;
+    const llmReady = !hasRealFile || llmStatus === "done" || llmStatus === "error";
+    if (!llmReady) return;
+    const t = setTimeout(() => onComplete(), 600);
+    return () => clearTimeout(t);
+  }, [stepsDone, hasRealFile, llmStatus, onComplete]);
 
   return (
     <div className="relative min-h-full w-full lg:overflow-hidden bg-navy-deep">
@@ -68,6 +89,24 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
               <div className="h-px w-10 sm:w-16 bg-gold" />
               <span className="label-tag text-gold text-shadow-sm text-[10px] sm:text-xs">מנוע SPARK AI · פעיל</span>
               <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-gold" />
+              {hasRealFile && (
+                <span
+                  className={`label-tag text-[10px] sm:text-xs px-2 py-0.5 rounded-full border ${
+                    llmStatus === "done"
+                      ? "border-emerald-400/60 bg-emerald-500/10 text-emerald-200"
+                      : llmStatus === "error"
+                        ? "border-red-400/60 bg-red-500/10 text-red-200"
+                        : "border-gold/50 bg-gold/15 text-gold animate-pulse"
+                  }`}
+                  aria-live="polite"
+                >
+                  {llmStatus === "done"
+                    ? "Claude Sonnet 4 · ניתוח הושלם"
+                    : llmStatus === "error"
+                      ? "Claude Sonnet 4 · שגיאה — מציגים נתונים מקומיים"
+                      : "Claude Sonnet 4 · מנתח את הקובץ שלכם…"}
+                </span>
+              )}
             </div>
 
             <h1 className="font-display text-2xl sm:text-3xl lg:text-5xl font-black leading-[1.05] lg:leading-[0.95] text-white tracking-tighter text-shadow-lg">

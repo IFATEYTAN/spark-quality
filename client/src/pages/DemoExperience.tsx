@@ -224,7 +224,21 @@ export default function DemoExperience() {
           return null;
         })()}
         {stage === "analyzing" && (
-          <AnalyzingStage onComplete={() => setStage("dashboard")} />
+          <AnalyzingStage
+            onComplete={() => setStage("dashboard")}
+            hasRealFile={!!parsedReport}
+            llmStatus={
+              !parsedReport
+                ? "idle"
+                : analyzeMutation.isPending
+                  ? "running"
+                  : analyzeMutation.isError
+                    ? "error"
+                    : analysis
+                      ? "done"
+                      : "running"
+            }
+          />
         )}
         {stage === "dashboard" && (
           <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} analysis={analysis} slide={1} />
