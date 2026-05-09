@@ -513,3 +513,19 @@
 - [x] IntroStage / UploadStage / AnalyzingStage: לוודא שכבר מתאימים ל-h-screen
 - [x] לבדוק ב-1280x720 וב-1920x1080 שאין גלילה כללית
 - [x] tsc + checkpoint
+
+
+## Round 59 — Slide-Mode לכל המסכים (2026-05-09)
+- [ ] לבדוק את גובה ה-Header ב-DemoExperience וכמה viewport באמת זמין לכל מסך
+- [ ] AnalyzingStage: לתקן חיתוך כותרת "מנתח את התיק שלכם" + להחזיר את כל השלבים לתוך 100vh
+- [ ] IntroStage: לכווץ ל-100vh ללא גלילה
+- [ ] UploadStage: לכווץ ל-100vh ללא גלילה
+- [ ] DashboardStage: לכווץ ל-100vh — לסדר את 4 הבלוקים בגריד 2x2 או 1x4 דחוס במקום אנכית
+- [ ] לוודא ש-SummaryStage ו-ActionsStage מתאימים ל-1280x720
+- [ ] tsc + checkpoint
+
+
+## Round 60 — תיקון SummaryStage (2026-05-09)
+- [x] להסיר את הבלוק "זיהוי הזדמנויות פיננסיות" (54 / 186 / 42)
+- [x] לכווץ את הפריסה כך שהמסך ישב על 100vh ללא גלילה
+- [x] TS check + checkpoint

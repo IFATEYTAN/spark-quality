@@ -20,24 +20,24 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
   }, []);
 
   return (
-    <div className="relative h-full w-full animate-fade-in overflow-y-auto overflow-x-hidden">
+    <div className="relative h-full w-full animate-fade-in overflow-hidden">
       {/* Subtle background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-bl from-cream via-ivory to-white" />
       <div className="absolute -top-32 -left-32 -z-10 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
       <div className="absolute -bottom-32 -right-32 -z-10 h-96 w-96 rounded-full bg-navy/10 blur-3xl" />
 
-      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-4 lg:py-6 pb-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
+      <div className="relative h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-3 lg:py-4 flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch flex-1 min-h-0">
           {/* RIGHT (RTL primary): content */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 min-h-0 overflow-hidden">
             <div className="max-w-2xl">
-              <div className="mb-3 flex items-center gap-3 animate-fade-up">
+              <div className="mb-2 flex items-center gap-3 animate-fade-up">
                 <div className="h-px w-16 bg-gold" />
                 <span className="label-tag text-gold">סיכום הדמו · SPARK AI</span>
               </div>
 
               <h1
-                className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-[0.95] text-navy-deep tracking-tighter animate-fade-up"
+                className="font-display text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-black leading-[0.95] text-navy-deep tracking-tighter animate-fade-up"
                 style={{ animationDelay: "0.1s" }}
               >
                 זה כל
@@ -46,7 +46,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               </h1>
 
               <p
-                className="mt-3 text-sm leading-relaxed text-muted-foreground font-light max-w-xl animate-fade-up"
+                className="mt-2 text-xs leading-relaxed text-muted-foreground font-light max-w-xl animate-fade-up"
                 style={{ animationDelay: "0.2s" }}
               >
                 ראינו איך תוך פחות מדקה, פלטפורמת SPARK AI הופכת דוח אקסל "מת" לרשימת
@@ -56,7 +56,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
               {/* Key metrics */}
               <div
-                className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3 border-y border-border/60 py-3 animate-fade-up"
+                className="mt-2 grid grid-cols-2 lg:grid-cols-4 gap-2 border-y border-border/60 py-2 animate-fade-up"
                 style={{ animationDelay: "0.3s" }}
               >
                 {[
@@ -66,48 +66,22 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                   { label: "פוטנציאל", value: "2.84", unit: "M ₪", sub: "הכנסה מיידית" },
                 ].map((m, i) => (
                   <div key={i}>
-                    <div className="label-tag text-[10px] text-gold mb-2">{m.label}</div>
-                    <div className="display-number text-3xl font-black text-navy-deep">
+                    <div className="label-tag text-[10px] text-gold mb-1">{m.label}</div>
+                    <div className="display-number text-2xl font-black text-navy-deep">
                       {m.value}
-                      {m.unit && <span className="text-xl text-gold mr-1">{m.unit}</span>}
+                      {m.unit && <span className="text-base text-gold mr-1">{m.unit}</span>}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1.5">{m.sub}</div>
+                    <div className="text-[10px] text-muted-foreground mt-1">{m.sub}</div>
                   </div>
                 ))}
               </div>
 
-              {/* Financial opportunities */}
-              <div
-                className="mt-3 rounded-md border border-gold/30 bg-gradient-to-l from-gold/5 to-transparent p-3 animate-fade-up"
-                style={{ animationDelay: "0.35s" }}
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="h-px w-6 bg-gold" />
-                  <span className="label-tag text-[10px] text-gold tracking-[0.3em]">
-                    זיהוי הזדמנויות פיננסיות
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { label: "לקוחות VIP", value: "42", sub: "צבירה מעל 1M ₪" },
-                    { label: "השתלמויות נזילות", value: "186", sub: "להגדלה / IRA" },
-                    { label: "תיקון 190", value: "54", sub: "פטור ממס רווחי הון" },
-                  ].map((m, i) => (
-                    <div key={i}>
-                      <div className="text-[10px] text-gold/80 mb-1 font-semibold">{m.label}</div>
-                      <div className="display-number text-2xl font-black text-gold">{m.value}</div>
-                      <div className="text-[10px] text-navy-deep/70 mt-1">{m.sub}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* Next steps */}
-              <div className="mt-3 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-                <h3 className="font-display text-xl font-bold text-navy-deep mb-3 tracking-tight">
+              <div className="mt-2 animate-fade-up" style={{ animationDelay: "0.4s" }}>
+                <h3 className="font-display text-base font-bold text-navy-deep mb-2 tracking-tight">
                   השלבים הבאים שלכם
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {[
                     { num: "01", text: "פיילוט עם 5-10 סוכנים נבחרים" },
                     { num: "02", text: "התמקדות ב-2 תהליכים: ניתוח דוחות + סיכומי פגישות" },
@@ -115,12 +89,12 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                   ].map((step, i) => (
                     <div
                       key={i}
-                      className="flex flex-col items-start gap-2 rounded-md border border-gold/40 bg-white/95 p-3 shadow-sm transition-all hover:border-gold hover:shadow-md"
+                      className="flex flex-col items-start gap-1 rounded-md border border-gold/40 bg-white/95 p-2 shadow-sm transition-all hover:border-gold hover:shadow-md"
                     >
-                      <span className="font-display text-xl font-black text-gold mono-num leading-none">
+                      <span className="font-display text-base font-black text-gold mono-num leading-none">
                         {step.num}
                       </span>
-                      <span className="text-sm text-navy-deep leading-snug font-semibold">
+                      <span className="text-xs text-navy-deep leading-snug font-semibold">
                         {step.text}
                       </span>
                     </div>
@@ -130,13 +104,13 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
               {/* CTA */}
               <div
-                className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-fade-up"
+                className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fade-up"
                 style={{ animationDelay: "0.5s" }}
               >
                 <button
                   type="button"
                   onClick={onReset}
-                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-navy-deep px-6 py-3 text-sm font-bold text-white transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
+                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-navy-deep px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
                 >
                   <RotateCcw className="h-4 w-4 transition-transform group-hover:-rotate-180 duration-500" />
                   הפעל את הדמו מההתחלה
@@ -144,7 +118,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                 <button
                   type="button"
                   onClick={() => setContactOpen(true)}
-                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-bold text-white transition-all hover:bg-gold/90 hover:shadow-2xl hover:shadow-gold/20"
+                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-gold/90 hover:shadow-2xl hover:shadow-gold/20"
                 >
                   <Calendar className="h-4 w-4" />
                   קבעו פגישת אפיון
@@ -154,40 +128,40 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
               {/* QR-code card — invites attendees to scan and open the contact form on their phones */}
               <div
-                className="mt-4 flex flex-col sm:flex-row items-center gap-4 rounded-md border border-gold/40 bg-white/95 p-4 shadow-md animate-fade-up"
+                className="mt-3 flex flex-row items-center gap-3 rounded-md border border-gold/40 bg-white/95 p-2.5 shadow-md animate-fade-up"
                 style={{ animationDelay: "0.55s" }}
               >
-                <div className="flex-shrink-0 rounded-md bg-white p-3 shadow-inner">
+                <div className="flex-shrink-0 rounded-md bg-white p-1.5 shadow-inner">
                   <QRCodeSVG
                     value={contactQrUrl}
-                    size={128}
+                    size={72}
                     level="M"
                     bgColor="#ffffff"
                     fgColor="#06101F"
                     aria-label="QR ליצירת קשר עם SPARK AI"
                   />
                 </div>
-                <div className="flex-1 text-center sm:text-right">
-                  <div className="flex items-center justify-center sm:justify-start gap-2 mb-2">
-                    <QrCode className="h-4 w-4 text-gold" />
-                    <span className="label-tag text-[10px] text-gold tracking-[0.3em]">
+                <div className="flex-1 text-right">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <QrCode className="h-3.5 w-3.5 text-gold" />
+                    <span className="label-tag text-[9px] text-gold tracking-[0.3em]">
                       סרקו · השאירו פרטים
                     </span>
                   </div>
-                  <h4 className="font-display text-lg font-black text-navy-deep mb-1">
+                  <h4 className="font-display text-sm font-black text-navy-deep mb-0.5">
                     רוצים שנחזור אליכם?
                   </h4>
-                  <p className="text-xs text-navy-deep/75 leading-relaxed max-w-sm">
-                    סרקו את הקוד עם המצלמה של הטלפון — הטופס נפתח אצלכם ברקע, ויפעת או ענת יחזרו אליכם תוך יום עסקים.
+                  <p className="text-[10px] text-navy-deep/75 leading-snug">
+                    סרקו את הקוד — יפעת או ענת יחזרו אליכם תוך יום עסקים.
                   </p>
                 </div>
               </div>
             </div>
           </div>
           {/** LEFT: Editorial brand statement + testimonial */}
-          <aside className="lg:col-span-5 lg:flex lg:flex-col gap-5">
+          <aside className="lg:col-span-5 lg:flex lg:flex-col gap-3 min-h-0">
             {/* Brand statement card */}
-            <div className="relative overflow-hidden rounded-md shadow-2xl shadow-navy/30 min-h-[420px]">
+            <div className="relative overflow-hidden rounded-md shadow-2xl shadow-navy/30 flex-1 min-h-0">
               <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628] via-navy-deep to-[#152844]" />
               <div className="absolute inset-3 border border-gold/30 rounded-md pointer-events-none" />
               <div
@@ -212,7 +186,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               <div className="absolute bottom-6 left-6 h-10 w-10 border-b-2 border-l-2 border-gold/40 pointer-events-none" />
 
               {/* Content - flow naturally so no text gets clipped */}
-              <div className="relative flex flex-col items-center justify-center px-6 sm:px-10 py-10 sm:py-12 text-center gap-5">
+              <div className="relative h-full flex flex-col items-center justify-center px-6 sm:px-8 py-6 text-center gap-3">
                 <div
                   className="flex items-center gap-3 animate-fade-in flex-wrap justify-center"
                   style={{ animationDelay: "0.3s" }}
@@ -225,7 +199,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                 </div>
 
                 <h2
-                  className="font-display font-black text-white text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-[0.95] tracking-tighter animate-fade-up"
+                  className="font-display font-black text-white text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-[0.95] tracking-tighter animate-fade-up"
                   style={{ animationDelay: "0.4s" }}
                 >
                   <span className="text-gold">הקסם</span>
@@ -243,7 +217,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                 </div>
 
                 <h2
-                  className="font-display font-black text-white text-3xl sm:text-4xl lg:text-5xl xl:text-6xl leading-[0.95] tracking-tighter animate-fade-up"
+                  className="font-display font-black text-white text-2xl sm:text-3xl lg:text-4xl xl:text-5xl leading-[0.95] tracking-tighter animate-fade-up"
                   style={{ animationDelay: "0.7s" }}
                 >
                   <span className="text-gold">העוצמה</span>
@@ -308,12 +282,12 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
           יציאה מהדמו
         </Link>
 
-        {/* Footer (in flow now — never clipped, scrolls with the page) */}
-        <div className="mt-4 pt-3 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-1">
-          <p className="text-xs text-muted-foreground text-center sm:text-right">
-            הדמו מבוסס על דוח "מוצרים בניהול" אמיתי ממערכת surense. כל הנתונים אנונימיים.
+        {/* Footer (compact line, fits 100vh) */}
+        <div className="mt-2 pt-2 border-t border-border/40 flex items-center justify-between gap-1 flex-shrink-0">
+          <p className="text-[10px] text-muted-foreground">
+            הדמו מבוסס על דוח "מוצרים בניהול" אמיתי ממערכת surense · נתונים אנונימיים
           </p>
-          <p className="text-xs text-muted-foreground">© 2026 SPARK AI</p>
+          <p className="text-[10px] text-muted-foreground">© 2026 SPARK AI</p>
         </div>
       </div>
 
