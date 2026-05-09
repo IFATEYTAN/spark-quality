@@ -20,24 +20,24 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
   }, []);
 
   return (
-    <div className="relative h-full w-full animate-fade-in overflow-y-auto">
+    <div className="relative h-full w-full animate-fade-in overflow-y-auto overflow-x-hidden">
       {/* Subtle background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-bl from-cream via-ivory to-white" />
       <div className="absolute -top-32 -left-32 -z-10 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
       <div className="absolute -bottom-32 -right-32 -z-10 h-96 w-96 rounded-full bg-navy/10 blur-3xl" />
 
-      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-6 lg:py-10 pb-28">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-4 lg:py-6 pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-start">
           {/* RIGHT (RTL primary): content */}
           <div className="lg:col-span-7">
             <div className="max-w-2xl">
-              <div className="mb-5 flex items-center gap-3 animate-fade-up">
+              <div className="mb-3 flex items-center gap-3 animate-fade-up">
                 <div className="h-px w-16 bg-gold" />
                 <span className="label-tag text-gold">סיכום הדמו · SPARK AI</span>
               </div>
 
               <h1
-                className="font-display text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] text-navy-deep tracking-tighter animate-fade-up"
+                className="font-display text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-black leading-[0.95] text-navy-deep tracking-tighter animate-fade-up"
                 style={{ animationDelay: "0.1s" }}
               >
                 זה כל
@@ -46,7 +46,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               </h1>
 
               <p
-                className="mt-5 text-base leading-relaxed text-muted-foreground font-light max-w-xl animate-fade-up"
+                className="mt-3 text-sm leading-relaxed text-muted-foreground font-light max-w-xl animate-fade-up"
                 style={{ animationDelay: "0.2s" }}
               >
                 ראינו איך תוך פחות מדקה, פלטפורמת SPARK AI הופכת דוח אקסל "מת" לרשימת
@@ -56,7 +56,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
               {/* Key metrics */}
               <div
-                className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4 border-y border-border/60 py-4 animate-fade-up"
+                className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3 border-y border-border/60 py-3 animate-fade-up"
                 style={{ animationDelay: "0.3s" }}
               >
                 {[
@@ -78,7 +78,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
               {/* Financial opportunities */}
               <div
-                className="mt-4 rounded-md border border-gold/30 bg-gradient-to-l from-gold/5 to-transparent p-4 animate-fade-up"
+                className="mt-3 rounded-md border border-gold/30 bg-gradient-to-l from-gold/5 to-transparent p-3 animate-fade-up"
                 style={{ animationDelay: "0.35s" }}
               >
                 <div className="flex items-center gap-2 mb-3">
@@ -103,7 +103,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               </div>
 
               {/* Next steps */}
-              <div className="mt-4 animate-fade-up" style={{ animationDelay: "0.4s" }}>
+              <div className="mt-3 animate-fade-up" style={{ animationDelay: "0.4s" }}>
                 <h3 className="font-display text-xl font-bold text-navy-deep mb-3 tracking-tight">
                   השלבים הבאים שלכם
                 </h3>
@@ -130,7 +130,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
               {/* CTA */}
               <div
-                className="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-fade-up"
+                className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 animate-fade-up"
                 style={{ animationDelay: "0.5s" }}
               >
                 <button
@@ -154,7 +154,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
 
               {/* QR-code card — invites attendees to scan and open the contact form on their phones */}
               <div
-                className="mt-6 flex flex-col sm:flex-row items-center gap-5 rounded-md border border-gold/40 bg-white/95 p-5 shadow-md animate-fade-up"
+                className="mt-4 flex flex-col sm:flex-row items-center gap-4 rounded-md border border-gold/40 bg-white/95 p-4 shadow-md animate-fade-up"
                 style={{ animationDelay: "0.55s" }}
               >
                 <div className="flex-shrink-0 rounded-md bg-white p-3 shadow-inner">
@@ -309,7 +309,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
         </Link>
 
         {/* Footer (in flow now — never clipped, scrolls with the page) */}
-        <div className="mt-10 pt-6 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <div className="mt-4 pt-3 border-t border-border/40 flex flex-col sm:flex-row items-center justify-between gap-1">
           <p className="text-xs text-muted-foreground text-center sm:text-right">
             הדמו מבוסס על דוח "מוצרים בניהול" אמיתי ממערכת surense. כל הנתונים אנונימיים.
           </p>

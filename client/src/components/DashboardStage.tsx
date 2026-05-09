@@ -50,7 +50,7 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
   };
 
   return (
-    <div data-pdf-target className="h-full w-full overflow-y-auto animate-fade-in bg-background">
+    <div data-pdf-target className="h-full w-full overflow-y-auto overflow-x-hidden animate-fade-in bg-background">
       {/* Page header */}
       <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
         <div className="container py-8">
@@ -98,9 +98,9 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
         </div>
       </div>
 
-      <div className="container py-10">
+      <div className="container py-6">
         {/* Hero KPIs - editorial layout */}
-        <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
           <div className="lg:col-span-5 animate-fade-up">
             <div className="glass-card relative overflow-hidden rounded-sm p-8">
               <div className="label-tag text-gold mb-3">סך נכסים בניהול (AUM)</div>
@@ -167,7 +167,7 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
         </div>
 
         {/* Trigger cards - 6 in a row */}
-        <div className="mb-12">
+        <div className="mb-6">
           <div className="mb-5 flex items-baseline justify-between">
             <h2 className="font-display text-2xl font-bold text-navy-deep">דגלים שזוהו · 6 קטגוריות</h2>
             <div className="gold-divider flex-1 mx-6" />
@@ -198,7 +198,7 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
         </div>
 
         {/* Charts row */}
-        <div className="mb-12 grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
           {/* Insurer breakdown */}
           <div className="lg:col-span-7 animate-fade-up">
             <div className="glass-card rounded-sm p-6">

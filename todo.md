@@ -502,3 +502,14 @@
 - [x] לאתר את שני הכפתורים "הפעל את הדמו מההתחלה" ו-"קבעו פגישת אפיון" ב-SummaryStage
 - [x] להפוך את שניהם לבולטים ושווי-מעמד עם טקסט לבן וברור (רקע כהה / כפתור משני עם רקע מלא ולא transparent border-only)
 - [x] tsc + checkpoint
+
+
+## Round 58 — מסכים מלאים (Slide-Mode) ללא גלילה כללית (2026-05-09)
+- [x] לסקור את DemoExperience והקונטיינר הראשי כדי להבין איפה מוגדר ה-overflow
+- [x] לקבע את הקונטיינר הראשי ל-h-screen + overflow-hidden
+- [x] DashboardStage: לכווץ כותרת + סטטיסטיקות, להפוך לפריסת flex אנכית עם 100vh, טבלה עם scroll פנימי בלבד
+- [x] ActionsStage: לעבור מרשימה אנכית ל-grid 2x2 שמכסה את גובה המסך
+- [x] SummaryStage: לעבור לפריסה אופקית שתופסת 100vh בלי גלילה
+- [x] IntroStage / UploadStage / AnalyzingStage: לוודא שכבר מתאימים ל-h-screen
+- [x] לבדוק ב-1280x720 וב-1920x1080 שאין גלילה כללית
+- [x] tsc + checkpoint

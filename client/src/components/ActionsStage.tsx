@@ -77,25 +77,24 @@ export function ActionsStage({ onComplete }: ActionsStageProps) {
   }, []);
 
   return (
-    <div className="h-full w-full overflow-y-auto animate-fade-in bg-background">
-      {/* Header */}
-      <div className="border-b border-border/40 bg-card/60 backdrop-blur-sm">
-        <div className="container py-8">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div className="h-full w-full flex flex-col overflow-hidden animate-fade-in bg-background">
+      {/* Header (compact) */}
+      <div className="shrink-0 border-b border-border/40 bg-card/60 backdrop-blur-sm">
+        <div className="container py-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <div className="mb-3 flex items-center gap-3">
-                <div className="h-px w-12 bg-gold" />
-                <span className="label-tag text-gold">פעולות אוטומטיות · בזמן אמת</span>
+              <div className="mb-1.5 flex items-center gap-3">
+                <div className="h-px w-10 bg-gold" />
+                <span className="label-tag text-gold text-[10px]">פעולות אוטומטיות · בזמן אמת</span>
               </div>
-              <h1 className="font-display text-4xl font-bold leading-tight text-navy-deep lg:text-5xl">
-                ה-AI לא רק מנתח<span className="text-gold">.</span><br />
-                <span className="text-muted-foreground">הוא יוזם פעולה.</span>
+              <h1 className="font-display text-2xl font-bold leading-tight text-navy-deep lg:text-3xl">
+                ה-AI לא רק מנתח<span className="text-gold">.</span> <span className="text-muted-foreground">הוא יוזם פעולה.</span>
               </h1>
             </div>
             {showSummary && (
               <button
                 onClick={onComplete}
-                className="group flex items-center gap-2 rounded-sm bg-navy-deep px-6 py-3 text-sm font-semibold text-cream transition-all hover:bg-navy hover:shadow-lg animate-fade-up"
+                className="group flex items-center gap-2 rounded-sm bg-navy-deep px-5 py-2.5 text-sm font-semibold text-cream transition-all hover:bg-navy hover:shadow-lg animate-fade-up"
               >
                 המשך לסיכום
                 <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
@@ -105,43 +104,43 @@ export function ActionsStage({ onComplete }: ActionsStageProps) {
         </div>
       </div>
 
-      {/* Actions List */}
-      <div className="container py-12">
-        <div className="mx-auto max-w-4xl space-y-6">
+      {/* 2x2 Grid - fills remaining viewport, no page scroll */}
+      <div className="flex-1 min-h-0 container py-4">
+        <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
           {ACTIONS.map((action) => {
             const isVisible = visibleActions.includes(action.id);
             const Icon = action.icon;
-            if (!isVisible) return null;
             return (
               <div
                 key={action.id}
-                className="group relative overflow-hidden rounded-xl border border-border/50 bg-card p-6 shadow-sm transition-all hover:shadow-md animate-fade-up"
+                className={`group relative overflow-hidden rounded-xl border border-border/50 bg-card p-4 shadow-sm transition-all duration-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
               >
-                <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-                  <div className="flex flex-col items-center gap-3 sm:w-32 sm:shrink-0">
-                    <div className={`flex h-14 w-14 items-center justify-center rounded-full ${action.iconBg}`}>
-                      <Icon className="h-6 w-6" />
+                <div className="flex h-full flex-col gap-3">
+                  {/* Header row: icon + title */}
+                  <div className="flex items-start gap-3 shrink-0">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-full ${action.iconBg} shrink-0`}>
+                      <Icon className="h-5 w-5" />
                     </div>
-                    <div className="text-center">
-                      <div className="text-sm font-bold text-navy-deep">{action.title}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">{action.target}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold text-navy-deep truncate">{action.title}</div>
+                      <div className="mt-0.5 text-[11px] text-muted-foreground truncate">{action.target}</div>
                     </div>
                   </div>
-                  <div className="flex-1 space-y-4">
-                    <div className="rounded-lg bg-muted/30 p-4">
-                      <div className="mb-2 font-semibold text-navy-deep">{action.subject}</div>
-                      <div className="whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-                        {action.body}
+                  {/* Body */}
+                  <div className="flex-1 min-h-0 rounded-lg bg-muted/30 p-3 overflow-hidden">
+                    <div className="mb-1 text-sm font-semibold text-navy-deep line-clamp-1">{action.subject}</div>
+                    <div className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground line-clamp-5">
+                      {action.body}
+                    </div>
+                  </div>
+                  {/* Meta */}
+                  <div className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    {action.meta.map((m, i) => (
+                      <div key={i} className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                        {m}
                       </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-3">
-                      {action.meta.map((m, i) => (
-                        <div key={i} className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                          {m}
-                        </div>
-                      ))}
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>

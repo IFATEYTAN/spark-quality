@@ -159,7 +159,8 @@ export default function DemoExperience() {
         </div>
       )}
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden relative pb-32 sm:pb-24">
+      {/* Slide-mode main: each stage controls its own internal scroll if needed; outer is fixed */}
+      <main className="flex-1 min-h-0 overflow-hidden relative">
         {stage === "intro" && (
           <IntroStage
             onContinue={() => setStage(isAdmin ? "upload" : "analyzing")}
