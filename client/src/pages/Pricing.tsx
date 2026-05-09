@@ -1,8 +1,9 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
+import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Check, Loader2, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { Check, Loader2, LogIn, X } from "lucide-react";
+import React, { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
@@ -191,8 +192,37 @@ export default function Pricing() {
     return `בחר ${plan.name}`;
   };
 
+  // Returning users landing on /pricing should be able to enter the app
+  // without going through onboarding again. Authenticated -> /dashboard;
+  // unauthenticated -> OAuth via getLoginUrl().
+  const handleLoginClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isAuthenticated) {
+      e.preventDefault();
+      navigate("/dashboard");
+    }
+  };
+
   return (
     <CinematicShell heroAsset="hero" overlayStrength={85} showSidebar={false}>
+      {/* Top-left login entry. Visible on every viewport so existing
+          customers reaching /pricing have a clear path back into the app.
+          The page is RTL but the login pill belongs in the LTR top-left
+          corner per spec. */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-30">
+        <a
+          href={isAuthenticated ? "/dashboard" : getLoginUrl()}
+          onClick={handleLoginClick}
+          className="group inline-flex items-center gap-2 rounded-full border border-gold/40 bg-black/40 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm text-white/90 hover:text-gold hover:border-gold transition-colors"
+          aria-label="כניסה למערכת לחשבון קיים"
+        >
+          <LogIn className="h-4 w-4 shrink-0" />
+          <span className="hidden sm:inline text-white/60 group-hover:text-gold/80">
+            יש לכם חשבון?
+          </span>
+          <span className="font-medium">כניסה למערכת</span>
+        </a>
+      </div>
+
       <div className="container max-w-6xl py-20">
         <div className="text-center mb-16">
           <div className="flex justify-center mb-4">
