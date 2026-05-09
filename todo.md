@@ -516,13 +516,13 @@
 
 
 ## Round 59 — Slide-Mode לכל המסכים (2026-05-09)
-- [ ] לבדוק את גובה ה-Header ב-DemoExperience וכמה viewport באמת זמין לכל מסך
-- [ ] AnalyzingStage: לתקן חיתוך כותרת "מנתח את התיק שלכם" + להחזיר את כל השלבים לתוך 100vh
-- [ ] IntroStage: לכווץ ל-100vh ללא גלילה
-- [ ] UploadStage: לכווץ ל-100vh ללא גלילה
-- [ ] DashboardStage: לכווץ ל-100vh — לסדר את 4 הבלוקים בגריד 2x2 או 1x4 דחוס במקום אנכית
-- [ ] לוודא ש-SummaryStage ו-ActionsStage מתאימים ל-1280x720
-- [ ] tsc + checkpoint
+- [x] לבדוק את גובה ה-Header ב-DemoExperience וכמה viewport באמת זמין לכל מסך (טופל בסבבים 60-63)
+- [x] AnalyzingStage: לתקן חיתוך כותרת "מנתח את התיק שלכם" + להחזיר את כל השלבים לתוך 100vh (טופל בסבב 63)
+- [x] IntroStage: לכווץ ל-100vh ללא גלילה (טופל בסבב 63)
+- [x] UploadStage: לכווץ ל-100vh ללא גלילה (טופל בסבב 63)
+- [x] DashboardStage: לכווץ ל-100vh — פוצל ל-3 מסכים נפרדים (3א/3ב/3ג) בסבב 61
+- [x] לוודא ש-SummaryStage ו-ActionsStage מתאימים ל-1280x720 (טופל בסבבים 60+63)
+- [x] tsc + checkpoint (כל הסבבים נשמרו עם tsc נקי)
 
 
 ## Round 60 — תיקון SummaryStage (2026-05-09)
@@ -578,3 +578,9 @@
 - [x] להציג הודעות שגיאה אדומות וברורות מתחת לכל שדה רלוונטי
 - [x] למנוע שליחה (disabled submit) אם יש שגיאות פעילות
 - [x] tsc + checkpoint
+
+## Round 68 — החזרת מסך UploadStage (2026-05-09)
+- [ ] לאתר את הסיבה שמסך UploadStage לא מופיע (כנראה stage order מוגבל לאדמין)
+- [ ] להחזיר את UploadStage לכל המשתמשים (גם guests)
+- [ ] לעדכן ספירת השלבים (יהיו 8 שלבים במקום 7)
+- [ ] tsc + checkpoint

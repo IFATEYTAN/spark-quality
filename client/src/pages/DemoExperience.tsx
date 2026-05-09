@@ -13,7 +13,6 @@ import { ActionsStage } from "@/components/ActionsStage";
 import { SummaryStage } from "@/components/SummaryStage";
 import type { Stage } from "@/lib/demoData";
 import type { ParsedReport } from "@/lib/parseReport";
-import { useAuth } from "@/_core/hooks/useAuth";
 
 const STAGE_LABELS: Record<Stage, string> = {
   splash: "0 / 7 · פתיחה",
@@ -27,20 +26,11 @@ const STAGE_LABELS: Record<Stage, string> = {
   summary: "5 / 7 · סיכום",
 };
 
-// Linear navigation order. UploadStage — admin-only.
-// Non-admin / guests get a skip flow that goes straight from Intro to Analyzing.
-const STAGE_ORDER_FULL: Stage[] = [
+// Linear navigation order — same flow for everyone.
+// UploadStage is part of the demo so every visitor sees the upload step.
+const STAGE_ORDER: Stage[] = [
   "intro",
   "upload",
-  "analyzing",
-  "dashboard",
-  "dashboard2",
-  "dashboard3",
-  "actions",
-  "summary",
-];
-const STAGE_ORDER_GUEST: Stage[] = [
-  "intro",
   "analyzing",
   "dashboard",
   "dashboard2",
@@ -58,23 +48,7 @@ export default function DemoExperience() {
     if (typeof window === "undefined") return false;
     return new URLSearchParams(window.location.search).get("clean") === "true";
   }, [location]);
-  // Admin gate — only authenticated admin users can reach UploadStage and try a real file.
-  // Everyone else (guests + regular logged-in users) sees the demo with embedded mock data.
-  const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
-  const STAGE_ORDER = isAdmin ? STAGE_ORDER_FULL : STAGE_ORDER_GUEST;
-  const STAGE_LABELS_DYNAMIC: Record<Stage, string> = isAdmin
-    ? STAGE_LABELS
-    : {
-        ...STAGE_LABELS,
-        intro: "0 / 6 · פתיחה",
-        analyzing: "1 / 6 · ניתוח AI",
-        dashboard: "2א / 6 · תוצאות",
-        dashboard2: "2ב / 6 · תוצאות",
-        dashboard3: "2ג / 6 · תוצאות",
-        actions: "3 / 6 · פעולות אוטומטיות",
-        summary: "4 / 6 · סיכום",
-      };
+  const STAGE_LABELS_DYNAMIC: Record<Stage, string> = STAGE_LABELS;
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
@@ -170,12 +144,9 @@ export default function DemoExperience() {
       {/* Slide-mode main on desktop (≥lg). On mobile we let content scroll naturally so nothing is clipped. */}
       <main className="flex-1 min-h-0 lg:overflow-hidden relative pb-24 lg:pb-0">
         {stage === "intro" && (
-          <IntroStage
-            onContinue={() => setStage(isAdmin ? "upload" : "analyzing")}
-          />
+          <IntroStage onContinue={() => setStage("upload")} />
         )}
-        {/* UploadStage — admin-only. Non-admin users never reach this stage. */}
-        {stage === "upload" && isAdmin && (
+        {stage === "upload" && (
           <UploadStage
             onUpload={(parsed) => {
               if (parsed) setParsedReport(parsed);
@@ -183,12 +154,6 @@ export default function DemoExperience() {
             }}
           />
         )}
-        {/* Safety net: if a non-admin somehow lands on "upload" via stale state, jump them forward. */}
-        {stage === "upload" && !isAdmin && (() => {
-          // Side effect inside render is okay here because it only runs once per state transition.
-          queueMicrotask(() => setStage("analyzing"));
-          return null;
-        })()}
         {stage === "analyzing" && (
           <AnalyzingStage onComplete={() => setStage("dashboard")} />
         )}
