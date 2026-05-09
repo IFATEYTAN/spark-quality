@@ -1,6 +1,6 @@
-// Editorial Fintech | מודאל סנריו פר-קטגוריה - תרשים זרימה ויזואלי
+// Editorial Fintech | מודאל סנריו פר-קטגוריה - תרשים זרימה ויזואלי (מפוצל ל-2 תצוגות)
 // פותח לחיצה על כרטיס קטגוריה ב-DashboardStage ומציג את הזרימה האוטומטית של אותה קטגוריה
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   X,
   Database,
@@ -19,6 +19,8 @@ import {
   Send,
   UserCheck,
   Target,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { InteractiveFlowchart, FLOWCHART_DATA } from "./InteractiveFlowchart";
 
@@ -177,6 +179,12 @@ interface CategoryScenarioModalProps {
 
 export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioModalProps) {
   const scenario = categoryId ? SCENARIOS[categoryId] : null;
+  const [view, setView] = useState<1 | 2>(1);
+
+  // Reset view when opening a new scenario
+  useEffect(() => {
+    if (categoryId) setView(1);
+  }, [categoryId]);
 
   // Lock body scroll while open
   useEffect(() => {
@@ -185,6 +193,8 @@ export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioM
     document.body.style.overflow = "hidden";
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") setView(2);
+      if (e.key === "ArrowRight") setView(1);
     };
     window.addEventListener("keydown", handler);
     return () => {
@@ -194,6 +204,26 @@ export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioM
   }, [scenario, onClose]);
 
   if (!scenario) return null;
+
+  // We slice the InteractiveFlowchart data to show only nodes 0-3 in View 1, and 4-7 in View 2.
+  // The original FLOWCHART_DATA has 8 nodes per scenario.
+  const fullFlowchartData = FLOWCHART_DATA[scenario.id];
+  const view1FlowchartData = fullFlowchartData ? {
+    nodes: fullFlowchartData.nodes.slice(0, 4),
+    edges: fullFlowchartData.edges.filter(e => {
+      const fromIdx = fullFlowchartData.nodes.findIndex(n => n.id === e.from);
+      const toIdx = fullFlowchartData.nodes.findIndex(n => n.id === e.to);
+      return fromIdx < 4 && toIdx < 4;
+    })
+  } : null;
+  const view2FlowchartData = fullFlowchartData ? {
+    nodes: fullFlowchartData.nodes.slice(4, 8),
+    edges: fullFlowchartData.edges.filter(e => {
+      const fromIdx = fullFlowchartData.nodes.findIndex(n => n.id === e.from);
+      const toIdx = fullFlowchartData.nodes.findIndex(n => n.id === e.to);
+      return fromIdx >= 4 && toIdx >= 4;
+    })
+  } : null;
 
   return (
     <div
@@ -205,17 +235,18 @@ export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioM
       {/* Backdrop */}
       <div className="absolute inset-0 bg-navy-deep/85 backdrop-blur-sm" />
 
-      {/* Panel */}
+      {/* Panel - Fixed height to 100vh minus padding, flex column to fill space */}
       <div
-        className="relative w-full max-w-6xl max-h-[92vh] overflow-y-auto bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up scroll-pt-32"
+        className="relative w-full max-w-6xl h-[92vh] flex flex-col bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header (non-sticky to avoid clipping inner headlines) */}
-        <div className="flex items-start justify-between gap-3 border-b border-border/60 bg-cream px-4 sm:px-10 py-4 sm:py-5">
+        {/* Header (fixed) */}
+        <div className="flex-shrink-0 flex items-start justify-between gap-3 border-b border-border/60 bg-cream px-4 sm:px-10 py-4 sm:py-5">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-px w-10 bg-gold" />
               <span className="label-tag text-gold text-[10px]">סנריו אוטומטי · SPARK AI</span>
+              <span className="label-tag text-muted-foreground text-[10px]">· תצוגה {view} מתוך 2</span>
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-black text-navy-deep tracking-tight leading-tight">
               {scenario.title}
@@ -230,170 +261,169 @@ export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioM
           </button>
         </div>
 
-        {/* Body */}
-        <div className="px-4 sm:px-10 py-5 sm:py-8 space-y-6">
-          {/* Pain Highlight */}
-          <div className="flex items-start gap-3 rounded-md bg-red-50/80 border border-red-100 p-4 sm:p-5">
-            <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <div className="text-xs font-bold text-red-800 uppercase tracking-wider mb-1">הכאב</div>
-              <div className="text-base sm:text-lg font-medium text-red-950 leading-snug">
-                {scenario.pain}
+        {/* Body - Flex 1 to take remaining space, internal scroll if needed but designed to fit */}
+        <div className="flex-1 min-h-0 px-4 sm:px-10 py-5 sm:py-6 flex flex-col gap-5 overflow-y-auto">
+          
+          {view === 1 && (
+            <div className="flex-1 flex flex-col gap-5 animate-fade-in">
+              {/* Pain Highlight */}
+              <div className="flex-shrink-0 flex items-start gap-3 rounded-md bg-red-50/80 border border-red-100 p-4 sm:p-5">
+                <AlertTriangle className="h-6 w-6 text-red-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="text-xs font-bold text-red-800 uppercase tracking-wider mb-1">הכאב</div>
+                  <div className="text-base sm:text-lg font-medium text-red-950 leading-snug">
+                    {scenario.pain}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Trigger banner */}
-          <div className="flex items-center gap-3 rounded-md border border-gold/30 bg-gradient-to-l from-gold/10 to-transparent px-4 py-3">
-            <Sparkles className="h-5 w-5 text-gold flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-[10px] text-gold font-bold tracking-[0.2em] uppercase mb-0.5">תנאי הפעלה</div>
-              <div className="text-sm font-medium text-navy-deep">{scenario.trigger}</div>
-            </div>
-          </div>
+              {/* Trigger banner */}
+              <div className="flex-shrink-0 flex items-center gap-3 rounded-md border border-gold/30 bg-gradient-to-l from-gold/10 to-transparent px-4 py-3">
+                <Sparkles className="h-5 w-5 text-gold flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] text-gold font-bold tracking-[0.2em] uppercase mb-0.5">תנאי הפעלה</div>
+                  <div className="text-sm font-medium text-navy-deep">{scenario.trigger}</div>
+                </div>
+              </div>
 
-          {/* Interactive Flowchart - תרשים זרימה ויזואלי אינטראקטיבי */}
-          {FLOWCHART_DATA[scenario.id] && (
-            <div>
-              <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
-                <div className="h-px w-6 bg-gold" />
-                תרשים זרימה אינטראקטיבי
-              </h3>
-              <InteractiveFlowchart data={FLOWCHART_DATA[scenario.id]} desktopColumns={4} />
+              {/* Interactive Flowchart View 1 (Steps 1-4) */}
+              {view1FlowchartData && (
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <h3 className="flex-shrink-0 font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
+                    <div className="h-px w-6 bg-gold" />
+                    תרשים זרימה אינטראקטיבי (שלבים 1-4)
+                  </h3>
+                  <div className="flex-1 min-h-0">
+                    <InteractiveFlowchart data={view1FlowchartData} desktopColumns={4} />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Compact step list - גיבוי טקסטואלי לסיכום */}
-          <div>
-            <h3 className="font-display text-base font-bold text-navy-deep mb-4 tracking-tight flex items-center gap-2">
-              <div className="h-px w-6 bg-gold" />
-              שלבי התהליך - סיכום
-            </h3>
+          {view === 2 && (
+            <div className="flex-1 flex flex-col gap-5 animate-fade-in">
+              {/* Interactive Flowchart View 2 (Steps 5-8) */}
+              {view2FlowchartData && (
+                <div className="flex-shrink-0">
+                  <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
+                    <div className="h-px w-6 bg-gold" />
+                    תרשים זרימה אינטראקטיבי (שלבים 5-8)
+                  </h3>
+                  <InteractiveFlowchart data={view2FlowchartData} desktopColumns={4} />
+                </div>
+              )}
 
-            {/* Desktop: horizontal flow with arrows */}
-            <div className="hidden lg:flex items-stretch gap-2">
-              {scenario.steps.map((step, i) => {
-                const v = VARIANT_STYLES[step.variant];
-                const Icon = step.icon;
-                const isLast = i === scenario.steps.length - 1;
-                return (
-                  <div key={i} className="flex items-stretch flex-1 min-w-0">
-                    <div
-                      className={`relative flex-1 min-w-0 flex flex-col rounded-md border-2 ${v.ring.replace("ring-", "border-")} ${step.variant === "result" ? "bg-navy-deep" : "bg-white"} p-4 transition-all hover:shadow-lg`}
-                    >
-                      {/* Step number ribbon */}
-                      <div className={`absolute -top-2 right-3 px-2 py-0.5 rounded ${v.bg} ${v.text} text-[9px] font-black tracking-[0.15em]`}>
-                        {String(i + 1).padStart(2, "0")} · {v.label}
-                      </div>
-                      {/* Icon */}
-                      <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded ${v.bg} ${v.text}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      {/* Title */}
-                      <div className={`font-display font-bold text-sm leading-tight mb-1.5 ${step.variant === "result" ? "text-cream" : "text-navy-deep"}`}>
-                        {step.label}
-                      </div>
-                      {/* Detail */}
-                      <p className={`text-[11px] leading-snug ${step.variant === "result" ? "text-cream/80" : "text-muted-foreground"}`}>
-                        {step.detail}
-                      </p>
-                    </div>
-                    {/* Arrow between cards */}
-                    {!isLast && (
-                      <div className="flex items-center px-1 text-gold flex-shrink-0">
-                        <ArrowLeft className="h-5 w-5" />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Mobile: vertical flow */}
-            <div className="lg:hidden space-y-2">
-              {scenario.steps.map((step, i) => {
-                const v = VARIANT_STYLES[step.variant];
-                const Icon = step.icon;
-                const isLast = i === scenario.steps.length - 1;
-                return (
-                  <div key={i}>
-                    <div
-                      className={`relative flex items-start gap-3 rounded-md border-2 ${v.ring.replace("ring-", "border-")} ${step.variant === "result" ? "bg-navy-deep" : "bg-white"} p-4`}
-                    >
-                      <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded ${v.bg} ${v.text}`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className={`text-[9px] font-black tracking-[0.15em] mb-0.5 ${v.text}`}>
-                          {String(i + 1).padStart(2, "0")} · {v.label}
+              {/* Compact step list - Textual summary of all steps */}
+              <div className="flex-shrink-0">
+                <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
+                  <div className="h-px w-6 bg-gold" />
+                  שלבי התהליך - סיכום
+                </h3>
+                <div className="hidden lg:flex items-stretch gap-2">
+                  {scenario.steps.map((step, i) => {
+                    const v = VARIANT_STYLES[step.variant];
+                    const Icon = step.icon;
+                    const isLast = i === scenario.steps.length - 1;
+                    return (
+                      <div key={i} className="flex items-stretch flex-1 min-w-0">
+                        <div
+                          className={`relative flex-1 min-w-0 flex flex-col rounded-md border-2 ${v.ring.replace("ring-", "border-")} ${step.variant === "result" ? "bg-navy-deep" : "bg-white"} p-3 transition-all hover:shadow-lg`}
+                        >
+                          <div className={`absolute -top-2 right-3 px-2 py-0.5 rounded ${v.bg} ${v.text} text-[9px] font-black tracking-[0.15em]`}>
+                            {String(i + 1).padStart(2, "0")} · {v.label}
+                          </div>
+                          <div className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded ${v.bg} ${v.text}`}>
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className={`font-display font-bold text-xs leading-tight mb-1 ${step.variant === "result" ? "text-cream" : "text-navy-deep"}`}>
+                            {step.label}
+                          </div>
+                          <p className={`text-[10px] leading-snug line-clamp-2 ${step.variant === "result" ? "text-cream/80" : "text-muted-foreground"}`}>
+                            {step.detail}
+                          </p>
                         </div>
-                        <div className={`font-display font-bold text-sm leading-tight mb-1 ${step.variant === "result" ? "text-cream" : "text-navy-deep"}`}>
-                          {step.label}
-                        </div>
-                        <p className={`text-xs leading-snug ${step.variant === "result" ? "text-cream/80" : "text-muted-foreground"}`}>
-                          {step.detail}
-                        </p>
+                        {!isLast && (
+                          <div className="flex items-center px-0.5 text-gold flex-shrink-0">
+                            <ArrowLeft className="h-4 w-4" />
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    {!isLast && (
-                      <div className="flex justify-center py-1 text-gold">
-                        <ArrowLeft className="h-5 w-5 -rotate-90" />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Example customer */}
-          <div className="rounded-md border border-border/70 bg-white p-5">
-            <div className="text-[10px] text-gold font-bold tracking-[0.2em] uppercase mb-3">דוגמה אמיתית מהדוח</div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">לקוח</div>
-                <div className="font-display font-bold text-sm text-navy-deep">{scenario.exampleCustomer.name}</div>
-              </div>
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">דגל שזוהה</div>
-                <div className="inline-block rounded bg-gold/15 px-2.5 py-1 text-xs font-bold text-gold">
-                  {scenario.exampleCustomer.flag}
+                    );
+                  })}
                 </div>
               </div>
-              <div>
-                <div className="text-xs text-muted-foreground mb-1">ערוץ פנייה</div>
-                <div className="font-display font-bold text-sm text-navy-deep">{scenario.exampleCustomer.channel}</div>
-              </div>
-            </div>
-          </div>
 
-          {/* Outcome metrics */}
-          <div>
-            <h3 className="font-display text-base font-bold text-navy-deep mb-3 tracking-tight flex items-center gap-2">
-              <div className="h-px w-6 bg-gold" />
-              תוצאה צפויה
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {scenario.outcome.map((m, i) => (
-                <div key={i} className="rounded-md border border-gold/25 bg-gradient-to-br from-gold/10 to-transparent p-4">
-                  <div className="text-[10px] text-gold/80 font-bold tracking-[0.15em] uppercase mb-2">{m.label}</div>
-                  <div className="display-number font-display text-2xl sm:text-3xl font-black text-navy-deep">
-                    {m.value}
+              <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-2 gap-5">
+                {/* Example customer */}
+                <div className="rounded-md border border-border/70 bg-white p-4 flex flex-col justify-center">
+                  <div className="text-[10px] text-gold font-bold tracking-[0.2em] uppercase mb-3">דוגמה אמיתית מהדוח</div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <div className="text-[10px] text-muted-foreground mb-1">לקוח</div>
+                      <div className="font-display font-bold text-xs text-navy-deep">{scenario.exampleCustomer.name}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-muted-foreground mb-1">דגל שזוהה</div>
+                      <div className="inline-block rounded bg-gold/15 px-2 py-0.5 text-[10px] font-bold text-gold">
+                        {scenario.exampleCustomer.flag}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-muted-foreground mb-1">ערוץ פנייה</div>
+                      <div className="font-display font-bold text-xs text-navy-deep">{scenario.exampleCustomer.channel}</div>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Footer CTA */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 border-t border-border/60">
+                {/* Outcome metrics */}
+                <div className="flex flex-col justify-center">
+                  <h3 className="font-display text-sm font-bold text-navy-deep mb-2 tracking-tight flex items-center gap-2">
+                    <div className="h-px w-4 bg-gold" />
+                    תוצאה צפויה
+                  </h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {scenario.outcome.map((m, i) => (
+                      <div key={i} className="rounded-md border border-gold/25 bg-gradient-to-br from-gold/10 to-transparent p-3">
+                        <div className="text-[9px] text-gold/80 font-bold tracking-[0.15em] uppercase mb-1">{m.label}</div>
+                        <div className="display-number font-display text-xl sm:text-2xl font-black text-navy-deep">
+                          {m.value}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Navigation */}
+        <div className="flex-shrink-0 flex items-center justify-between px-4 sm:px-10 py-4 border-t border-border/60 bg-cream">
+          <div className="flex items-center gap-3">
             <button
-              onClick={onClose}
-              className="flex-1 sm:flex-initial rounded-md border-2 border-navy-deep bg-transparent px-6 py-3 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream"
+              onClick={() => setView(1)}
+              disabled={view === 1}
+              className="flex items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-bold text-navy-deep transition-all hover:border-gold hover:text-gold disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              סגור
+              <ChevronRight className="h-4 w-4" />
+              הקודם
+            </button>
+            <button
+              onClick={() => setView(2)}
+              disabled={view === 2}
+              className="flex items-center gap-2 rounded-md bg-navy-deep px-4 py-2 text-sm font-bold text-cream transition-all hover:bg-navy disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              הבא
+              <ChevronLeft className="h-4 w-4" />
             </button>
           </div>
+          <button
+            onClick={onClose}
+            className="rounded-md border-2 border-navy-deep bg-transparent px-6 py-2 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream"
+          >
+            סגור
+          </button>
         </div>
       </div>
     </div>
