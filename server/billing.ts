@@ -5,7 +5,13 @@ import { notifyOwner } from "./_core/notification";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { sendEmail } from "./email";
 import { renderBrandedEmail } from "./emailTemplates";
-import { getDb } from "./db";
+import {
+  createPaymentAttempt,
+  getDb,
+  getPaymentAttemptByRequestId,
+  markPaymentAttemptFailed,
+  markPaymentAttemptSucceeded,
+} from "./db";
 import { workspaces, users } from "../drizzle/schema";
 import { iCountSdk } from "./iCount";
 import { makeCheckoutSdk } from "./makeCheckout";
@@ -707,6 +713,31 @@ export const billingRouter = router({
         throw new Error(
           "לא הצלחנו לשגר את הבקשה למערכת התשלום. צוות SPARK קיבל התראה ויטפל בזה ידנית.",
         );
+      }
+
+      // Persist a pending payment_attempts row so the abandoned-cart watchdog
+      // (POST /api/scheduled/abandonedCarts) can find it 15 minutes from now
+      // if no /api/billing/activate callback arrives.
+      try {
+        await createPaymentAttempt({
+          requestId,
+          workspaceId: ws.id,
+          initiatedByUserId: ctx.user.id,
+          plan: input.plan,
+          billingPeriod: input.period,
+          amount,
+          customerSnapshot: {
+            name: ctx.user.name ?? ws.name ?? "",
+            email: ctx.user.email ?? "",
+            phone: ws.contactPhone ?? "",
+            taxId: ws.taxId ?? "",
+          },
+          paymentUrl,
+        });
+      } catch (persistErr) {
+        // Best-effort — do not block the customer from reaching the payment
+        // page just because we couldn't write the audit row.
+        console.warn("[billing] payment_attempts insert failed", persistErr);
       }
 
       // Best-effort customer confirmation: tell them a payment link is on the

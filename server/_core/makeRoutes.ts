@@ -1,7 +1,11 @@
 import type { Express, Request, Response } from "express";
 import { eq } from "drizzle-orm";
 import { workspaces, users } from "../../drizzle/schema";
-import { getDb } from "../db";
+import {
+  getDb,
+  markPaymentAttemptFailed,
+  markPaymentAttemptSucceeded,
+} from "../db";
 import { sendEmail } from "../email";
 import { renderBrandedEmail } from "../emailTemplates";
 import { makeCheckoutSdk } from "../makeCheckout";
@@ -110,6 +114,14 @@ export function registerMakeRoutes(app: Express): void {
             pastDueSince: new Date(),
           })
           .where(eq(workspaces.id, workspaceId));
+        try {
+          await markPaymentAttemptFailed({
+            requestId,
+            errorMessage: "Make reported status=fail",
+          });
+        } catch (err) {
+          console.warn("[make activate] mark failed error", err);
+        }
         return res.json({ ok: true, marked: "past_due" });
       }
 
@@ -189,6 +201,19 @@ export function registerMakeRoutes(app: Express): void {
             return sendEmail({ to: m.email!, subject, html, text });
           }),
       );
+
+      try {
+        await markPaymentAttemptSucceeded({
+          requestId,
+          invoiceId: invoiceId || undefined,
+          subscriptionId: subscriptionId || undefined,
+        });
+      } catch (err) {
+        // Non-fatal — the workspace is already active; the audit row just
+        // stays in `pending` (the watchdog will eventually flip it to
+        // `abandoned`, which is a known false-positive we accept).
+        console.warn("[make activate] mark succeeded error", err);
+      }
 
       return res.json({
         ok: true,

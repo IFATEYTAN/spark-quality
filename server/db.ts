@@ -798,3 +798,124 @@ export async function getGlobalDashboardStats() {
     aum: Number((aumSum as any)?.s ?? 0),
   };
 }
+
+
+// ============================================================
+// PAYMENT ATTEMPTS — מעקב אחר ניסיונות תשלום ועגלות נטושות
+// ============================================================
+import { paymentAttempts } from "../drizzle/schema";
+
+export async function createPaymentAttempt(input: {
+  requestId: string;
+  workspaceId: number;
+  initiatedByUserId: number;
+  plan: "basic" | "pro" | "premium";
+  billingPeriod: "monthly" | "yearly";
+  amount: number;
+  customerSnapshot: { name: string; email: string; phone: string; taxId: string };
+  paymentUrl?: string;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(paymentAttempts).values({
+    requestId: input.requestId,
+    workspaceId: input.workspaceId,
+    initiatedByUserId: input.initiatedByUserId,
+    plan: input.plan,
+    billingPeriod: input.billingPeriod,
+    amount: input.amount,
+    status: "pending",
+    customerSnapshot: input.customerSnapshot,
+    paymentUrl: input.paymentUrl ?? null,
+  });
+}
+
+export async function getPaymentAttemptByRequestId(
+  requestId: string,
+): Promise<typeof paymentAttempts.$inferSelect | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const { eq } = await import("drizzle-orm");
+  const rows = await db
+    .select()
+    .from(paymentAttempts)
+    .where(eq(paymentAttempts.requestId, requestId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function markPaymentAttemptSucceeded(input: {
+  requestId: string;
+  invoiceId?: string;
+  subscriptionId?: string;
+}): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const { eq } = await import("drizzle-orm");
+  const result = await db
+    .update(paymentAttempts)
+    .set({
+      status: "succeeded",
+      invoiceId: input.invoiceId ?? null,
+      subscriptionId: input.subscriptionId ?? null,
+      callbackAt: new Date(),
+    })
+    .where(eq(paymentAttempts.requestId, input.requestId));
+  // mysql2 result is a header packet; treat truthy result as success.
+  return Boolean(result);
+}
+
+export async function markPaymentAttemptFailed(input: {
+  requestId: string;
+  errorMessage: string;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  const { eq } = await import("drizzle-orm");
+  await db
+    .update(paymentAttempts)
+    .set({
+      status: "failed",
+      errorMessage: input.errorMessage,
+      callbackAt: new Date(),
+    })
+    .where(eq(paymentAttempts.requestId, input.requestId));
+}
+
+/**
+ * Find pending payment attempts older than `maxAgeMs` that haven't been
+ * notified yet. Used by the abandoned-cart watchdog (see jobs/abandonedCarts.ts).
+ */
+export async function findAbandonedPaymentAttempts(
+  maxAgeMs: number,
+): Promise<Array<typeof paymentAttempts.$inferSelect>> {
+  const db = await getDb();
+  if (!db) return [];
+  const { and, eq, lt, isNull } = await import("drizzle-orm");
+  const cutoff = new Date(Date.now() - maxAgeMs);
+  return db
+    .select()
+    .from(paymentAttempts)
+    .where(
+      and(
+        eq(paymentAttempts.status, "pending"),
+        lt(paymentAttempts.createdAt, cutoff),
+        isNull(paymentAttempts.abandonedNotifiedAt),
+      ),
+    );
+}
+
+export async function markPaymentAttemptAbandoned(
+  requestId: string,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  const { eq } = await import("drizzle-orm");
+  await db
+    .update(paymentAttempts)
+    .set({
+      status: "abandoned",
+      abandonedNotifiedAt: new Date(),
+    })
+    .where(eq(paymentAttempts.requestId, requestId));
+}

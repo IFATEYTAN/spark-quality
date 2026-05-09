@@ -407,3 +407,58 @@ export const auditLog = mysqlTable(
 );
 export type AuditLog = typeof auditLog.$inferSelect;
 export type InsertAuditLog = typeof auditLog.$inferInsert;
+
+
+// ============================================================
+// PAYMENT ATTEMPTS - מעקב אחר בקשות תשלום שנשלחו ל-Make
+// ============================================================
+//
+// כל קריאה ל-billing.startCheckoutViaMake יוצרת רשומה כאן עם status=pending.
+// כשה-callback מ-Make מגיע ל-/api/billing/activate אנחנו מעדכנים ל-succeeded.
+// Watchdog שרץ כל דקה מאתר רשומות pending מעל 15 דקות, מסמן abandoned
+// ושולח מייל RTL לבעלת המערכת (anat@spark-ai.co.il) לטיפול ידני.
+export const paymentAttempts = mysqlTable(
+  "payment_attempts",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** מזהה ייחודי שגם נשלח ל-Make וגם חוזר ב-callback */
+    requestId: varchar("requestId", { length: 64 }).notNull().unique(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** מי שלחץ "בחר תוכנית" */
+    initiatedByUserId: int("initiatedByUserId").references(() => users.id).notNull(),
+    plan: mysqlEnum("plan", ["basic", "pro", "premium"]).notNull(),
+    billingPeriod: mysqlEnum("billingPeriod", ["monthly", "yearly"]).notNull(),
+    /** סכום כולל מע"מ בש"ח */
+    amount: int("amount").notNull(),
+    /** סטטוס המעקב */
+    status: mysqlEnum("status", [
+      "pending",
+      "succeeded",
+      "failed",
+      "abandoned",
+    ]).default("pending").notNull(),
+    /** סנפשוט של פרטי הלקוח בזמן השליחה (טלפון/מייל/שם), כדי שה-watchdog יוכל לכתוב מייל אישי גם אם המשתמש שינה פרטים בינתיים */
+    customerSnapshot: json("customerSnapshot"),
+    /** ה-paymentUrl שהוחזר מ-Make (אם הוחזר) — שימושי לאיתור עגלות נטושות */
+    paymentUrl: text("paymentUrl"),
+    /** מזהה החשבונית מ-iCount (מגיע ב-callback) */
+    invoiceId: varchar("invoiceId", { length: 100 }),
+    /** מזהה הוראת הקבע מ-iCount (מגיע ב-callback) */
+    subscriptionId: varchar("subscriptionId", { length: 100 }),
+    /** תאריך שה-callback הגיע */
+    callbackAt: timestamp("callbackAt"),
+    /** תאריך שמייל נטישת-עגלה נשלח (כדי לא לשלוח פעמיים) */
+    abandonedNotifiedAt: timestamp("abandonedNotifiedAt"),
+    /** הודעת שגיאה אם status=failed */
+    errorMessage: text("errorMessage"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("payment_attempts_workspace_idx").on(table.workspaceId),
+    statusIdx: index("payment_attempts_status_idx").on(table.status),
+    createdIdx: index("payment_attempts_created_idx").on(table.createdAt),
+  }),
+);
+export type PaymentAttempt = typeof paymentAttempts.$inferSelect;
+export type InsertPaymentAttempt = typeof paymentAttempts.$inferInsert;

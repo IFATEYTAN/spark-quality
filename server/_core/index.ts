@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
 import { registerICountRoutes } from "./iCountRoutes";
 import { registerMakeRoutes } from "./makeRoutes";
+import { abandonedCartsHandler } from "../jobs/abandonedCarts";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -40,6 +41,8 @@ async function startServer() {
   registerOAuthRoutes(app);
   registerICountRoutes(app);
   registerMakeRoutes(app);
+  // Heartbeat scheduled callbacks (cron-only).
+  app.post("/api/scheduled/abandonedCarts", abandonedCartsHandler);
   // tRPC API
   app.use(
     "/api/trpc",

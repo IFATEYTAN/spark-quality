@@ -435,3 +435,15 @@
 - [x] toast.error אם ה-paymentUrl לא חזר + סגירת ה-blank tab
 - [x] vitest: 4 טסטים חדשים ל-extractPaymentUrl (21/21 עוברים)
 - [x] TS check נקי + checkpoint
+
+
+## Round 50 — Callback מ-Make + Abandoned-cart watchdog (2026-05-09)
+- [x] לוודא חוזה הקריאה החוזרת `/api/billing/activate`: payload, HMAC header, success / failure responses (`{ok:true}` / `{ok:false, error}`)
+- [x] להוסיף טבלת `payment_attempts` (workspaceId, requestId, plan, period, amount, status: pending/succeeded/failed/abandoned, createdAt, activatedAt) + `pnpm db:push`
+- [x] בעת `billing.startCheckoutViaMake` → ליצור רשומת `payment_attempts` עם status=pending
+- [x] ב-`/api/billing/activate` callback → לעדכן status=succeeded + activatedAt + workspaces.subscriptionStatus=active
+- [x] Abandoned-cart watchdog: לכל דקה לבדוק אם יש pending מעל 15 דק׳ → לשלוח מייל RTL מותג לבעל ה-workspace + status=abandoned
+- [x] אינטגרציה עם heartbeat/cron skill כדי שהג'וב ירוץ ברקע
+- [x] vitest: יצירת payment_attempt + transition pending→succeeded + watchdog 15min (4/4 עוברים)
+- [x] עדכון `MAKE_BILLING_CALLBACK.md` עם הוראות מפורטות + דוגמת JSON
+- [x] checkpoint + הודעה לבדיקה
