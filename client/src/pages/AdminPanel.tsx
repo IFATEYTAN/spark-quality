@@ -116,10 +116,10 @@ export default function AdminPanel() {
       <div className="px-4 lg:px-8 py-6 sm:py-8 max-w-7xl mx-auto space-y-5 sm:space-y-6">
         <header>
           <GoldEyebrow>SPARK AI · ניהול מערכת</GoldEyebrow>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl text-white font-light tracking-tight">
-            פאנל מנהל מערכת
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter leading-[1.1]">
+            פאנל <span className="text-gold">מנהל מערכת</span>
           </h1>
-          <p className="text-white/60 mt-2 max-w-2xl">
+          <p className="mt-3 text-sm lg:text-base text-white/65 leading-relaxed max-w-2xl">
             מבט-על על כל הסוכנויות, המשתמשים, הפניות והפעולות במערכת. רק Super-Admins של SPARK AI רואים את האזור הזה.
           </p>
         </header>
