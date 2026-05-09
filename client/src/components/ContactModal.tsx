@@ -31,9 +31,9 @@ const IFAT_WHATSAPP = "054-563-3661";
 const IFAT_WHATSAPP_DIGITS = "972545633661";
 
 const SOCIAL_LINKS = {
-  website: "https://get-marketing.co.il/spark-ai/",
+  website: "https://spark-ai-sprinkle-ai-and-automat-30332645.base44.app/Main",
   facebook: "https://www.facebook.com/people/Spark-Ai/61572580830662/",
-  digitalCard: "https://spark-ai-sprinkle-ai-and-automat-30332645.base44.app/Main",
+  digitalCard: "https://get-marketing.co.il/spark-ai/",
 };
 
 type SubmitState = "idle" | "submitting" | "ok" | "error";
