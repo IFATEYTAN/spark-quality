@@ -478,3 +478,9 @@
 - [x] לאתר את הרכיב KeyboardHint שמציג גלולת "טיפ ← למעבר בין מסכים · F למסך מלא" בתחתית מסכי הדמו (DemoExperience.tsx)
 - [x] להסיר את ה-usage `<KeyboardHint />` ואת הגדרת הרכיב כליל
 - [x] tsc clean + checkpoint
+
+
+## Round 55 — הסרת כפתור "ראה את כל 1,071 הלקוחות" שלא פעיל (DashboardStage) (2026-05-09)
+- [x] לאתר את הכפתור בתוך כותרת "לקוחות בעדיפות גבוהה" ב-DashboardStage.tsx
+- [x] להסיר את הכפתור (היה ללא onClick — רק קישוט. הטבלה ממילא מציגה את הלקוחות. ייצוא Excel/HTML נשארים פעילים)
+- [x] tsc clean + checkpoint

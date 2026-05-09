@@ -320,10 +320,7 @@ export function DashboardStage({ onAction, parsed }: DashboardStageProps) {
               >
                 ייצוא HTML
               </button>
-              <button className="text-sm font-semibold text-navy-deep hover:text-gold flex items-center gap-1">
-                ראה את כל 1,071 הלקוחות
-                <ArrowLeft className="h-3.5 w-3.5" />
-              </button>
+
             </div>
           </div>
 
