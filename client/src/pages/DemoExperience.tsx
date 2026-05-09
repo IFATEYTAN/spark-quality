@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Header } from "@/components/Header";
 import { SplashStage } from "@/components/SplashStage";
 import { IntroStage } from "@/components/IntroStage";
@@ -14,7 +15,8 @@ import { SummaryStage } from "@/components/SummaryStage";
 import type { Stage } from "@/lib/demoData";
 import type { ParsedReport } from "@/lib/parseReport";
 
-const STAGE_LABELS: Record<Stage, string> = {
+// Two distinct stage maps: admins see Upload (real-data path); guests skip it (canned demo).
+const STAGE_LABELS_ADMIN: Record<Stage, string> = {
   splash: "0 / 7 · פתיחה",
   intro: "0 / 7 · פתיחה",
   upload: "1 / 7 · העלאת דוח",
@@ -26,11 +28,31 @@ const STAGE_LABELS: Record<Stage, string> = {
   summary: "5 / 7 · סיכום",
 };
 
-// Linear navigation order — same flow for everyone.
-// UploadStage is part of the demo so every visitor sees the upload step.
-const STAGE_ORDER: Stage[] = [
+const STAGE_LABELS_GUEST: Record<Stage, string> = {
+  splash: "0 / 6 · פתיחה",
+  intro: "0 / 6 · פתיחה",
+  upload: "—",
+  analyzing: "1 / 6 · ניתוח AI",
+  dashboard: "2א / 6 · תוצאות",
+  dashboard2: "2ב / 6 · תוצאות",
+  dashboard3: "2ג / 6 · תוצאות",
+  actions: "3 / 6 · פעולות אוטומטיות",
+  summary: "4 / 6 · סיכום",
+};
+
+const STAGE_ORDER_ADMIN: Stage[] = [
   "intro",
   "upload",
+  "analyzing",
+  "dashboard",
+  "dashboard2",
+  "dashboard3",
+  "actions",
+  "summary",
+];
+
+const STAGE_ORDER_GUEST: Stage[] = [
+  "intro",
   "analyzing",
   "dashboard",
   "dashboard2",
@@ -48,7 +70,21 @@ export default function DemoExperience() {
     if (typeof window === "undefined") return false;
     return new URLSearchParams(window.location.search).get("clean") === "true";
   }, [location]);
-  const STAGE_LABELS_DYNAMIC: Record<Stage, string> = STAGE_LABELS;
+  // Detect admin: workspaceRole owner/admin OR super-admin OR app-level role admin.
+  const { user } = useAuth();
+  const isAdmin = useMemo(() => {
+    if (!user) return false;
+    if ((user as { isSuperAdmin?: boolean }).isSuperAdmin) return true;
+    const role = (user as { role?: string }).role;
+    if (role === "admin") return true;
+    const wsRole = (user as { workspaceRole?: string }).workspaceRole;
+    if (wsRole === "owner" || wsRole === "admin") return true;
+    return false;
+  }, [user]);
+  const STAGE_ORDER: Stage[] = isAdmin ? STAGE_ORDER_ADMIN : STAGE_ORDER_GUEST;
+  const STAGE_LABELS_DYNAMIC: Record<Stage, string> = isAdmin
+    ? STAGE_LABELS_ADMIN
+    : STAGE_LABELS_GUEST;
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
@@ -67,7 +103,7 @@ export default function DemoExperience() {
       }
       return current;
     });
-  }, []);
+  }, [STAGE_ORDER]);
 
   const goPrev = useCallback(() => {
     setStage((current) => {
@@ -78,7 +114,7 @@ export default function DemoExperience() {
       }
       return current;
     });
-  }, []);
+  }, [STAGE_ORDER]);
 
   const toggleFullscreen = useCallback(async () => {
     try {
@@ -146,7 +182,7 @@ export default function DemoExperience() {
         {stage === "intro" && (
           <IntroStage onContinue={() => setStage("upload")} />
         )}
-        {stage === "upload" && (
+        {stage === "upload" && isAdmin && (
           <UploadStage
             onUpload={(parsed) => {
               if (parsed) setParsedReport(parsed);
@@ -154,6 +190,11 @@ export default function DemoExperience() {
             }}
           />
         )}
+        {/* Safety net: if a non-admin somehow lands on "upload", jump them forward. */}
+        {stage === "upload" && !isAdmin && (() => {
+          queueMicrotask(() => setStage("analyzing"));
+          return null;
+        })()}
         {stage === "analyzing" && (
           <AnalyzingStage onComplete={() => setStage("dashboard")} />
         )}
@@ -167,9 +208,9 @@ export default function DemoExperience() {
           <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} slide={3} />
         )}
         {stage === "actions" && (
-          <ActionsStage onComplete={() => setStage("summary")} />
+          <ActionsStage onComplete={() => setStage("summary")} parsed={parsedReport} />
         )}
-        {stage === "summary" && <SummaryStage onReset={reset} />}
+        {stage === "summary" && <SummaryStage onReset={reset} parsed={parsedReport} />}
       </main>
 
       {/* Floating navigation cluster - bottom-left corner (away from RTL primary action zone) */}

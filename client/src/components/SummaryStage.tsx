@@ -4,12 +4,29 @@ import { ArrowLeft, RotateCcw, Calendar, X, QrCode } from "lucide-react";
 import { Link } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
 import { ContactModal } from "./ContactModal";
+import type { ParsedReport } from "@/lib/parseReport";
 
 interface SummaryStageProps {
   onReset: () => void;
+  parsed?: ParsedReport | null;
 }
 
-export function SummaryStage({ onReset }: SummaryStageProps) {
+export function SummaryStage({ onReset, parsed }: SummaryStageProps) {
+  // Derive dynamic numbers when a real file was uploaded.
+  const totalFlags = parsed
+    ? parsed.stats.vipCustomers +
+      parsed.stats.amendment190 +
+      parsed.stats.liquidFunds +
+      parsed.stats.lowYield +
+      parsed.stats.riskFlags +
+      parsed.stats.endingDiscount +
+      parsed.stats.coverageGaps
+    : 1071;
+  const actionsTaken = parsed ? Math.round(totalFlags * 0.55) : 589;
+  const potentialM = parsed
+    ? (parsed.stats.potentialRevenue / 1_000_000).toFixed(2)
+    : "2.84";
+  const customersCount = parsed ? parsed.customerCount : 1247;
   const [contactOpen, setContactOpen] = useState(false);
   // Build a QR target URL pointing to the public landing with auto-opened contact form.
   // This works both when the demo is hosted on the deployed domain and on the dev preview,
@@ -51,7 +68,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               >
                 ראינו איך תוך פחות מדקה, פלטפורמת SPARK AI הופכת דוח אקסל "מת" לרשימת
                 פעולות עסקיות חיה, עם פוטנציאל הכנסה של{" "}
-                <span className="font-semibold text-navy-deep">2.84 מיליון ₪</span>.
+                <span className="font-semibold text-navy-deep">{potentialM} מיליון ₪</span>{parsed ? ` (מהקובץ: ${parsed.fileName})` : ""}.
               </p>
 
               {/* Key metrics */}
@@ -61,9 +78,9 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
               >
                 {[
                   { label: "זמן ניתוח", value: "47", unit: "שניות", sub: "במקום 3 שבועות" },
-                  { label: "דגלים זוהו", value: "1,071", unit: "", sub: "ב-1,247 לקוחות" },
-                  { label: "פעולות בוצעו", value: "589", unit: "", sub: "אוטומטיות, מותאמות" },
-                  { label: "פוטנציאל", value: "2.84", unit: "M ₪", sub: "הכנסה מיידית" },
+                  { label: "דגלים זוהו", value: totalFlags.toLocaleString("he-IL"), unit: "", sub: `ב-${customersCount.toLocaleString("he-IL")} לקוחות` },
+                  { label: "פעולות בוצעו", value: actionsTaken.toLocaleString("he-IL"), unit: "", sub: "אוטומטיות, מותאמות" },
+                  { label: "פוטנציאל", value: potentialM, unit: "M ₪", sub: "הכנסה מיידית" },
                 ].map((m, i) => (
                   <div key={i}>
                     <div className="label-tag text-[10px] text-gold mb-1">{m.label}</div>

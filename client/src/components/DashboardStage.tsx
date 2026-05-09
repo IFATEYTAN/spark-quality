@@ -38,9 +38,9 @@ interface DashboardStageProps {
 function buildTriggerCards(stats: typeof STATS) {
   return [
     // 💸 קטגוריות פיננסיות (3)
-    { id: "vip", name: "לקוחות VIP", value: 42, sub: "צבירה מעל 1M ₪", icon: Sparkles, accent: "text-gold", bg: "bg-gold/15", border: "border-gold/50" },
+    { id: "vip", name: "לקוחות VIP", value: (stats as any).vipCustomers ?? 42, sub: "צבירה מעל 1M ₪", icon: Sparkles, accent: "text-gold", bg: "bg-gold/15", border: "border-gold/50" },
     { id: "lowYield", name: "תשואות נמוכות", value: stats.lowYield, sub: "דמי ניהול גבוהים מהממוצע", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
-    { id: "190", name: "תיקון 190", value: 54, sub: "פטור ממס רווחי הון", icon: Briefcase, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
+    { id: "190", name: "תיקון 190", value: (stats as any).amendment190 ?? 54, sub: "פטור ממס רווחי הון", icon: Briefcase, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
     // 🚨 קטגוריות סיכון / שימור (3)
     { id: "risk", name: "ריסק זמני", value: stats.riskFlags, sub: "דורש פעולה מיידית", icon: AlertTriangle, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
     { id: "discount", name: "תום הנחה", value: stats.endingDiscount, sub: "סיכון נטישה", icon: Calendar, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
@@ -145,7 +145,7 @@ export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStagePr
           <div className="glass-card relative overflow-hidden rounded-sm p-6 lg:p-8 w-full flex flex-col">
             <div className="label-tag text-gold mb-3">סך נכסים בניהול (AUM)</div>
             <div className="display-number text-6xl lg:text-7xl font-bold text-navy-deep">
-              <AnimatedNumber value={487} duration={1800} />
+              <AnimatedNumber value={parsed ? Math.round(stats.totalAUM / 1_000_000) : 487} duration={1800} />
               <span className="text-3xl font-semibold text-gold mr-2">M ₪</span>
             </div>
             <div className="mt-auto pt-6 grid grid-cols-2 gap-6 border-t border-border/40">
@@ -175,6 +175,11 @@ export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStagePr
                 <div className="display-number text-5xl lg:text-6xl font-bold text-navy-deep">
                   {formatCurrency(stats.potentialRevenue)}
                 </div>
+                {parsed && (
+                  <div className="mt-1 text-[10px] uppercase tracking-wider text-gold/80">
+                    מבוסס על הקובץ שהעלית: {parsed.fileName}
+                  </div>
+                )}
               </div>
               <div className="text-left">
                 <div className="label-tag text-[10px] text-muted-foreground">חיסכון בזמן</div>
@@ -216,7 +221,7 @@ export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStagePr
         <div className="mb-3 flex items-baseline justify-between">
           <h2 className="font-display text-lg lg:text-xl font-bold text-navy-deep">דגלים שזוהו · 6 קטגוריות</h2>
           <div className="gold-divider flex-1 mx-4" />
-          <span className="label-tag text-[10px] text-muted-foreground">סה״כ 1,071 התראות</span>
+          <span className="label-tag text-[10px] text-muted-foreground">סה״כ {(TRIGGER_CARDS.reduce((s, c) => s + (c.value ?? 0), 0)).toLocaleString("he-IL")} התראות</span>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
           {TRIGGER_CARDS.map((card, i) => (

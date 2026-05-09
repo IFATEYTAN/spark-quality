@@ -1,9 +1,69 @@
 // Editorial Fintech | מסך פעולות אוטומטיות - הדגמת התראות פיננסיות
 import { useEffect, useState } from "react";
 import { ArrowLeft, MessageSquare, CheckCircle2, FileText, Briefcase, TrendingUp, Mail } from "lucide-react";
-
+import type { ParsedReport } from "@/lib/parseReport";
 interface ActionsStageProps {
   onComplete: () => void;
+  parsed?: ParsedReport | null;
+}
+
+function buildActionsFromParsed(parsed: ParsedReport) {
+  const customers = parsed.customers;
+  const vip = customers.find(c => c.status === "VIP") || customers[0];
+  const liquid = customers.find(c => c.status === "השתלמות נזילה") || customers[1] || customers[0];
+  const t190 = customers.find(c => c.status === "תיקון 190") || customers[2] || customers[0];
+  const risk = customers.find(c => c.status === "ריסק זמני" || c.status === "תום הנחה" || c.status === "תשואה חלשה") || customers[3] || customers[0];
+
+  return [
+    {
+      id: 1,
+      type: "email",
+      icon: Briefcase,
+      iconBg: "bg-gold/10 text-gold",
+      delay: 300,
+      title: "התראה דחופה - לקוחות VIP",
+      target: "יפעת איתן <yifat@spark-ai.co.il>",
+      subject: `💎 דוח VIP: ${(parsed.stats as any).vipCustomers ?? 4} לקוחות עתירי נכסים דורשים פגישת תכנון פיננסי`,
+      body: `שלום יפעת,\n\nמערכת SPARK AI זיהתה ${(parsed.stats as any).vipCustomers ?? 4} לקוחות עם צבירה כוללת של מעל 1,000,000 ₪ כל אחד (ביניהם ${vip?.name}).\n\nהמלצה: תיאום פגישת ניהול עושר מקיפה לבחינת תיקון 190, פיזור סיכונים, ושימור. רשימה מלאה מצורפת.`,
+      meta: ["נשלח כעת", `${(parsed.stats as any).vipCustomers ?? 4} לקוחות VIP`, "PDF מוכן"],
+    },
+    {
+      id: 2,
+      type: "whatsapp",
+      icon: MessageSquare,
+      iconBg: "bg-emerald-50 text-emerald-700",
+      delay: 1100,
+      title: "WhatsApp - השתלמות נזילה",
+      target: `ללקוח: ${liquid?.name} · ${liquid?.phone || "052-111-2222"}`,
+      subject: "הזדמנות השקעה: קרן השתלמות נזילה",
+      body: `שלום ${liquid?.name?.split(" ")[0] || "דני"} 👋\n\nכאן יפעת מ-SPARK AI. ראיתי שקרן ההשתלמות שלך ב${liquid?.insurer || "הראל"} הפכה לנזילה לאחרונה.\n\nזה אומר שיש לך הון פנוי פטור ממס שניתן למנף להשקעה חכמה או פוליסת חיסכון. אשמח לתאם שיחה קצרה להציג לך אפשרויות.\n\nמתי נוח לך השבוע?`,
+      meta: ["מותאם אישית", "אישור לפני שליחה", "מחכה לאישורך"],
+    },
+    {
+      id: 3,
+      type: "email",
+      icon: TrendingUp,
+      iconBg: "bg-blue-50 text-blue-700",
+      delay: 1900,
+      title: "מייל אאפסל - תיקון 190",
+      target: `ללקוח: ${t190?.name} <${t190?.email || "client@demo.co.il"}>`,
+      subject: "הזדמנות לפטור ממס רווחי הון (תיקון 190)",
+      body: `שלום ${t190?.name?.split(" ")[0] || "שרה"},\n\nבבחינת התיק הפיננסי שלך, זיהינו שאת/ה עומד/ת בקריטריונים לניצול הטבות מס משמעותיות לפי תיקון 190 (גיל 60+ וצבירה פנויה).\n\nהכנו עבורך סימולציה המדגימה כיצד הפקדה לקופת גמל לפי תיקון 190 יכולה לחסוך לך עשרות אלפי שקלים במס רווחי הון בעת המשיכה.\n\nלצפייה בסימולציה: [קישור מאובטח]`,
+      meta: ["מותאם AI", "מצורף PDF", "מוכן לאישור"],
+    },
+    {
+      id: 4,
+      type: "task",
+      icon: FileText,
+      iconBg: "bg-navy/10 text-navy-deep",
+      delay: 2700,
+      title: "משימה ב-CRM",
+      target: "מערכת CRM של הסוכנות",
+      subject: `פגישת שימור: ${risk?.name} - ${risk?.status}`,
+      body: `נוצרה משימה אוטומטית ב-CRM:\n\n• לקוח: ${risk?.name}\n• סוג: פגישת שימור (${risk?.status})\n• עדיפות: גבוהה\n• דדליין: עד 25/01/2026\n• הערות: הלקוח עם צבירה של ₪${risk?.accumulation?.toLocaleString("he-IL")}. סכנת ניוד גבוהה. יש להציע מסלול דמי ניהול מוזל או חידוש כיסוי.`,
+      meta: ["סנכרון אוטומטי", "תזכורת ב-3 ימים", "הוקצה ליפעת"],
+    },
+  ];
 }
 
 const ACTIONS = [
@@ -57,13 +117,16 @@ const ACTIONS = [
   },
 ];
 
-export function ActionsStage({ onComplete }: ActionsStageProps) {
+export function ActionsStage({ onComplete, parsed }: ActionsStageProps) {
+  // כשקיים parsed — למצוא 4 לקוחות לדוגמה לעדכון התוכן הדינמי של ה-Actions.
+  const dynamicActions = parsed ? buildActionsFromParsed(parsed) : null;
+  const ACTIONS_TO_RENDER = dynamicActions ?? ACTIONS;
   const [visibleActions, setVisibleActions] = useState<number[]>([]);
   const [showSummary, setShowSummary] = useState(false);
 
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
-    ACTIONS.forEach((a) => {
+    ACTIONS_TO_RENDER.forEach((a) => {
       timers.push(
         setTimeout(() => {
           setVisibleActions((prev) => [...prev, a.id]);
@@ -107,7 +170,7 @@ export function ActionsStage({ onComplete }: ActionsStageProps) {
       {/* 2x2 Grid - fills remaining viewport on desktop, stacks on mobile */}
       <div className="flex-1 min-h-0 container py-4">
         <div className="lg:h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {ACTIONS.map((action) => {
+          {ACTIONS_TO_RENDER.map((action) => {
             const isVisible = visibleActions.includes(action.id);
             const Icon = action.icon;
             return (

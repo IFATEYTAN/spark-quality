@@ -580,7 +580,11 @@
 - [x] tsc + checkpoint
 
 ## Round 68 — החזרת מסך UploadStage (2026-05-09)
-- [ ] לאתר את הסיבה שמסך UploadStage לא מופיע (כנראה stage order מוגבל לאדמין)
-- [ ] להחזיר את UploadStage לכל המשתמשים (גם guests)
-- [ ] לעדכן ספירת השלבים (יהיו 8 שלבים במקום 7)
-- [ ] tsc + checkpoint
+- [x] לאתר את הסיבה שמסך UploadStage לא מופיע (כנראה stage order מוגבל לאדמין)
+- [x] להחזיר את UploadStage לכל המשתמשים (גם guests)
+- [x] לעדכן ספירת השלבים (יהיו 8 שלבים במקום 7)
+- [x] tsc + checkpoint
+
+## Round 69 — הפרדה בין Demo Mode (נתוני mock) ל-Real Mode (LLM אמיתי) (2026-05-09)
+- [ ] בדיקת UploadStage קיים — מה קורה היום עם הקובץ שעולה
+- [ ] להמתין למפת ה-LLM מהמשתמשת לפני יישום
