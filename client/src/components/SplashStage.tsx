@@ -1,30 +1,48 @@
-// Editorial Fintech | מסך פתיחה דרמטי וסינמטי
-// תמונת רקע ריאליסטית של מהפכה שקטה: ספר, נר, חלקיקי זהב עולים — מתואמים למסר
-// 4 שניות → ממשיך אוטומטית ל-Intro
+// Editorial Fintech | מסך פתיחה דרמטי וסינמטי - גרסה 2
+// רקע נייבי כהה אחיד עם הפייה מרחפת מעל הלוגו ומפזרת אבקת קסמים
+// כפתור יציאה בולט בפינה השמאלית-העליונה
+// 12s default duration, click anywhere to skip
 import { useEffect, useMemo } from "react";
+import { X } from "lucide-react";
+import { useLocation } from "wouter";
 import { LOGO } from "@/lib/demoData";
+
+const FAIRY_IMAGE = "/manus-storage/spark-fairy-clean_1c43284b.png";
 
 interface SplashStageProps {
   onComplete: () => void;
   durationMs?: number;
 }
 
-const HERO_IMAGE =
-  "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/splash_hero_cinematic-hy4Db4SsQYS4322PWXEJLK.webp";
-
-// 12s default duration so the presenter can talk over the splash; click skips manually
 export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps) {
-  // Floating extra particles in front of the image
-  const particles = useMemo(
+  const [, navigate] = useLocation();
+
+  // Fairy dust particles - מתפזרים סביב הפייה (top-center)
+  const dustParticles = useMemo(
     () =>
-      Array.from({ length: 35 }, (_, i) => ({
+      Array.from({ length: 60 }, (_, i) => ({
+        id: i,
+        top: 8 + Math.random() * 35,
+        left: 30 + Math.random() * 40,
+        size: 1.5 + Math.random() * 3,
+        delay: Math.random() * 4,
+        duration: 3 + Math.random() * 4,
+        opacity: 0.4 + Math.random() * 0.6,
+      })),
+    []
+  );
+
+  // Background ambient particles - חלקיקים עדינים בכל המסך
+  const bgParticles = useMemo(
+    () =>
+      Array.from({ length: 40 }, (_, i) => ({
         id: i,
         top: Math.random() * 100,
         left: Math.random() * 100,
-        size: 1 + Math.random() * 2.5,
-        delay: Math.random() * 2,
-        duration: 2.5 + Math.random() * 3,
-        opacity: 0.3 + Math.random() * 0.5,
+        size: 1 + Math.random() * 2,
+        delay: Math.random() * 5,
+        duration: 4 + Math.random() * 5,
+        opacity: 0.2 + Math.random() * 0.4,
       })),
     []
   );
@@ -34,6 +52,11 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
     return () => clearTimeout(timer);
   }, [onComplete, durationMs]);
 
+  const handleExit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigate("/");
+  };
+
   return (
     <div
       className="fixed inset-0 z-[100] overflow-hidden cursor-pointer bg-[#06101F]"
@@ -41,61 +64,77 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
       role="button"
       aria-label="דלג למצגת"
     >
-      {/* Cinematic hero background image with subtle parallax-style scale */}
+      {/* Deep navy gradient background - אחיד עם המערכת */}
       <div
-        className="absolute inset-0 animate-splash-zoom"
-        style={{
-          backgroundImage: `url(${HERO_IMAGE})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-
-      {/* Lighter overlay - lets the book image shine through */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#06101F]/45 via-[#06101F]/15 to-[#06101F]/75" />
-
-      {/* Soft side vignette only - keeps the center bright */}
-      <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0"
         style={{
           background:
-            "radial-gradient(ellipse at 50% 65%, transparent 30%, rgba(6,16,31,0.55) 95%)",
+            "radial-gradient(ellipse at top, #0a1a35 0%, #06101F 50%, #030813 100%)",
         }}
       />
 
-      {/* Animated golden particles (front layer) */}
+      {/* Subtle ambient sparkles overlay */}
       <div className="absolute inset-0 pointer-events-none">
-        {particles.map((p) => (
+        {bgParticles.map((p) => (
           <div
             key={p.id}
-            className="absolute rounded-full bg-gold animate-pulse"
+            className="absolute rounded-full bg-gold-light"
             style={{
               top: `${p.top}%`,
               left: `${p.left}%`,
               width: `${p.size}px`,
               height: `${p.size}px`,
               opacity: p.opacity,
-              animationDelay: `${p.delay}s`,
-              animationDuration: `${p.duration}s`,
-              boxShadow: "0 0 12px rgba(201, 169, 97, 0.85)",
+              boxShadow: `0 0 ${p.size * 4}px rgba(201,169,97,0.6)`,
+              animation: `fairy-dust ${p.duration}s ease-out ${p.delay}s infinite`,
             }}
           />
         ))}
       </div>
 
-      {/* Grain */}
+      {/* Fairy dust around the fairy area */}
+      <div className="absolute inset-0 pointer-events-none">
+        {dustParticles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full"
+            style={{
+              top: `${p.top}%`,
+              left: `${p.left}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              background: "rgba(255, 215, 130, 0.95)",
+              opacity: p.opacity,
+              boxShadow: `0 0 ${p.size * 5}px rgba(255,215,130,0.8), 0 0 ${p.size * 10}px rgba(201,169,97,0.5)`,
+              animation: `fairy-dust ${p.duration}s ease-out ${p.delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Subtle noise texture */}
       <div
-        className="absolute inset-0 opacity-[0.08] mix-blend-overlay pointer-events-none"
+        className="absolute inset-0 opacity-[0.04] mix-blend-overlay pointer-events-none"
         style={{
           backgroundImage:
             "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")",
         }}
       />
 
-      {/* Centered content - logos + tagline. גדלים רספונסיביים + scroll במובייל כדי שטקסט לא ייחתך */}
+      {/* Exit button - top-left */}
+      <button
+        onClick={handleExit}
+        className="absolute top-5 left-5 z-[110] flex items-center gap-2 rounded-full border border-gold/40 bg-black/40 backdrop-blur-md px-4 py-2 text-xs font-semibold tracking-wider text-gold hover:bg-gold/10 hover:border-gold/70 transition-all"
+        aria-label="יציאה לעמוד הבית"
+      >
+        <X className="h-4 w-4" />
+        <span>יציאה</span>
+      </button>
+
+      {/* Centered content */}
       <div className="relative h-full w-full overflow-y-auto px-5 sm:px-8 py-10">
         <div className="min-h-full w-full flex flex-col items-center justify-center text-center">
-          {/* Top label - Hebrew kicker */}
+          {/* Top label */}
           <div
             className="mb-6 sm:mb-10 animate-fade-in"
             style={{ animationDelay: "0.2s", animationDuration: "1.4s" }}
@@ -105,10 +144,24 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
             </p>
           </div>
 
+          {/* Floating fairy above logo */}
+          <div
+            className="relative mb-2 sm:mb-3 animate-fade-in"
+            style={{ animationDelay: "0.3s", animationDuration: "1.4s" }}
+          >
+            <img
+              src={FAIRY_IMAGE}
+              alt="SPARK Fairy"
+              className="w-[80px] sm:w-[110px] lg:w-[130px] h-auto object-contain animate-fairy-float select-none"
+              style={{ filter: "drop-shadow(0 0 25px rgba(201,169,97,0.7))" }}
+              draggable={false}
+            />
+          </div>
+
           {/* SPARK AI logo */}
           <div
             className="animate-fade-up flex items-center justify-center w-full"
-            style={{ animationDelay: "0.4s", animationDuration: "1.4s" }}
+            style={{ animationDelay: "0.5s", animationDuration: "1.4s" }}
           >
             <img
               src={LOGO.clear}
@@ -118,7 +171,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
             />
           </div>
 
-          {/* Product name - SPARK Quality מבית SPARK AI */}
+          {/* Product name */}
           <div
             className="mt-3 sm:mt-6 animate-fade-in"
             style={{ animationDelay: "0.7s", animationDuration: "1.4s" }}
@@ -132,7 +185,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
             </p>
           </div>
 
-          {/* Golden divider with sparkle */}
+          {/* Golden divider */}
           <div
             className="relative mt-6 sm:mt-14 animate-fade-in w-full max-w-[380px]"
             style={{ animationDelay: "1.1s", animationDuration: "1s" }}
@@ -151,7 +204,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
               <span className="text-gold font-semibold">פוגש את העוצמה שלכם</span>
             </p>
 
-            {/* Team credits — SPARK AI — זהב מודגש ומוצל לקריאה מלאה */}
+            {/* Team credits */}
             <div
               className="mt-8 sm:mt-10 animate-fade-up"
               style={{ animationDelay: "1.7s", animationDuration: "1.2s" }}
@@ -161,7 +214,10 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
               </p>
               <p
                 className="font-display text-base sm:text-lg text-gold-light tracking-wide"
-                style={{ textShadow: "0 2px 12px rgba(0,0,0,0.6), 0 0 18px rgba(201,169,97,0.35)" }}
+                style={{
+                  textShadow:
+                    "0 2px 12px rgba(0,0,0,0.6), 0 0 18px rgba(201,169,97,0.35)",
+                }}
               >
                 <span className="font-bold text-gold">יפעת איתן</span>
                 <span className="mx-3 sm:mx-4 text-gold/60">×</span>
@@ -177,7 +233,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
             </p>
           </div>
 
-          {/* Skip hint - inline (לא absolute) כדי שלא ייחתך במובייל */}
+          {/* Skip hint */}
           <div
             className="mt-8 sm:mt-12 mb-4 sm:mb-6 animate-fade-in"
             style={{ animationDelay: "2.4s", animationDuration: "1s" }}

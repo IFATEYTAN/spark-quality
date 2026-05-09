@@ -293,15 +293,30 @@ export function TopZoneNav() {
     >
       {zones.map((z) => {
         const Icon = z.icon;
+        const isExternal = z.href.startsWith("http");
+        const className = `group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold tracking-wider transition-all ${
+          z.active
+            ? "bg-gold/15 border border-gold/50 text-gold shadow-[0_0_18px_rgba(201,169,97,0.25)]"
+            : "border border-transparent text-white/70 hover:text-white hover:bg-white/5"
+        }`;
+        if (isExternal) {
+          return (
+            <a
+              key={z.href}
+              href={z.href}
+              className={className}
+              aria-current={z.active ? "page" : undefined}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              <span>{z.label}</span>
+            </a>
+          );
+        }
         return (
           <Link
             key={z.href}
             href={z.href}
-            className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold tracking-wider transition-all ${
-              z.active
-                ? "bg-gold/15 border border-gold/50 text-gold shadow-[0_0_18px_rgba(201,169,97,0.25)]"
-                : "border border-transparent text-white/70 hover:text-white hover:bg-white/5"
-            }`}
+            className={className}
             aria-current={z.active ? "page" : undefined}
           >
             <Icon className="h-3.5 w-3.5" />
