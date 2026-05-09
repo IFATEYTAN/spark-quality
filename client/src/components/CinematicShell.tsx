@@ -206,19 +206,8 @@ export function CinematicHeader({
           {/* CENTER — unified 3-zone navigation (Site / Demo / Product) */}
           <TopZoneNav />
 
-          {/* Left - user state + cinematic demo link + mobile menu */}
+          {/* Left - user state + mobile menu (dedicated demo link removed; the central TopZoneNav exposes "דמו") */}
           <div className="flex items-center gap-2 sm:gap-3">
-            {/* קישור דמו - מוצג רק לאדמינים, ובדסקטופ */}
-            {user?.role === "admin" && (
-              <Link
-                href="/demo"
-                className="hidden md:flex group items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-xs font-semibold text-gold transition-all hover:bg-gold/20 hover:border-gold/70 hover:scale-[1.03]"
-                aria-label="צפייה בדמו האינטראקטיבי"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span className="tracking-wider">דמו הדרכה</span>
-              </Link>
-            )}
             {isAuthenticated && user ? (
               <>
                 <div className="hidden md:flex flex-col items-end leading-tight">

@@ -586,28 +586,28 @@
 - [x] tsc + checkpoint
 
 ## Round 69 — הפרדה בין Demo Mode (נתוני mock) ל-Real Mode (LLM אמיתי) (2026-05-09)
-- [ ] בדיקת UploadStage קיים — מה קורה היום עם הקובץ שעולה
-- [ ] להמתין למפת ה-LLM מהמשתמשת לפני יישום
+- [x] בדיקת UploadStage קיים — מה קורה היום עם הקובץ שעולה
+- [x] קיבלנו מפת LLM (Surense Skill v2) ויישמנו ב-Round 70
 
 
 ## Round 70 — חיבור LLM אמיתי (surense-analyzer skill)
-- [ ] התקנת skill files תחת `skills/surense-analyzer/` בתוך הפרויקט
-- [ ] הוספת `server/prompts.ts` עם 6 הפרומפטים
-- [ ] טבלת DB: `reports.analysis` (JSON column) על סכמה קיימת
-- [ ] tRPC procedure `reports.analyze` — invokeLLM(SKILL.md, parsedData) → DB
-- [ ] UploadStage קוראת ל-`reports.analyze` ומקבלת analysis
-- [ ] DemoExperience מעביר analysis ל-Dashboard/Actions/Summary
-- [ ] Dashboard מציג kpis ו-flagDetails מ-analysis
-- [ ] Actions מציג critical/urgent/opportunities
-- [ ] Summary מציג summary_he
-- [ ] tRPC procedures נוספות: `reports.compose`, `reports.briefing`, `reports.clientSummary`, `reports.qa`
-- [ ] Vitest tests
+- [x] התקנת skill files תחת `skills/surense-analyzer/` בתוך הפרויקט
+- [x] הוספת `server/prompts.ts` עם 6 הפרומפטים
+- [x] טבלת DB: `reports.llmAnalysis` (JSON column) על סכמה קיימת
+- [x] tRPC procedure `reports.analyze` — invokeLLM(SKILL.md, parsedData) → DB
+- [x] DemoExperience מפעיל אוטומטית `reports.analyze` ומקבל analysis
+- [x] DemoExperience מעביר analysis ל-Dashboard/Actions/Summary
+- [x] Dashboard מציג kpis מ-analysis (merge עם stats)
+- [ ] Actions מציג critical/urgent/opportunities מ-analysis (כרגע משתמש ב-parsed.customers בלבד; לשדרוג עתידי)
+- [x] Summary מציג summary_he + KPIs מ-analysis
+- [x] tRPC procedures נוספות: `reports.compose`, `reports.briefing`, `reports.clientSummary`, `reports.qa`
+- [x] Vitest tests (server/prompts.test.ts — 4/4 passing)
 
 
 ## Round 71 — תפריט-על אחיד + עיצוב כותרות מאוחד
-- [ ] רכיב TopNavBar חדש (Site / Demo / Product) — RTL, זהב, מצב פעיל
-- [ ] PageHeader אחיד (eyebrow + title + subtitle, גופנים Cinzel/Heebo)
-- [ ] שילוב TopNavBar בכל המסכים, מסתיר ב-`?clean=true`
-- [ ] הסרת כפילויות Header / איחוד עם CinematicSidebar באזור המוצר
-- [ ] הפעלת PageHeader על Home, Demo, Onboarding, Dashboard, Clients, Upload, Team, Pricing, Legal, Admin
-- [ ] בדיקה ויזואלית + checkpoint
+- [x] רכיב TopZoneNav חדש (Site / Demo / Product) — RTL, זהב, מצב פעיל
+- [x] PageHeader אחיד (eyebrow + title + subtitle) — רכיב זמין לשימוש עתידי
+- [x] שילוב TopZoneNav בכל המסכים דרך CinematicHeader + SiteNav
+- [x] שמירת Sidebar באזור המוצר; tסר תפריט כפילות
+- [x] בדיקה ויזואלית + checkpoint (39ffe70a)
+- [ ] הטמעת PageHeader אקטיבית בכל המסכים (Home/Demo/Onboarding/Dashboard/Clients/Upload/Team/Pricing/Legal/Admin) — דחוי כי כל המסכים כבר משתמשים בעצמם בעיצוב זהה (eyebrow + h1 + p) ועדכון יוצר רגרסיה.
