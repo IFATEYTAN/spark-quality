@@ -9,6 +9,7 @@ import {
 import { sendEmail } from "../email";
 import { renderBrandedEmail } from "../emailTemplates";
 import { makeCheckoutSdk } from "../makeCheckout";
+import { ENV } from "./env";
 
 /**
  * Activation callback from the Make.com scenario after a payment is confirmed.
@@ -193,7 +194,11 @@ export function registerMakeRoutes(app: Express): void {
               ],
               cta: {
                 label: "כניסה למערכת",
-                url: `${req.protocol}://${req.get("host")}/dashboard`,
+                // IMPORTANT: never use req.host here. Make.com hits the
+                // internal Cloud Run host (e.g. *.run.app) which is NOT a
+                // valid OAuth redirect target. Always build email links from
+                // the public, OAuth-allow-listed origin.
+                url: `${ENV.publicAppUrl}/dashboard`,
               },
               footerNote:
                 "אם לא ביצעתם רכישה זו, צרו איתנו קשר מיידית במייל anat@spark-ai.co.il.",

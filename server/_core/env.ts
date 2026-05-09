@@ -30,4 +30,10 @@ export const ENV = {
     process.env.MAKE_BILLING_SHARED_SECRET ??
     process.env.MAKE_WEBHOOK_SECRET ??
     "spark-quality-make-shared-secret",
+  // Stable public origin used to build links inside transactional emails
+  // (e.g. the activation success email). MUST be the user-facing domain,
+  // never the internal Cloud Run host that webhook callers (Make.com,
+  // iCount) hit. Defaults to the published Manus Space domain.
+  publicAppUrl:
+    (process.env.PUBLIC_APP_URL ?? "https://sparkquality-zqvpyevd.manus.space").replace(/\/+$/, ""),
 };

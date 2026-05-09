@@ -5,6 +5,7 @@ import { iCountSdk } from "../iCount";
 import { getDb } from "../db";
 import { sendEmail } from "../email";
 import { renderBrandedEmail } from "../emailTemplates";
+import { ENV } from "./env";
 
 /**
  * iCount sends a server-to-server notification (notify_url we configured) to
@@ -128,7 +129,9 @@ export function registerICountRoutes(app: Express): void {
                 ],
                 cta: {
                   label: "כניסה למערכת",
-                  url: `${req.protocol}://${req.get("host")}/dashboard`,
+                  // Use the public app URL, not req.host (which points to the
+                  // internal Cloud Run host when iCount calls us directly).
+                  url: `${ENV.publicAppUrl}/dashboard`,
                 },
                 footerNote:
                   "אם לא ביצעתם הרשמה זו או יש לכם שאלה, צרו קשר במייל anat@spark-ai.co.il.",

@@ -458,3 +458,11 @@
 - [x] לקוח: כפתור "ייצוא ל-CSV" בצד הלקוח
 - [x] לקוח: סטטוס Badges + כפתור "סמן כטופל"
 - [x] checkpoint
+
+
+## Round 52 — Fix activation email login link (2026-05-09)
+- [x] שרת: PUBLIC_APP_URL env (fallback קבוע ל-sparkquality-zqvpyevd.manus.space)
+- [x] שרת: makeRoutes — להחליף `req.protocol://req.host` בלינק הפעלה ל-`PUBLIC_APP_URL`
+- [x] שרת: iCountRoutes — אותו תיקון לעקביות
+- [x] טסט: vitest שמוודא שלינק ההפעלה בנוי על PUBLIC_APP_URL ולא על host header
+- [ ] checkpoint + publish
