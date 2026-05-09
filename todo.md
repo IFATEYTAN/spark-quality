@@ -395,3 +395,10 @@
 - [x] לבדוק שגם flow ה-OAuth/registration מקבל את ההזמנה — משומר דרך Onboarding ?invite=token + acceptInvite mutation
 - [x] vitest invitations.test.ts (5/5 עוברים) — revoke + sendInvitationEmail + happy/error paths
 - [x] checkpoint
+
+
+## Round 45 — שיתוף הזמנה בוואטסאפ + סידור layout במובייל (2026-05-09)
+- [x] להוסיף כפתור "WhatsApp" בכרטיס ההזמנה הממתינה — פותח `https://wa.me/?text=...` עם הודעה RTL מוכנה הכוללת את לינק ההצטרפות
+- [x] לשפר את ה-layout של שורת הכפתורים במובייל (4 פעולות: וואטסאפ / מייל / קישור / מחיקה) — שלא יחתכו ושיהיה touch-target ≥ 40px (flex-wrap sm:flex-nowrap, h-10 במובייל)
+- [x] לאחד את הכפתורים בשורה גלויה אחת תחת פרטי ההזמנה במקום בצד (mt-3 sm:mt-0 w-full sm:w-auto)
+- [x] עדכון של ה-vitest החדש (אופציונלי — לוואטסאפ זה client-only)

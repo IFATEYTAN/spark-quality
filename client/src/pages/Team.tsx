@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { trpc } from "@/lib/trpc";
-import { Copy, Loader2, Mail, MailCheck, Trash2, UserPlus, X } from "lucide-react";
+import { Copy, Loader2, Mail, MailCheck, MessageCircle, Trash2, UserPlus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
@@ -359,16 +359,19 @@ function PendingInvitationRow({ invitation }: { invitation: InvitationRow }) {
       </div>
 
       {isPending && (
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 mt-3 sm:mt-0 w-full sm:w-auto">
           <Button
             type="button"
             size="sm"
             variant="outline"
-            onClick={copyLink}
-            className="border-white/25 bg-white/5 text-white hover:bg-white/10"
+            onClick={() => {
+              const text = encodeURIComponent(`היי! הוזמנת להצטרף לסוכנות ב-SPARK Quality.\nלחץ/י על הקישור כדי לאשר את ההצטרפות:\n${inviteUrl}`);
+              window.open(`https://wa.me/?text=${text}`, "_blank");
+            }}
+            className="flex-1 sm:flex-none border-[#25D366]/40 bg-[#25D366]/10 text-[#25D366] hover:bg-[#25D366]/20 hover:text-[#25D366] h-10 sm:h-9"
           >
-            <Copy className="h-3.5 w-3.5 ml-1.5" />
-            קישור
+            <MessageCircle className="h-4 w-4 ml-1.5" />
+            וואטסאפ
           </Button>
           <Button
             type="button"
@@ -380,16 +383,26 @@ function PendingInvitationRow({ invitation }: { invitation: InvitationRow }) {
               })
             }
             disabled={sendEmail.isPending}
-            className="bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] hover:shadow-lg hover:shadow-gold/30 font-bold disabled:opacity-50"
+            className="flex-1 sm:flex-none bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-[1.02] hover:shadow-lg hover:shadow-gold/30 font-bold disabled:opacity-50 h-10 sm:h-9"
           >
             {sendEmail.isPending ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <MailCheck className="h-3.5 w-3.5 ml-1.5" />
-                שליחה במייל
+                <MailCheck className="h-4 w-4 ml-1.5" />
+                מייל
               </>
             )}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={copyLink}
+            className="flex-1 sm:flex-none border-white/25 bg-white/5 text-white hover:bg-white/10 h-10 sm:h-9"
+            title="העתקת קישור"
+          >
+            <Copy className="h-4 w-4" />
           </Button>
           <Button
             type="button"
@@ -401,9 +414,10 @@ function PendingInvitationRow({ invitation }: { invitation: InvitationRow }) {
               }
             }}
             disabled={revoke.isPending}
-            className="border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:text-white"
+            className="flex-1 sm:flex-none border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:text-white h-10 sm:h-9"
+            title="ביטול הזמנה"
           >
-            <Trash2 className="h-3.5 w-3.5" />
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
       )}
