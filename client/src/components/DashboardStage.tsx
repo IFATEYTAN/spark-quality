@@ -138,8 +138,8 @@ export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStagePr
 
   /* ───────── Slide 1: KPIs hero + financial breakdown ───────── */
   const Slide1 = (
-    <div className="flex-1 min-h-0 overflow-hidden container py-4 lg:py-6">
-      <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-12">
+    <div className="flex-1 min-h-0 lg:overflow-hidden container py-4 lg:py-6">
+      <div className="grid lg:h-full grid-cols-1 gap-4 lg:grid-cols-12">
         {/* AUM hero card */}
         <div className="lg:col-span-5 animate-fade-up flex">
           <div className="glass-card relative overflow-hidden rounded-sm p-6 lg:p-8 w-full flex flex-col">
@@ -210,7 +210,7 @@ export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStagePr
 
   /* ───────── Slide 2: 6 trigger flags + 2 charts ───────── */
   const Slide2 = (
-    <div className="flex-1 min-h-0 overflow-hidden container py-4 lg:py-6 flex flex-col gap-4">
+    <div className="flex-1 min-h-0 lg:overflow-hidden container py-4 lg:py-6 flex flex-col gap-4">
       {/* Trigger cards - 6 in a row */}
       <div className="flex-shrink-0">
         <div className="mb-3 flex items-baseline justify-between">
@@ -327,7 +327,7 @@ export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStagePr
 
   /* ───────── Slide 3: Customer table + exports ───────── */
   const Slide3 = (
-    <div className="flex-1 min-h-0 overflow-hidden container py-4 lg:py-6 flex flex-col">
+    <div className="flex-1 min-h-0 lg:overflow-hidden container py-4 lg:py-6 flex flex-col">
       <div className="mb-3 flex flex-col items-start justify-between gap-3 lg:flex-row lg:items-baseline flex-shrink-0">
         <div>
           <div className="label-tag text-gold mb-1 text-[10px]">רשימת פעולה</div>
@@ -435,7 +435,7 @@ export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStagePr
   );
 
   return (
-    <div data-pdf-target className="h-full w-full overflow-hidden animate-fade-in bg-background flex flex-col">
+    <div data-pdf-target className="min-h-full w-full lg:overflow-hidden animate-fade-in bg-background flex flex-col">
       {HeaderBlock}
       {slide === 1 && Slide1}
       {slide === 2 && Slide2}

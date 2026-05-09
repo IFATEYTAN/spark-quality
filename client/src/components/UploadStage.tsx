@@ -54,7 +54,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
   };
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-navy-deep">
+    <div className="relative min-h-full w-full lg:overflow-hidden bg-navy-deep">
       {/* Hidden file input */}
       <input
         ref={inputRef}
@@ -75,7 +75,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
       </div>
 
       {/* Content layout */}
-      <div className="relative grid h-full w-full max-w-[1500px] mx-auto grid-cols-1 lg:grid-cols-12">
+      <div className="relative grid lg:h-full w-full max-w-[1500px] mx-auto grid-cols-1 lg:grid-cols-12">
         {/* RIGHT side (main, RTL primary): hero text + upload */}
         <div className="lg:col-span-8 flex items-center px-8 lg:px-16 py-8">
           <div className="max-w-2xl animate-fade-up w-full">

@@ -77,7 +77,7 @@ export function ActionsStage({ onComplete }: ActionsStageProps) {
   }, []);
 
   return (
-    <div className="h-full w-full flex flex-col overflow-hidden animate-fade-in bg-background">
+    <div className="min-h-full w-full flex flex-col lg:overflow-hidden animate-fade-in bg-background">
       {/* Header (compact) */}
       <div className="shrink-0 border-b border-border/40 bg-card/60 backdrop-blur-sm">
         <div className="container py-4">
@@ -104,9 +104,9 @@ export function ActionsStage({ onComplete }: ActionsStageProps) {
         </div>
       </div>
 
-      {/* 2x2 Grid - fills remaining viewport, no page scroll */}
+      {/* 2x2 Grid - fills remaining viewport on desktop, stacks on mobile */}
       <div className="flex-1 min-h-0 container py-4">
-        <div className="h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="lg:h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
           {ACTIONS.map((action) => {
             const isVisible = visibleActions.includes(action.id);
             const Icon = action.icon;

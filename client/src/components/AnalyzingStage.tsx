@@ -42,7 +42,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
   }, [onComplete]);
 
   return (
-    <div className="relative h-full w-full overflow-hidden bg-navy-deep">
+    <div className="relative min-h-full w-full lg:overflow-hidden bg-navy-deep">
       {/* Background image with strong overlay */}
       <div className="absolute inset-0">
         <img src={ASSETS.brain} alt="" className="h-full w-full object-cover scale-110 animate-[fade-in_2s]" />
@@ -60,7 +60,7 @@ export function AnalyzingStage({ onComplete }: AnalyzingStageProps) {
         }}
       />
 
-      <div className="relative grid h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12">
+      <div className="relative grid lg:h-full w-full max-w-[1600px] mx-auto grid-cols-1 lg:grid-cols-12">
         {/* RIGHT (RTL primary): progress steps */}
         <div className="lg:col-span-7 flex items-center px-4 py-3 sm:px-6 lg:px-10 lg:py-5 overflow-hidden">
           <div className="w-full max-w-2xl animate-fade-in">

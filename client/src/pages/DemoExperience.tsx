@@ -160,15 +160,15 @@ export default function DemoExperience() {
   const canGoForward = currentIdx < STAGE_ORDER.length - 1;
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-navy-deep">
+    <div className="min-h-screen lg:h-screen flex flex-col lg:overflow-hidden bg-navy-deep">
       {!cleanMode && (
         <div className="hidden md:block">
           <Header stage={STAGE_LABELS_DYNAMIC[stage]} onReset={reset} />
         </div>
       )}
 
-      {/* Slide-mode main: each stage controls its own internal scroll if needed; outer is fixed */}
-      <main className="flex-1 min-h-0 overflow-hidden relative">
+      {/* Slide-mode main on desktop (≥lg). On mobile we let content scroll naturally so nothing is clipped. */}
+      <main className="flex-1 min-h-0 lg:overflow-hidden relative pb-24 lg:pb-0">
         {stage === "intro" && (
           <IntroStage
             onContinue={() => setStage(isAdmin ? "upload" : "analyzing")}

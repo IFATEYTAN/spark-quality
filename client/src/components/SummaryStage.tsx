@@ -20,16 +20,16 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
   }, []);
 
   return (
-    <div className="relative h-full w-full animate-fade-in overflow-hidden">
+    <div className="relative min-h-full w-full animate-fade-in lg:overflow-hidden">
       {/* Subtle background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-bl from-cream via-ivory to-white" />
       <div className="absolute -top-32 -left-32 -z-10 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
       <div className="absolute -bottom-32 -right-32 -z-10 h-96 w-96 rounded-full bg-navy/10 blur-3xl" />
 
-      <div className="relative h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-3 lg:py-4 flex flex-col">
+      <div className="relative lg:h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-3 lg:py-4 flex flex-col">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch flex-1 min-h-0">
           {/* RIGHT (RTL primary): content */}
-          <div className="lg:col-span-7 min-h-0 overflow-hidden">
+          <div className="lg:col-span-7 min-h-0 lg:overflow-hidden">
             <div className="max-w-2xl">
               <div className="mb-2 flex items-center gap-3 animate-fade-up">
                 <div className="h-px w-16 bg-gold" />
@@ -124,6 +124,13 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                   קבעו פגישת אפיון
                   <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
                 </button>
+                <Link
+                  href="/"
+                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md border border-navy-deep/20 bg-white px-5 py-2.5 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep/5 hover:border-navy-deep/40"
+                >
+                  <X className="h-4 w-4" />
+                  יציאה מהדמו
+                </Link>
               </div>
 
               {/* QR-code card — invites attendees to scan and open the contact form on their phones */}
