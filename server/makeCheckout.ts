@@ -138,11 +138,18 @@ export function newRequestId(): string {
  * Post the JSON payload to Make. Returns the raw HTTP status + response text
  * so the caller can decide how loud to be about non-2xx responses. Make
  * webhooks return 200 with body "Accepted" by default.
+ *
+ * If the Make scenario is configured to return a JSON body containing a
+ * `paymentUrl` / `payment_url` / `url` field (or even a bare URL string), we
+ * surface it as `paymentUrl` so the client can open the iCount checkout in a
+ * new tab. When no URL is present we still report success and the user is
+ * told a payment link will arrive by email (legacy flow).
  */
 export async function postToMake(payload: MakeCheckoutPayload): Promise<{
   ok: boolean;
   status: number;
   body: string;
+  paymentUrl?: string;
 }> {
   if (!ENV.makePaymentWebhookUrl) {
     throw new Error("MAKE_PAYMENT_WEBHOOK_URL is not configured");
@@ -156,7 +163,70 @@ export async function postToMake(payload: MakeCheckoutPayload): Promise<{
     body: JSON.stringify(payload),
   });
   const body = await res.text().catch(() => "");
-  return { ok: res.ok, status: res.status, body };
+  return { ok: res.ok, status: res.status, body, paymentUrl: extractPaymentUrl(body) };
+}
+
+/**
+ * Extract a payment URL from a Make webhook response body. Tolerates:
+ *   - Empty / non-JSON bodies (returns undefined)
+ *   - JSON with `{ paymentUrl: "..." }` / `payment_url` / `url`
+ *   - Nested `{ data: { paymentUrl: "..." } }` (a common Make pattern)
+ *   - A bare URL string (no JSON envelope)
+ * Validates the value is an http(s) URL before returning it.
+ */
+export function extractPaymentUrl(body: string): string | undefined {
+  if (!body) return undefined;
+  const trimmed = body.trim();
+  if (!trimmed) return undefined;
+
+  const isHttpUrl = (val: unknown): val is string => {
+    if (typeof val !== "string") return false;
+    try {
+      const u = new URL(val);
+      return u.protocol === "https:" || u.protocol === "http:";
+    } catch {
+      return false;
+    }
+  };
+
+  // Bare URL response
+  if (isHttpUrl(trimmed)) return trimmed;
+
+  // JSON response
+  try {
+    const parsed = JSON.parse(trimmed) as unknown;
+    if (parsed && typeof parsed === "object") {
+      const obj = parsed as Record<string, unknown>;
+      const candidates = [
+        obj.paymentUrl,
+        obj.payment_url,
+        obj.url,
+        obj.checkoutUrl,
+        obj.checkout_url,
+        obj.hostedUrl,
+      ];
+      for (const c of candidates) {
+        if (isHttpUrl(c)) return c;
+      }
+      const data = obj.data;
+      if (data && typeof data === "object") {
+        const d = data as Record<string, unknown>;
+        const nested = [
+          d.paymentUrl,
+          d.payment_url,
+          d.url,
+          d.checkoutUrl,
+          d.checkout_url,
+        ];
+        for (const c of nested) {
+          if (isHttpUrl(c)) return c;
+        }
+      }
+    }
+  } catch {
+    // not JSON — fall through
+  }
+  return undefined;
 }
 
 export const makeCheckoutSdk = {
@@ -166,4 +236,5 @@ export const makeCheckoutSdk = {
   verifyActivation,
   newRequestId,
   postToMake,
+  extractPaymentUrl,
 };

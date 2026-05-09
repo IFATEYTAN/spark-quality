@@ -692,6 +692,7 @@ export const billingRouter = router({
       const signature = makeCheckoutSdk.signCheckout(base);
       const payload = { ...base, signature };
 
+      let paymentUrl: string | undefined;
       try {
         const res = await makeCheckoutSdk.postToMake(payload);
         if (!res.ok) {
@@ -700,6 +701,7 @@ export const billingRouter = router({
             `מערכת התשלום (Make) החזירה שגיאה (${res.status}). אנא נסו שוב.`,
           );
         }
+        paymentUrl = res.paymentUrl;
       } catch (err) {
         console.error("[billing] Make webhook failed", err);
         throw new Error(
@@ -748,6 +750,7 @@ export const billingRouter = router({
         period: input.period,
         amount,
         returnUrl,
+        paymentUrl,
       };
     }),
 

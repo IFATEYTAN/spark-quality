@@ -99,6 +99,31 @@ export default function Pricing() {
   // callback flip the workspace to active.
   const startCheckoutViaMake = trpc.billing.startCheckoutViaMake.useMutation({
     onSuccess: (res) => {
+      // If the Make scenario returned a hosted iCount URL synchronously,
+      // open it in a new tab so the user pays without losing the dashboard
+      // tab. If no URL was returned (legacy email flow), fall back to the
+      // waiting screen and the email link.
+      if (res.paymentUrl) {
+        const opened = window.open(
+          res.paymentUrl,
+          "_blank",
+          "noopener,noreferrer",
+        );
+        if (opened) {
+          toast.success("פתחנו עבורכם את עמוד התשלום בכרטיסייה חדשה", {
+            description:
+              "השלימו את התשלום וחזרו אל מסך זה — הגישה תיפתח אוטומטית.",
+          });
+        } else {
+          toast.warning("הדפדפן חסם את הכרטיסייה החדשה", {
+            description: "לחצו על הלינק במסך ההמתנה כדי לפתוח את עמוד התשלום.",
+          });
+        }
+        navigate(
+          `/billing/waiting?req=${res.requestId}&payUrl=${encodeURIComponent(res.paymentUrl)}`,
+        );
+        return;
+      }
       toast.success("הבקשה נשלחה — מעבירים אתכם למסך ההמתנה", {
         description:
           "לינק לעמוד התשלום נשלח אליכם במייל. הגישה למערכת תיפתח אוטומטית מיד עם אישור התשלום.",

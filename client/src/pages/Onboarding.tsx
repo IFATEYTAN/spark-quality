@@ -74,6 +74,30 @@ export default function Onboarding() {
   // שולח למשתמש לינק לתשלום, ומחזיר ל-/api/billing/activate לאחר מכן.
   const startCheckoutViaMake = trpc.billing.startCheckoutViaMake.useMutation({
     onSuccess: (res) => {
+      // אם Make החזיר לינק סליקה מידי (paymentUrl) — נפתח אותו בלשונית חדשה
+      // כך שהמשתמש משלם בלי לאבד את מסך ההמתנה.
+      if (res.paymentUrl) {
+        const opened = window.open(
+          res.paymentUrl,
+          "_blank",
+          "noopener,noreferrer",
+        );
+        if (opened) {
+          toast.success("פתחנו עבורכם את עמוד התשלום בכרטיסייה חדשה", {
+            description:
+              "השלימו את התשלום וחזרו אל מסך זה — הגישה תיפתח אוטומטית.",
+          });
+        } else {
+          toast.warning("הדפדפן חסם את הכרטיסייה החדשה", {
+            description: "לחצו על הלינק במסך ההמתנה כדי לפתוח את עמוד התשלום.",
+          });
+        }
+        navigate(
+          `/billing/waiting?req=${res.requestId}&payUrl=${encodeURIComponent(res.paymentUrl)}`,
+          { replace: true },
+        );
+        return;
+      }
       toast.success("הבקשה נשלחה — מעבירים אתכם למסך ההמתנה", {
         description: "לינק לעמוד התשלום נשלח אליכם במייל.",
       });

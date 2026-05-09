@@ -1,8 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 import { CinematicShell } from "@/components/CinematicShell";
 import { GlassCard, GoldEyebrow } from "@/components/CinematicShell";
-import { ShieldCheck, Loader2, CreditCard } from "lucide-react";
+import { ShieldCheck, Loader2, CreditCard, ExternalLink } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 /**
@@ -11,10 +11,24 @@ import { trpc } from "@/lib/trpc";
  * subscriptionStatus becomes "active" and we redirect to the dashboard.
  */
 export default function BillingWaiting() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const accessQuery = trpc.billing.myAccessStatus.useQuery(undefined, {
     refetchInterval: 3000,
   });
+
+  const payUrl = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("payUrl");
+    if (!raw) return null;
+    try {
+      const u = new URL(raw);
+      if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+      return u.toString();
+    } catch {
+      return null;
+    }
+  }, [location]);
 
   useEffect(() => {
     if (accessQuery.data?.status === "active") {
@@ -69,6 +83,23 @@ export default function BillingWaiting() {
               </p>
             </div>
           </div>
+
+          {payUrl && (
+            <div className="rounded-lg border border-gold/30 bg-gold/10 p-4 text-center">
+              <p className="text-white/80 text-sm mb-3">
+                הדפדפן חסם את הכרטיסייה החדשה? אפשר לפתוח את עמוד התשלום ידנית.
+              </p>
+              <a
+                href={payUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-gold text-[#06101F] hover:bg-gold-light font-medium px-5 py-2.5 rounded-lg transition-all"
+              >
+                <ExternalLink className="h-4 w-4" />
+                פתיחת עמוד התשלום
+              </a>
+            </div>
+          )}
 
           <div className="text-center pt-2">
             <button

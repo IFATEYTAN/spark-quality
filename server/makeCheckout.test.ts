@@ -5,6 +5,7 @@ import {
   verifyActivation,
   signCheckout,
   newRequestId,
+  extractPaymentUrl,
 } from "./makeCheckout";
 
 describe("makeCheckout signActivation/verifyActivation", () => {
@@ -113,5 +114,49 @@ describe("makeCheckoutSdk surface", () => {
     expect(typeof makeCheckoutSdk.verifyActivation).toBe("function");
     expect(typeof makeCheckoutSdk.newRequestId).toBe("function");
     expect(typeof makeCheckoutSdk.postToMake).toBe("function");
+    expect(typeof makeCheckoutSdk.extractPaymentUrl).toBe("function");
+  });
+});
+
+describe("extractPaymentUrl", () => {
+  it("returns undefined for empty / whitespace bodies", () => {
+    expect(extractPaymentUrl("")).toBeUndefined();
+    expect(extractPaymentUrl("   ")).toBeUndefined();
+  });
+
+  it("returns undefined for the default Make 'Accepted' body", () => {
+    expect(extractPaymentUrl("Accepted")).toBeUndefined();
+  });
+
+  it("accepts a bare https URL response", () => {
+    const url = "https://app.icount.co.il/payment/abc123";
+    expect(extractPaymentUrl(url)).toBe(url);
+  });
+
+  it("reads paymentUrl from a top-level JSON body", () => {
+    const url = "https://app.icount.co.il/payment/xyz";
+    const body = JSON.stringify({ paymentUrl: url });
+    expect(extractPaymentUrl(body)).toBe(url);
+  });
+
+  it("reads payment_url (snake_case) from a top-level JSON body", () => {
+    const url = "https://app.icount.co.il/p/789";
+    const body = JSON.stringify({ payment_url: url, status: "ok" });
+    expect(extractPaymentUrl(body)).toBe(url);
+  });
+
+  it("reads url field from a nested data envelope", () => {
+    const url = "https://app.icount.co.il/checkout/42";
+    const body = JSON.stringify({ data: { url } });
+    expect(extractPaymentUrl(body)).toBe(url);
+  });
+
+  it("rejects non-http(s) values", () => {
+    const body = JSON.stringify({ paymentUrl: "javascript:alert(1)" });
+    expect(extractPaymentUrl(body)).toBeUndefined();
+  });
+
+  it("rejects malformed JSON gracefully", () => {
+    expect(extractPaymentUrl("{not json")).toBeUndefined();
   });
 });

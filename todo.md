@@ -408,3 +408,14 @@
 - [x] איתור כל המופעים של "דוח שורנס" / "שורנס" ב-client/src
 - [x] עדכון הכותרות בעמוד /upload + תפריט הצד + הדשבורד + ה-CTA
 - [x] TS check + checkpoint
+
+
+## Round 47 — פתיחת דף הסליקה בלשונית חדשה (2026-05-09)
+- [x] שרת: `extractPaymentUrl()` + `postToMake` מחזיר `paymentUrl?: string` (תומך bare URL / `paymentUrl` / `payment_url` / `url` / `data.url`)
+- [x] `billing.startCheckoutViaMake` מחזיר `paymentUrl` ב-return value
+- [x] `Pricing.tsx` — `window.open(paymentUrl, "_blank", "noopener,noreferrer")` + טיפול ב-popup blocker (toast.warning + טיפול ב-/billing/waiting)
+- [x] `Onboarding.tsx` — אותה התנהגות
+- [x] `BillingWaiting.tsx` — מציג כפתור "פתיחת עמוד התשלום" כאשר ?payUrl= קיים ב-query (fallback ל-popup חסום)
+- [x] vitest extractPaymentUrl: 8 טסטים חדשים (17/17 בקובץ)
+- [x] TS check נקי
+- [x] checkpoint
