@@ -1,12 +1,95 @@
 // Editorial Fintech | מסך פעולות אוטומטיות - הדגמת התראות פיננסיות
 import { useEffect, useState } from "react";
-import { ArrowLeft, MessageSquare, CheckCircle2, FileText, Briefcase, TrendingUp, Mail } from "lucide-react";
+import { ArrowLeft, MessageSquare, CheckCircle2, FileText, Briefcase, TrendingUp, Mail, Sparkles, Loader2 } from "lucide-react";
 import type { ParsedReport } from "@/lib/parseReport";
+import { trpc } from "@/lib/trpc";
+
 interface ActionsStageProps {
   onComplete: () => void;
   parsed?: ParsedReport | null;
   /** LLM analysis JSON — reserved for future enrichment of action contents. */
-  analysis?: unknown;
+  analysis?: any;
+}
+
+function buildActionsFromAnalysis(analysis: any) {
+  const actions = [];
+  let id = 1;
+
+  // 1. Take up to 2 critical items
+  const criticals = Array.isArray(analysis?.critical) ? analysis.critical.slice(0, 2) : [];
+  for (const c of criticals) {
+    actions.push({
+      id: id++,
+      type: "whatsapp",
+      icon: MessageSquare,
+      iconBg: "bg-red-50 text-red-700",
+      delay: id * 400,
+      title: `קריטי: ${c.flag}`,
+      target: `ללקוח: ${c.client_name} · ${c.phone || "חסר נייד"}`,
+      subject: `פעולה נדרשת: ${c.action || "טיפול מיידי"}`,
+      body: `לקוח: ${c.client_name}\nמוצר: ${c.product || "לא צוין"} (${c.company || ""})\nפרטים: ${c.days_overdue ? `בפיגור של ${c.days_overdue} ימים` : "דורש התערבות"}.`,
+      meta: ["דחוף", "התראה קריטית"],
+      triggerData: { 
+        channel: "whatsapp", 
+        flag: c.flag || "פעולה נדרשת",
+        firstName: c.client_name?.split(" ")[0] || "לקוח",
+        agentName: "יפעת",
+        detail: c.action || "טיפול מיידי",
+        productName: c.product,
+        company: c.company
+      }
+    });
+  }
+
+  // 2. Take up to 1 urgent item
+  const urgents = Array.isArray(analysis?.urgent) ? analysis.urgent.slice(0, 1) : [];
+  for (const u of urgents) {
+    actions.push({
+      id: id++,
+      type: "email",
+      icon: Briefcase,
+      iconBg: "bg-orange-50 text-orange-700",
+      delay: id * 400,
+      title: `דחוף: ${u.flag}`,
+      target: `ללקוח: ${u.client_name} · ${u.phone || "חסר נייד"}`,
+      subject: "עדכון סטטוס תיק",
+      body: `לקוח: ${u.client_name}\nפרטים: ${u.detail || "דורש טיפול קרוב"}.`,
+      meta: ["דחוף", "התראה"],
+      triggerData: { 
+        channel: "email", 
+        flag: u.flag || "עדכון סטטוס",
+        firstName: u.client_name?.split(" ")[0] || "לקוח",
+        agentName: "יפעת",
+        detail: u.detail
+      }
+    });
+  }
+
+  // 3. Take up to 1 opportunity
+  const opps = Array.isArray(analysis?.opportunities) ? analysis.opportunities.slice(0, 1) : [];
+  for (const o of opps) {
+    actions.push({
+      id: id++,
+      type: "task",
+      icon: TrendingUp,
+      iconBg: "bg-emerald-50 text-emerald-700",
+      delay: id * 400,
+      title: `הזדמנות: ${o.flag}`,
+      target: `פוטנציאל: ${o.count} לקוחות`,
+      subject: "פוטנציאל עסקי",
+      body: `זיהינו ${o.count} לקוחות רלוונטיים להזדמנות זו.\nשווי מוערך: ₪${(o.total_value || 0).toLocaleString("he-IL")}`,
+      meta: ["הזדמנות עסקית", "אאפסל"],
+      triggerData: { 
+        channel: "email", 
+        flag: o.flag || "הזדמנות עסקית",
+        firstName: "לקוח",
+        agentName: "יפעת",
+        detail: `פוטנציאל של ${o.count} לקוחות בשווי ₪${o.total_value}`
+      }
+    });
+  }
+
+  return actions.length > 0 ? actions : null;
 }
 
 function buildActionsFromParsed(parsed: ParsedReport) {
@@ -119,10 +202,13 @@ const ACTIONS = [
   },
 ];
 
-export function ActionsStage({ onComplete, parsed, analysis: _analysis }: ActionsStageProps) {
-  // כשקיים parsed — למצוא 4 לקוחות לדוגמה לעדכון התוכן הדינמי של ה-Actions.
-  const dynamicActions = parsed ? buildActionsFromParsed(parsed) : null;
+export function ActionsStage({ onComplete, parsed, analysis }: ActionsStageProps) {
+  // Prefer LLM analysis if available, fallback to parsed logic, fallback to canned mock
+  const dynamicActions = analysis ? buildActionsFromAnalysis(analysis) : (parsed ? buildActionsFromParsed(parsed) : null);
   const ACTIONS_TO_RENDER = dynamicActions ?? ACTIONS;
+  
+  const composeMutation = trpc.reports.compose.useMutation();
+  const [composedMessages, setComposedMessages] = useState<Record<number, string>>({});
   const [visibleActions, setVisibleActions] = useState<number[]>([]);
   const [showSummary, setShowSummary] = useState(false);
 
@@ -192,20 +278,51 @@ export function ActionsStage({ onComplete, parsed, analysis: _analysis }: Action
                     </div>
                   </div>
                   {/* Body */}
-                  <div className="flex-1 min-h-0 rounded-lg bg-muted/30 p-3 overflow-hidden">
+                  <div className="flex-1 min-h-0 rounded-lg bg-muted/30 p-3 overflow-y-auto custom-scrollbar">
                     <div className="mb-1 text-sm font-semibold text-navy-deep line-clamp-1">{action.subject}</div>
-                    <div className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground line-clamp-5">
-                      {action.body}
+                    <div className="whitespace-pre-wrap text-xs leading-relaxed text-muted-foreground">
+                      {composedMessages[action.id] || action.body}
                     </div>
                   </div>
-                  {/* Meta */}
-                  <div className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-1">
-                    {action.meta.map((m, i) => (
-                      <div key={i} className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                        {m}
-                      </div>
-                    ))}
+                  {/* Meta & Composer */}
+                  <div className="shrink-0 flex items-center justify-between mt-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                      {action.meta.map((m, i) => (
+                        <div key={i} className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                          {m}
+                        </div>
+                      ))}
+                    </div>
+                    {/* Composer Button (only if we have triggerData from LLM analysis) */}
+                    {(action as any).triggerData && !composedMessages[action.id] && (
+                      <button
+                        onClick={() => {
+                          const td = (action as any).triggerData;
+                          composeMutation.mutate(
+                            { 
+                              channel: td.channel, 
+                              flag: td.flag,
+                              firstName: td.firstName,
+                              agentName: td.agentName,
+                              detail: td.detail,
+                              productName: td.productName,
+                              company: td.company
+                            },
+                            {
+                              onSuccess: (res) => {
+                                setComposedMessages(prev => ({ ...prev, [action.id]: String(res.message) }));
+                              }
+                            }
+                          );
+                        }}
+                        disabled={composeMutation.isPending}
+                        className="flex items-center gap-1.5 rounded-md bg-gold/10 px-2.5 py-1.5 text-[11px] font-semibold text-gold transition-colors hover:bg-gold/20 disabled:opacity-50"
+                      >
+                        {composeMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                        נסח הודעה
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

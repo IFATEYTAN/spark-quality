@@ -20,6 +20,8 @@ import type { Customer } from "@/lib/demoData";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CategoryScenarioModal } from "./CategoryScenarioModal";
 import { AIComposerModal } from "./AIComposerModal";
+import { AIBriefingModal } from "./AIBriefingModal";
+import { AIQaModal } from "./AIQaModal";
 import { exportDashboardPDF } from "@/lib/exportPdf";
 import type { ParsedReport } from "@/lib/parseReport";
 
@@ -77,6 +79,8 @@ export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: Dashbo
   const insurerData = (parsed?.insurerBreakdown ?? INSURER_BREAKDOWN).map((d: { name: string; customers: number }) => ({ name: d.name, customers: d.customers }));
   const [composerCustomer, setComposerCustomer] = useState<Customer | null>(null);
   const [composerChannel, setComposerChannel] = useState<"email" | "whatsapp" | null>(null);
+  const [briefingOpen, setBriefingOpen] = useState(false);
+  const [qaOpen, setQaOpen] = useState(false);
 
   const openComposer = (customer: Customer, channel: "email" | "whatsapp") => {
     setComposerCustomer(customer);
@@ -125,6 +129,27 @@ export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: Dashbo
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* AI panels — only when LLM analysis is present (admin uploaded a real file) */}
+            {Boolean(analysis) && (
+              <>
+                <button
+                  onClick={() => setBriefingOpen(true)}
+                  className="flex items-center gap-2 rounded-sm border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold transition-all hover:bg-gold/20"
+                  title="תדריך בוקר אישי מבוסס AI"
+                >
+                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+                  תדריך AI
+                </button>
+                <button
+                  onClick={() => setQaOpen(true)}
+                  className="flex items-center gap-2 rounded-sm border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-600 transition-all hover:bg-blue-500/20"
+                  title="שאל שאלות על הדוח"
+                >
+                  <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
+                  שאל את ה-AI
+                </button>
+              </>
+            )}
             <button
               onClick={async () => {
                 const t = toast.loading("מכין דוח PDF…");
@@ -479,6 +504,16 @@ export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: Dashbo
           setActiveScenario(null);
           onAction();
         }}
+      />
+      <AIBriefingModal
+        isOpen={briefingOpen}
+        onClose={() => setBriefingOpen(false)}
+        analysisContext={analysis}
+      />
+      <AIQaModal
+        isOpen={qaOpen}
+        onClose={() => setQaOpen(false)}
+        analysisContext={analysis}
       />
     </div>
   );
