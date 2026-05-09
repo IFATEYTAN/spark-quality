@@ -159,4 +159,28 @@ describe("extractPaymentUrl", () => {
   it("rejects malformed JSON gracefully", () => {
     expect(extractPaymentUrl("{not json")).toBeUndefined();
   });
+
+  it("extracts URL from Make HTML meta-refresh response", () => {
+    const url = "https://app.icount.co.il/m/abc/p_xyz?utm=a";
+    const body = `<head><meta http-equiv="refresh" content="0; url=${url}" /></head>`;
+    expect(extractPaymentUrl(body)).toBe(url);
+  });
+
+  it("extracts URL from meta-refresh with extra attributes / single quotes", () => {
+    const url = "https://app.icount.co.il/m/abc/p_yyy";
+    const body = `<html><head><META HTTP-EQUIV='refresh' CONTENT='0; URL=${url}' /></head></html>`;
+    expect(extractPaymentUrl(body)).toBe(url);
+  });
+
+  it("falls back to first https URL inside arbitrary HTML", () => {
+    const url = "https://app.icount.co.il/cards/p_123";
+    const body = `<html><body><a href="${url}">go</a></body></html>`;
+    expect(extractPaymentUrl(body)).toBe(url);
+  });
+
+  it("reads JSON.data.sale_url and JSON.sale_url shapes", () => {
+    const url = "https://app.icount.co.il/cards/p_sale";
+    expect(extractPaymentUrl(JSON.stringify({ sale_url: url }))).toBe(url);
+    expect(extractPaymentUrl(JSON.stringify({ data: { sale_url: url } }))).toBe(url);
+  });
 });

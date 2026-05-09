@@ -419,3 +419,19 @@
 - [x] vitest extractPaymentUrl: 8 טסטים חדשים (17/17 בקובץ)
 - [x] TS check נקי
 - [x] checkpoint
+
+
+## Round 48 — Bugfix: דף הסליקה לא נפתח בחלון חדש (2026-05-09)
+- [ ] לבדוק logs של השרת לראות אם Make מחזיר paymentUrl או רק "Accepted"
+- [ ] לפתוח tab סינכרונית בלחיצה (about:blank) ולנווט אותו אחרי שה-mutation מסתיימת — דפדפנים חוסמים window.open אסינכרוני
+- [ ] להוסיף ENV `ICOUNT_DIRECT_PAYMENT_URL` כ-fallback מיידי אם אין paymentUrl מ-Make (השרת יחזיר אותו)
+- [ ] vitest + checkpoint
+
+
+## Round 49 — Bugfix: pre-open about:blank + parse HTML meta-refresh (2026-05-09)
+- [x] שרת: extractPaymentUrl מזהה גם `<meta http-equiv="refresh" content="0; url=...">` (תומך single/double quotes ו-uppercase)
+- [x] שרת: fallback ל-URL ראשון של https:// ב-HTML כללי + תמיכה ב-`sale_url`/`saleUrl` בתגובה (מה ש-Make iCount מחזיר)
+- [x] קוח: Pricing + Onboarding פותחים about:blank סינכרונית ב-onClick ומעדכנים location.replace אחרי שה-mutation חוזר (popup blocker bypass)
+- [x] toast.error אם ה-paymentUrl לא חזר + סגירת ה-blank tab
+- [x] vitest: 4 טסטים חדשים ל-extractPaymentUrl (21/21 עוברים)
+- [x] TS check נקי + checkpoint

@@ -2,7 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { trpc } from "@/lib/trpc";
 import { Check, Loader2, X } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
@@ -97,40 +97,53 @@ export default function Pricing() {
   // payment page and POSTs back to /api/billing/activate when payment is
   // confirmed. We just take the user to /billing/waiting and let the activation
   // callback flip the workspace to active.
+  // Holds the tab we pre-open synchronously in the click handler so the
+  // browser treats it as a user-gesture and never popup-blocks it. After the
+  // mutation comes back we redirect that tab to the iCount payment URL.
+  const checkoutWindowRef = useRef<Window | null>(null);
+
   const startCheckoutViaMake = trpc.billing.startCheckoutViaMake.useMutation({
     onSuccess: (res) => {
-      // If the Make scenario returned a hosted iCount URL synchronously,
-      // open it in a new tab so the user pays without losing the dashboard
-      // tab. If no URL was returned (legacy email flow), fall back to the
-      // waiting screen and the email link.
+      const w = checkoutWindowRef.current;
       if (res.paymentUrl) {
-        const opened = window.open(
-          res.paymentUrl,
-          "_blank",
-          "noopener,noreferrer",
-        );
-        if (opened) {
+        if (w && !w.closed) {
+          // Re-target the pre-opened blank tab; this is allowed because the
+          // tab was opened in the same user-gesture as the mutation start.
+          w.location.replace(res.paymentUrl);
           toast.success("פתחנו עבורכם את עמוד התשלום בכרטיסייה חדשה", {
-            description:
-              "השלימו את התשלום וחזרו אל מסך זה — הגישה תיפתח אוטומטית.",
+            description: "השלימו את התשלום וחזרו אל מסך זה — הגישה תיפתח אוטומטית.",
           });
         } else {
-          toast.warning("הדפדפן חסם את הכרטיסייה החדשה", {
-            description: "לחצו על הלינק במסך ההמתנה כדי לפתוח את עמוד התשלום.",
-          });
+          // Pre-open failed (rare). Try a normal window.open as a fallback.
+          const opened = window.open(res.paymentUrl, "_blank", "noopener,noreferrer");
+          if (!opened) {
+            toast.warning("הדפדפן חסם את הכרטיסייה החדשה", {
+              description: "לחצו על הלינק במסך ההמתנה כדי לפתוח את עמוד התשלום.",
+            });
+          }
         }
+        checkoutWindowRef.current = null;
         navigate(
           `/billing/waiting?req=${res.requestId}&payUrl=${encodeURIComponent(res.paymentUrl)}`,
         );
         return;
       }
+      // No URL came back. Close the pre-opened blank tab and fall back to
+      // the legacy email flow.
+      if (w && !w.closed) w.close();
+      checkoutWindowRef.current = null;
       toast.success("הבקשה נשלחה — מעבירים אתכם למסך ההמתנה", {
         description:
-          "לינק לעמוד התשלום נשלח אליכם במייל. הגישה למערכת תיפתח אוטומטית מיד עם אישור התשלום.",
+          "לינק לעמוד התשלום יגיע אליכם במייל. הגישה למערכת תיפתח אוטומטית מיד עם אישור התשלום.",
       });
       navigate(`/billing/waiting?req=${res.requestId}`);
     },
     onError: (err) => {
+      // Close the pre-opened blank tab so the user isn't left staring at
+      // about:blank.
+      const w = checkoutWindowRef.current;
+      if (w && !w.closed) w.close();
+      checkoutWindowRef.current = null;
       toast.error("לא הצלחנו לפתוח את הבקשה לתשלום", { description: err.message });
     },
   });
@@ -160,6 +173,10 @@ export default function Pricing() {
       navigate("/onboarding");
       return;
     }
+    // Pre-open the new tab synchronously so it's tied to this user-gesture
+    // and won't be popup-blocked. We'll redirect it once the mutation
+    // returns the iCount URL (or close it if there is none).
+    checkoutWindowRef.current = window.open("about:blank", "_blank", "noopener,noreferrer");
     startCheckoutViaMake.mutate({
       plan: slug,
       period: isAnnual ? "yearly" : "monthly",

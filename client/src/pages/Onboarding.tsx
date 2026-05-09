@@ -25,7 +25,7 @@ import {
   isValidIsraeliMobile,
   isValidIsraeliTaxId,
 } from "@shared/ilValidators";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
 
@@ -72,38 +72,43 @@ export default function Onboarding() {
 
   // מסלול ראשי — POST ל-Make webhook. Make מתזמן עם iCount,
   // שולח למשתמש לינק לתשלום, ומחזיר ל-/api/billing/activate לאחר מכן.
+  const checkoutWindowRef = useRef<Window | null>(null);
+
   const startCheckoutViaMake = trpc.billing.startCheckoutViaMake.useMutation({
     onSuccess: (res) => {
-      // אם Make החזיר לינק סליקה מידי (paymentUrl) — נפתח אותו בלשונית חדשה
-      // כך שהמשתמש משלם בלי לאבד את מסך ההמתנה.
+      const w = checkoutWindowRef.current;
       if (res.paymentUrl) {
-        const opened = window.open(
-          res.paymentUrl,
-          "_blank",
-          "noopener,noreferrer",
-        );
-        if (opened) {
+        if (w && !w.closed) {
+          w.location.replace(res.paymentUrl);
           toast.success("פתחנו עבורכם את עמוד התשלום בכרטיסייה חדשה", {
-            description:
-              "השלימו את התשלום וחזרו אל מסך זה — הגישה תיפתח אוטומטית.",
+            description: "השלימו את התשלום וחזרו אל מסך זה — הגישה תיפתח אוטומטית.",
           });
         } else {
-          toast.warning("הדפדפן חסם את הכרטיסייה החדשה", {
-            description: "לחצו על הלינק במסך ההמתנה כדי לפתוח את עמוד התשלום.",
-          });
+          const opened = window.open(res.paymentUrl, "_blank", "noopener,noreferrer");
+          if (!opened) {
+            toast.warning("הדפדפן חסם את הכרטיסייה החדשה", {
+              description: "לחצו על הלינק במסך ההמתנה כדי לפתוח את עמוד התשלום.",
+            });
+          }
         }
+        checkoutWindowRef.current = null;
         navigate(
           `/billing/waiting?req=${res.requestId}&payUrl=${encodeURIComponent(res.paymentUrl)}`,
           { replace: true },
         );
         return;
       }
+      if (w && !w.closed) w.close();
+      checkoutWindowRef.current = null;
       toast.success("הבקשה נשלחה — מעבירים אתכם למסך ההמתנה", {
-        description: "לינק לעמוד התשלום נשלח אליכם במייל.",
+        description: "לינק לעמוד התשלום יגיע אליכם במייל.",
       });
       navigate(`/billing/waiting?req=${res.requestId}`, { replace: true });
     },
     onError: (err) => {
+      const w = checkoutWindowRef.current;
+      if (w && !w.closed) w.close();
+      checkoutWindowRef.current = null;
       toast.error("לא הצלחנו לפתוח את הבקשה לתשלום", { description: err.message });
     },
   });
@@ -122,6 +127,8 @@ export default function Onboarding() {
   });
 
   const upgradeTo = (plan: PaidPlan) => {
+    // Pre-open the new tab synchronously to bypass popup blockers.
+    checkoutWindowRef.current = window.open("about:blank", "_blank", "noopener,noreferrer");
     startCheckoutViaMake.mutate({
       plan,
       period: billingPeriod,

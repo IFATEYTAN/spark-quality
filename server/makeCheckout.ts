@@ -204,6 +204,8 @@ export function extractPaymentUrl(body: string): string | undefined {
         obj.checkoutUrl,
         obj.checkout_url,
         obj.hostedUrl,
+        obj.sale_url,
+        obj.saleUrl,
       ];
       for (const c of candidates) {
         if (isHttpUrl(c)) return c;
@@ -217,6 +219,8 @@ export function extractPaymentUrl(body: string): string | undefined {
           d.url,
           d.checkoutUrl,
           d.checkout_url,
+          d.sale_url,
+          d.saleUrl,
         ];
         for (const c of nested) {
           if (isHttpUrl(c)) return c;
@@ -225,6 +229,23 @@ export function extractPaymentUrl(body: string): string | undefined {
     }
   } catch {
     // not JSON — fall through
+  }
+
+  // HTML response — Make scenarios commonly issue a redirect via
+  // <meta http-equiv="refresh" content="0; url=https://...">. Try to extract
+  // the URL from the meta refresh first, then any standalone https:// URL.
+  const text: string = trimmed;
+  const metaMatch = text.match(
+    /<meta[^>]*http-equiv\s*=\s*["']?refresh["']?[^>]*content\s*=\s*["']\s*\d+\s*;\s*url\s*=\s*([^"'>\s]+)/i,
+  );
+  if (metaMatch && metaMatch[1] && isHttpUrl(metaMatch[1])) {
+    return metaMatch[1];
+  }
+  // Fallback: first https URL anywhere in the body. Stop at common HTML
+  // delimiters so we don't capture trailing markup.
+  const urlMatch = text.match(/https?:\/\/[^\s"'<>]+/);
+  if (urlMatch && isHttpUrl(urlMatch[0])) {
+    return urlMatch[0];
   }
   return undefined;
 }
