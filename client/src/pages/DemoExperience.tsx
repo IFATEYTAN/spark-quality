@@ -1,9 +1,11 @@
 // Editorial Fintech | אורקסטרציה ראשית של הדמו
 // תכונות: ניווט מקלדת (חצים), מסך מלא, כפתורי ניווט קבועים, Splash דרמטי
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Header } from "@/components/Header";
 import { SplashStage } from "@/components/SplashStage";
 import { IntroStage } from "@/components/IntroStage";
@@ -88,9 +90,35 @@ export default function DemoExperience() {
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
+  const [analysis, setAnalysis] = useState<unknown>(null);
+  const analyzingRef = useRef(false);
+  const analyzeMutation = trpc.reports.analyze.useMutation();
+
+  // When admin uploads a real file, kick off the LLM analyzer in background.
+  // The result is stored on `analysis` and passed down to dashboard/actions/summary.
+  useEffect(() => {
+    if (!parsedReport || analyzingRef.current) return;
+    analyzingRef.current = true;
+    setAnalysis(null);
+    const t = toast.loading("AI מנתח את התיק — מסתמלו על דעתכם…");
+    analyzeMutation
+      .mutateAsync({ parsed: parsedReport })
+      .then((res) => {
+        setAnalysis(res?.analysis ?? null);
+        toast.success("הניתוח הושלם — מציגים תובנות אמיתיות", { id: t });
+      })
+      .catch((err) => {
+        console.warn("[reports.analyze] failed", err);
+        toast.error("לא הצלחנו להריץ ניתוח AI — מציגים תוצאות מקומיות", { id: t });
+      })
+      .finally(() => {
+        analyzingRef.current = false;
+      });
+  }, [parsedReport, analyzeMutation]);
 
   const reset = useCallback(() => {
     setParsedReport(null);
+    setAnalysis(null);
     setStage("splash");
   }, []);
 
@@ -199,18 +227,18 @@ export default function DemoExperience() {
           <AnalyzingStage onComplete={() => setStage("dashboard")} />
         )}
         {stage === "dashboard" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} slide={1} />
+          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} analysis={analysis} slide={1} />
         )}
         {stage === "dashboard2" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} slide={2} />
+          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} analysis={analysis} slide={2} />
         )}
         {stage === "dashboard3" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} slide={3} />
+          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} analysis={analysis} slide={3} />
         )}
         {stage === "actions" && (
-          <ActionsStage onComplete={() => setStage("summary")} parsed={parsedReport} />
+          <ActionsStage onComplete={() => setStage("summary")} parsed={parsedReport} analysis={analysis} />
         )}
-        {stage === "summary" && <SummaryStage onReset={reset} parsed={parsedReport} />}
+        {stage === "summary" && <SummaryStage onReset={reset} parsed={parsedReport} analysis={analysis} />}
       </main>
 
       {/* Floating navigation cluster - bottom-left corner (away from RTL primary action zone) */}

@@ -314,6 +314,31 @@ export async function createReport(data: InsertReport) {
   return (result as unknown as { insertId: number }).insertId;
 }
 
+export async function updateReportLlmAnalysis(
+  reportId: number,
+  workspaceId: number,
+  analysis: unknown,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db
+    .update(reports)
+    .set({ llmAnalysis: analysis as never })
+    .where(and(eq(reports.id, reportId), eq(reports.workspaceId, workspaceId)));
+  return true;
+}
+
+export async function getReportById(reportId: number, workspaceId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db
+    .select()
+    .from(reports)
+    .where(and(eq(reports.id, reportId), eq(reports.workspaceId, workspaceId)))
+    .limit(1);
+  return rows.length > 0 ? rows[0] : undefined;
+}
+
 // ============================================================
 // INVITATIONS
 // ============================================================

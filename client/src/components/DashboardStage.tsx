@@ -26,6 +26,8 @@ import type { ParsedReport } from "@/lib/parseReport";
 interface DashboardStageProps {
   onAction: () => void;
   parsed?: ParsedReport | null;
+  /** LLM analysis JSON returned by reports.analyze (Surense Skill v2). */
+  analysis?: unknown;
   /**
    * Which of the 3 dashboard sub-slides to render. Defaults to 1 for backwards compat.
    *  1 = KPIs hero + financial breakdown
@@ -33,6 +35,24 @@ interface DashboardStageProps {
    *  3 = High-priority customers table + exports
    */
   slide?: 1 | 2 | 3;
+}
+
+/**
+ * If LLM analysis is present, override numeric stats with its kpis.
+ * Falls back to local parsed stats / canned STATS otherwise.
+ */
+function mergeStatsWithAnalysis(stats: typeof STATS, analysis: unknown): typeof STATS {
+  if (!analysis || typeof analysis !== "object") return stats;
+  const k = (analysis as { kpis?: Record<string, number> }).kpis;
+  if (!k) return stats;
+  return {
+    ...stats,
+    totalCustomers: k.total_clients ?? stats.totalCustomers,
+    totalAUM: k.total_aum ?? stats.totalAUM,
+    riskFlags: k.risk_zmani ?? stats.riskFlags,
+    noPension: k.no_pension ?? stats.noPension,
+    vipCustomers: (k.vip_count as number | undefined) ?? (stats as { vipCustomers?: number }).vipCustomers,
+  } as typeof STATS;
 }
 
 function buildTriggerCards(stats: typeof STATS) {
@@ -48,11 +68,11 @@ function buildTriggerCards(stats: typeof STATS) {
   ];
 }
 
-export function DashboardStage({ onAction, parsed, slide = 1 }: DashboardStageProps) {
+export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: DashboardStageProps) {
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
   // Use parsed data if a real file was uploaded, otherwise fall back to demo data
   const customers: Customer[] = parsed?.customers ?? CUSTOMERS;
-  const stats = parsed?.stats ?? STATS;
+  const stats = mergeStatsWithAnalysis(parsed?.stats ?? STATS, analysis);
   const TRIGGER_CARDS = buildTriggerCards(stats);
   const insurerData = (parsed?.insurerBreakdown ?? INSURER_BREAKDOWN).map((d: { name: string; customers: number }) => ({ name: d.name, customers: d.customers }));
   const [composerCustomer, setComposerCustomer] = useState<Customer | null>(null);

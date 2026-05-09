@@ -5,6 +5,8 @@ import type { ParsedReport } from "@/lib/parseReport";
 interface ActionsStageProps {
   onComplete: () => void;
   parsed?: ParsedReport | null;
+  /** LLM analysis JSON — reserved for future enrichment of action contents. */
+  analysis?: unknown;
 }
 
 function buildActionsFromParsed(parsed: ParsedReport) {
@@ -117,7 +119,7 @@ const ACTIONS = [
   },
 ];
 
-export function ActionsStage({ onComplete, parsed }: ActionsStageProps) {
+export function ActionsStage({ onComplete, parsed, analysis: _analysis }: ActionsStageProps) {
   // כשקיים parsed — למצוא 4 לקוחות לדוגמה לעדכון התוכן הדינמי של ה-Actions.
   const dynamicActions = parsed ? buildActionsFromParsed(parsed) : null;
   const ACTIONS_TO_RENDER = dynamicActions ?? ACTIONS;

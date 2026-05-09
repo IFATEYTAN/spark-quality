@@ -9,11 +9,17 @@ import type { ParsedReport } from "@/lib/parseReport";
 interface SummaryStageProps {
   onReset: () => void;
   parsed?: ParsedReport | null;
+  /** LLM analysis JSON returned by reports.analyze (Surense Skill v2). */
+  analysis?: unknown;
 }
 
-export function SummaryStage({ onReset, parsed }: SummaryStageProps) {
+export function SummaryStage({ onReset, parsed, analysis }: SummaryStageProps) {
+  // Optional KPIs from LLM analysis override local heuristics when present.
+  const llmKpis = (analysis as { kpis?: Record<string, number>; summary_he?: string } | null)?.kpis;
+  const llmSummaryHe = (analysis as { summary_he?: string } | null)?.summary_he;
+
   // Derive dynamic numbers when a real file was uploaded.
-  const totalFlags = parsed
+  const totalFlagsLocal = parsed
     ? parsed.stats.vipCustomers +
       parsed.stats.amendment190 +
       parsed.stats.liquidFunds +
@@ -22,11 +28,15 @@ export function SummaryStage({ onReset, parsed }: SummaryStageProps) {
       parsed.stats.endingDiscount +
       parsed.stats.coverageGaps
     : 1071;
+  const totalFlags = (llmKpis?.total_flags as number | undefined) ?? totalFlagsLocal;
   const actionsTaken = parsed ? Math.round(totalFlags * 0.55) : 589;
-  const potentialM = parsed
-    ? (parsed.stats.potentialRevenue / 1_000_000).toFixed(2)
-    : "2.84";
-  const customersCount = parsed ? parsed.customerCount : 1247;
+  const potentialMNum = llmKpis?.potential_revenue
+    ? llmKpis.potential_revenue / 1_000_000
+    : parsed
+      ? parsed.stats.potentialRevenue / 1_000_000
+      : 2.84;
+  const potentialM = potentialMNum.toFixed(2);
+  const customersCount = (llmKpis?.total_clients as number | undefined) ?? (parsed ? parsed.customerCount : 1247);
   const [contactOpen, setContactOpen] = useState(false);
   // Build a QR target URL pointing to the public landing with auto-opened contact form.
   // This works both when the demo is hosted on the deployed domain and on the dev preview,
@@ -70,6 +80,16 @@ export function SummaryStage({ onReset, parsed }: SummaryStageProps) {
                 פעולות עסקיות חיה, עם פוטנציאל הכנסה של{" "}
                 <span className="font-semibold text-navy-deep">{potentialM} מיליון ₪</span>{parsed ? ` (מהקובץ: ${parsed.fileName})` : ""}.
               </p>
+
+              {llmSummaryHe && (
+                <div
+                  className="mt-2 rounded-md border border-gold/40 bg-gold/5 px-3 py-2 text-xs leading-relaxed text-navy-deep animate-fade-up"
+                  style={{ animationDelay: "0.25s" }}
+                >
+                  <div className="label-tag text-[10px] text-gold mb-1">תובנת AI מהניתוח</div>
+                  {llmSummaryHe}
+                </div>
+              )}
 
               {/* Key metrics */}
               <div

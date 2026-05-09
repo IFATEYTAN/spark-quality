@@ -12,6 +12,19 @@ import { adminRouter } from "./adminRouter";
 import { billingRouter } from "./billing";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { isValidIsraeliTaxId, normalizeIsraeliMobile } from "@shared/ilValidators";
+import { invokeLLM } from "./_core/llm";
+import {
+  buildAnalysisSystem,
+  ANALYSIS_JSON_SCHEMA,
+  COMPOSER_SYSTEM,
+  buildComposerUserPrompt,
+  BRIEFING_SYSTEM,
+  buildBriefingUserPrompt,
+  CLIENT_SUMMARY_SYSTEM,
+  buildClientSummaryUserPrompt,
+  QA_SYSTEM,
+  buildQaUserPrompt,
+} from "./prompts";
 
 function escapeHtml(value: string): string {
   return value
@@ -575,6 +588,132 @@ export const appRouter = router({
         }
 
         return { id: reportId, importedCount };
+      }),
+
+    /**
+     * LLM Analysis (Surense Skill v2.0)
+     * Receives anonymized parsed JSON, calls Claude with the skill prompt,
+     * returns structured JSON and persists it on the report row.
+     */
+    analyze: workspaceProcedure
+      .input(
+        z.object({
+          reportId: z.number().optional(),
+          parsed: z.any(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const today = new Date().toISOString().slice(0, 10);
+        const userPayload = JSON.stringify(input.parsed).slice(0, 60_000);
+
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: buildAnalysisSystem(today) },
+            { role: "user", content: userPayload },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: ANALYSIS_JSON_SCHEMA,
+          },
+        });
+
+        const raw = completion?.choices?.[0]?.message?.content ?? "{}";
+        let analysis: unknown = {};
+        try {
+          analysis = typeof raw === "string" ? JSON.parse(raw) : raw;
+        } catch (err) {
+          console.warn("[reports.analyze] JSON.parse failed, returning raw", err);
+          analysis = { raw, parseError: true };
+        }
+
+        if (input.reportId) {
+          try {
+            await db.updateReportLlmAnalysis(input.reportId, ctx.user.workspaceId, analysis);
+          } catch (err) {
+            console.warn("[reports.analyze] failed to persist analysis", err);
+          }
+        }
+
+        return { analysis };
+      }),
+
+    /**
+     * AI Composer — generate WhatsApp / Email / SMS for a specific trigger
+     */
+    compose: workspaceProcedure
+      .input(
+        z.object({
+          flag: z.string(),
+          channel: z.enum(["whatsapp", "email", "sms"]),
+          firstName: z.string(),
+          age: z.number().optional(),
+          detail: z.string().optional(),
+          agentName: z.string(),
+          productName: z.string().optional(),
+          company: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: COMPOSER_SYSTEM },
+            { role: "user", content: buildComposerUserPrompt(input) },
+          ],
+        });
+        const message = completion?.choices?.[0]?.message?.content ?? "";
+        return { message };
+      }),
+
+    /**
+     * Daily morning briefing — based on stored analysis
+     */
+    briefing: workspaceProcedure
+      .input(z.object({ analysis: z.any(), agentName: z.string() }))
+      .mutation(async ({ input }) => {
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: BRIEFING_SYSTEM },
+            {
+              role: "user",
+              content: buildBriefingUserPrompt({
+                analysis: input.analysis,
+                agentName: input.agentName,
+                date: new Date().toISOString().slice(0, 10),
+              }),
+            },
+          ],
+        });
+        return { briefing: completion?.choices?.[0]?.message?.content ?? "" };
+      }),
+
+    /**
+     * Client meeting prep summary
+     */
+    clientSummary: workspaceProcedure
+      .input(z.object({ client: z.any(), analysisContext: z.any().optional() }))
+      .mutation(async ({ input }) => {
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: CLIENT_SUMMARY_SYSTEM },
+            { role: "user", content: buildClientSummaryUserPrompt(input) },
+          ],
+        });
+        return { summary: completion?.choices?.[0]?.message?.content ?? "" };
+      }),
+
+    /**
+     * Q&A — free-form question on the analysis JSON
+     */
+    qa: workspaceProcedure
+      .input(z.object({ question: z.string(), analysis: z.any() }))
+      .mutation(async ({ input }) => {
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: QA_SYSTEM },
+            { role: "user", content: buildQaUserPrompt(input) },
+          ],
+        });
+        return { answer: completion?.choices?.[0]?.message?.content ?? "" };
       }),
   }),
 
