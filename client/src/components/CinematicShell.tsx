@@ -13,6 +13,9 @@ import {
   ShieldCheck,
   Menu,
   X,
+  Globe,
+  Film,
+  Briefcase,
 } from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -200,6 +203,9 @@ export function CinematicHeader({
             />
           </Link>
 
+          {/* CENTER — unified 3-zone navigation (Site / Demo / Product) */}
+          <TopZoneNav />
+
           {/* Left - user state + cinematic demo link + mobile menu */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* קישור דמו - מוצג רק לאדמינים, ובדסקטופ */}
@@ -260,6 +266,62 @@ const NAV_ITEMS = [
   { href: "/team", label: "צוות", icon: UserCog, superAdminOnly: false },
   { href: "/admin", label: "מנהל מערכת", icon: ShieldCheck, superAdminOnly: true },
 ] as const;
+
+/**
+ * TopZoneNav — 3-zone unified navigation: Site (אתר) / Demo (דמו) / Product (מערכת)
+ * Highlights the active zone in gold so users always know where they are.
+ * Hidden when only the user landing area is appropriate (logo still leads home).
+ */
+export function TopZoneNav() {
+  const [location] = useLocation();
+  const { isAuthenticated } = useAuth();
+
+  // Determine current zone
+  const isProductZone =
+    location.startsWith("/dashboard") ||
+    location.startsWith("/clients") ||
+    location.startsWith("/upload") ||
+    location.startsWith("/team") ||
+    location.startsWith("/admin") ||
+    location.startsWith("/onboarding") ||
+    location.startsWith("/billing");
+  const isDemoZone = location.startsWith("/demo");
+  const isSiteZone = !isProductZone && !isDemoZone;
+
+  const productHref = isAuthenticated ? "/dashboard" : "/onboarding";
+
+  const zones = [
+    { href: "/", label: "אתר", icon: Globe, active: isSiteZone },
+    { href: "/demo", label: "דמו", icon: Film, active: isDemoZone },
+    { href: productHref, label: "מערכת", icon: Briefcase, active: isProductZone },
+  ];
+
+  return (
+    <nav
+      className="hidden md:flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-md px-1.5 py-1.5"
+      aria-label="ניווט ראשי"
+    >
+      {zones.map((z) => {
+        const Icon = z.icon;
+        return (
+          <Link
+            key={z.href}
+            href={z.href}
+            className={`group flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold tracking-wider transition-all ${
+              z.active
+                ? "bg-gold/15 border border-gold/50 text-gold shadow-[0_0_18px_rgba(201,169,97,0.25)]"
+                : "border border-transparent text-white/70 hover:text-white hover:bg-white/5"
+            }`}
+            aria-current={z.active ? "page" : undefined}
+          >
+            <Icon className="h-3.5 w-3.5" />
+            <span>{z.label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
 /** סייד-בר ניווט בסגנון הדמו: רקע שקוף-נייבי, גבולות זהב, אקטיבי בזהב */
 export function CinematicSidebar() {

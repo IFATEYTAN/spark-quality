@@ -285,6 +285,10 @@ export const reports = mysqlTable(
     status: mysqlEnum("status", ["pending", "processing", "done", "failed"]).default("pending").notNull(),
     /** Summary metrics computed at parse time (JSON) */
     summary: json("summary"),
+    /** LLM analysis output from surense-analyzer skill (Prompt 2). Stored once per report. */
+    llmAnalysis: json("llmAnalysis"),
+    /** Detected report type from Prompt 1 classification (surense | roeto | unknown) */
+    reportType: varchar("reportType", { length: 32 }),
     /** Number of clients found */
     clientCount: int("clientCount"),
     /** Total AUM in this report */

@@ -7,6 +7,7 @@ import { Menu, X, Play, LogIn, Sparkles } from "lucide-react";
 import { LOGO } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { TopZoneNav } from "@/components/CinematicShell";
 
 interface NavSection {
   id: string;
@@ -96,6 +97,8 @@ export function SiteNav({ available }: SiteNavProps) {
         >
           <img src={LOGO.clear} alt="SPARK AI" className="h-9 w-auto" />
         </a>
+        {/* 3-zone unified nav (Site / Demo / Product) */}
+        <TopZoneNav />
 
         {/* Desktop tabs */}
         <ul className="hidden lg:flex items-center gap-1 mx-auto">

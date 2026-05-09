@@ -71,6 +71,13 @@
       "when": 1778315560495,
       "tag": "0009_unique_tyrannus",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1778367133387,
+      "tag": "0010_redundant_demogoblin",
+      "breakpoints": true
     }
   ]
 }
