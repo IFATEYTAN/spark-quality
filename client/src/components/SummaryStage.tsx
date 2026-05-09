@@ -136,7 +136,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                 <button
                   type="button"
                   onClick={onReset}
-                  className="group flex items-center justify-center gap-2 rounded-md bg-navy-deep px-6 py-3 text-sm font-bold text-cream transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
+                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-navy-deep px-6 py-3 text-sm font-bold text-white transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
                 >
                   <RotateCcw className="h-4 w-4 transition-transform group-hover:-rotate-180 duration-500" />
                   הפעל את הדמו מההתחלה
@@ -144,7 +144,7 @@ export function SummaryStage({ onReset }: SummaryStageProps) {
                 <button
                   type="button"
                   onClick={() => setContactOpen(true)}
-                  className="group flex items-center justify-center gap-2 rounded-md border-2 border-navy-deep bg-transparent px-6 py-3 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep hover:text-cream"
+                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-3 text-sm font-bold text-white transition-all hover:bg-gold/90 hover:shadow-2xl hover:shadow-gold/20"
                 >
                   <Calendar className="h-4 w-4" />
                   קבעו פגישת אפיון
