@@ -279,9 +279,11 @@ export function TopZoneNav() {
   const isSiteZone = !isProductZone && !isDemoZone;
 
   const productHref = isAuthenticated ? "/dashboard" : getLoginUrl();
+  // משתמש מחובר לוחץ על "אתר" מקבל דגל למנוע מה-redirect האוטומטי ל-/dashboard.
+  const siteHref = isAuthenticated ? "/?view=site" : "/";
 
   const zones = [
-    { href: "/", label: "אתר", icon: Globe, active: isSiteZone },
+    { href: siteHref, label: "אתר", icon: Globe, active: isSiteZone },
     { href: "/demo", label: "דמו", icon: Film, active: isDemoZone },
     { href: productHref, label: "מערכת", icon: Briefcase, active: isProductZone },
   ];

@@ -28,7 +28,10 @@ export default function Home() {
   // משתמשים ב-setLocation (ניווט פנימי ללא טעינה מחדש) במקום window.location.replace שגרם לטעינת עמוד כפול.
   const isContactMode = typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("contact") === "1";
-  const willRedirect = !loading && isAuthenticated && Boolean(user) && !isContactMode;
+  // אם משתמש מחובר ולחץ על כפתור "אתר" ב-TopZoneNav הוא גיגלית לעמוד הבית הציבורי — גם ?view=site מבטל את ה-redirect האוטומטי.
+  const isSiteViewMode = typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("view") === "site";
+  const willRedirect = !loading && isAuthenticated && Boolean(user) && !isContactMode && !isSiteViewMode;
   useEffect(() => {
     if (!willRedirect) return;
     const hasWorkspace = Boolean((user as { workspaceId?: number | null } | null)?.workspaceId);

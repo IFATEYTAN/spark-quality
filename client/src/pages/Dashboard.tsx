@@ -2,7 +2,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
-import { ActionCenter } from "@/components/ActionCenter";
+import { PriorityActionGroups } from "@/components/PriorityActionGroups";
 import { trpc } from "@/lib/trpc";
 import {
   Building2,
@@ -168,18 +168,28 @@ export default function Dashboard() {
           </GlassCard>
         </div>
 
-        {/* Action Center — surfaces post-import next steps */}
+        {/* Priority Action Groups — 16 triggers in 5 priority buckets (P0-P4) */}
         {totalClients > 0 && (
-          <ActionCenter
+          <PriorityActionGroups
             counts={{
-              vipClients: metricsQuery.data?.vipClients ?? 0,
-              liquidFunds: metricsQuery.data?.liquidFunds ?? 0,
-              tikun190Candidates: metricsQuery.data?.tikun190Candidates ?? 0,
+              poaExpired: 0,
+              poaExpiring90d: 0,
+              riskTemporary: metricsQuery.data?.riskEnding ?? 0,
+              coverageEnding: metricsQuery.data?.coverageGaps ?? 0,
+              savingsNoInsurance: metricsQuery.data?.coverageGaps ?? 0,
+              noActivePension: 0,
+              age46NoLongTermCare: 0,
+              aumFrozen: metricsQuery.data?.liquidFunds ?? 0,
               highFees: metricsQuery.data?.highFees ?? 0,
-              riskEnding: metricsQuery.data?.riskEnding ?? 0,
-              coverageGaps: metricsQuery.data?.coverageGaps ?? 0,
+              trackMismatch: 0,
+              selfEmployedNoDeposit: metricsQuery.data?.tikun190Candidates ?? 0,
+              concentrationRisk: 0,
+              birthdayMilestone: 0,
+              birthdayThisMonth: 0,
+              vipGoldPremium: metricsQuery.data?.vipClients ?? 0,
+              noEmail: 0,
             }}
-            subtitle="זיהינו את הקטגוריות הפעילות בתיק שלכם — לחצו על קטגוריה כדי לראות את תרשים הזרימה האוטומטי ואת הצעד הבא."
+            subtitle="כל לקוח, כל הזדמנות, כל סיכון — מסודרים לפי דחיפות. לחצו על קבוצה לפתיחה ועל טריגר כדי להפעיל את האוטומציה."
           />
         )}
 
