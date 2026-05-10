@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, MessageSquare, CheckCircle2, FileText, Briefcase, TrendingUp, Mail, Sparkles, Loader2 } from "lucide-react";
 import type { ParsedReport } from "@/lib/parseReport";
 import { trpc } from "@/lib/trpc";
+import { UpgradeModal } from "@/components/UpgradeModal";
+import { useFeatureGate } from "@/hooks/useFeatureGate";
 
 interface ActionsStageProps {
   onComplete: () => void;
@@ -208,6 +210,7 @@ export function ActionsStage({ onComplete, parsed, analysis }: ActionsStageProps
   const ACTIONS_TO_RENDER = dynamicActions ?? ACTIONS;
   
   const composeMutation = trpc.reports.compose.useMutation();
+  const composerGate = useFeatureGate("ai.composer");
   const [composedMessages, setComposedMessages] = useState<Record<number, string>>({});
   const [visibleActions, setVisibleActions] = useState<number[]>([]);
   const [showSummary, setShowSummary] = useState(false);
@@ -298,6 +301,10 @@ export function ActionsStage({ onComplete, parsed, analysis }: ActionsStageProps
                     {(action as any).triggerData && !composedMessages[action.id] && (
                       <button
                         onClick={() => {
+                          if (!composerGate.allowed) {
+                            composerGate.prompt();
+                            return;
+                          }
                           const td = (action as any).triggerData;
                           composeMutation.mutate(
                             { 
@@ -330,6 +337,7 @@ export function ActionsStage({ onComplete, parsed, analysis }: ActionsStageProps
           })}
         </div>
       </div>
+      <UpgradeModal {...composerGate.modalProps} />
     </div>
   );
 }

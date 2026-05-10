@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "./db";
 import { router, superAdminProcedure } from "./_core/trpc";
+import { assertDowngradeAllowed, normalizeWorkspacePlan } from "./featureGate";
 
 /**
  * Admin router - cross-workspace operations for SPARK AI staff.
@@ -48,9 +49,27 @@ export const adminRouter = router({
       z.object({
         workspaceId: z.number(),
         plan: z.enum(["basic", "pro", "premium", "enterprise"]),
+        force: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Block downgrades that violate the new plan's quotas — unless the
+      // super-admin explicitly forces it (e.g., agreed offline with the customer).
+      if (!input.force) {
+        const stats = await db.listAllWorkspacesWithStats();
+        const ws = stats.find(w => w.id === input.workspaceId);
+        if (ws) {
+          assertDowngradeAllowed(
+            normalizeWorkspacePlan(ws.plan),
+            input.plan,
+            {
+              clientCount: ws.clientCount,
+              activeFlagCount: 0,
+              enabledTriggerCount: 0,
+            },
+          );
+        }
+      }
       await db.setWorkspacePlan(input.workspaceId, input.plan);
       await db.writeAudit({
         actorUserId: ctx.user.id,

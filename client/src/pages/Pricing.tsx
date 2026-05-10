@@ -1,11 +1,15 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
+import { EnterpriseContactDialog } from "@/components/EnterpriseContactDialog";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Check, Loader2, LogIn, X } from "lucide-react";
-import React, { useRef, useState } from "react";
+import { Check, Crown, Loader2, LogIn, MessageCircle, X } from "lucide-react";
+import React, { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
+import type { PlanKey } from "@shared/planFeatures";
+
+const PLAN_RANK: Record<PlanKey, number> = { basic: 1, pro: 2, premium: 3, enterprise: 4 };
 
 type PaidPlan = "basic" | "pro" | "premium";
 
@@ -165,6 +169,20 @@ export default function Pricing() {
 
   const userWorkspaceId = (user as { workspaceId?: number } | null | undefined)?.workspaceId ?? null;
 
+  // Resolve current plan to drive CTA labels ("התוכנית הנוכחית" / "שדרוג" / "הורדת תוכנית").
+  const accessQuery = trpc.billing.myAccessStatus.useQuery(undefined, {
+    enabled: !!isAuthenticated,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
+  const currentPlan = useMemo<PlanKey | null>(() => {
+    const raw = (accessQuery.data as { plan?: string } | undefined)?.plan;
+    if (raw === "basic" || raw === "pro" || raw === "premium" || raw === "enterprise") return raw;
+    return null;
+  }, [accessQuery.data]);
+
+  const [enterpriseOpen, setEnterpriseOpen] = useState(false);
+
   const handleSelect = (slug: PaidPlan) => {
     // Anyone without an active workspace must complete the full onboarding
     // (license verification + payment). No trial path exists anywhere.
@@ -188,11 +206,19 @@ export default function Pricing() {
   };
 
   const ctaLabel = (plan: PlanCard): string => {
-    if (isAuthenticated && userWorkspaceId) {
-      return `שדרוג ל-${plan.name}`;
+    if (!isAuthenticated || !userWorkspaceId) {
+      return `בחר ${plan.name}`;
     }
-    return `בחר ${plan.name}`;
+    if (!currentPlan) return `שדרוג ל-${plan.name}`;
+    if (currentPlan === plan.slug) return "התוכנית הנוכחית";
+    if (PLAN_RANK[plan.slug] > PLAN_RANK[currentPlan]) return `שדרוג ל-${plan.name}`;
+    return `הורדת תוכנית ל-${plan.name}`;
   };
+
+  // Disable the CTA on the user's currently active plan to prevent accidental
+  // re-checkout. All other plans (upgrade or downgrade) remain clickable.
+  const isCurrent = (plan: PlanCard): boolean =>
+    !!isAuthenticated && !!userWorkspaceId && currentPlan === plan.slug;
 
   // Returning users landing on /pricing should be able to enter the app
   // without going through onboarding again. Authenticated -> /dashboard;
@@ -281,7 +307,7 @@ export default function Pricing() {
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
           {PLANS.map((plan) => (
             <GlassCard
               key={plan.slug}
@@ -315,11 +341,14 @@ export default function Pricing() {
 
               <button
                 onClick={() => handleSelect(plan.slug)}
-                disabled={startCheckoutViaMake.isPending || requestCheckout.isPending}
-                className={`w-full py-3 rounded-lg font-medium transition-all mb-6 disabled:opacity-50 inline-flex items-center justify-center gap-2 ${
-                  plan.popular
-                    ? "bg-gold text-[#06101F] hover:bg-gold-light shadow-[0_0_20px_rgba(201,169,97,0.3)]"
-                    : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
+                disabled={startCheckoutViaMake.isPending || requestCheckout.isPending || isCurrent(plan)}
+                aria-current={isCurrent(plan) ? "true" : undefined}
+                className={`w-full py-3 rounded-lg font-medium transition-all mb-6 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 ${
+                  isCurrent(plan)
+                    ? "bg-emerald-500/20 text-emerald-200 border border-emerald-400/40 cursor-not-allowed"
+                    : plan.popular
+                      ? "bg-gold text-[#06101F] hover:bg-gold-light shadow-[0_0_20px_rgba(201,169,97,0.3)]"
+                      : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
                 }`}
               >
                 {(startCheckoutViaMake.isPending && startCheckoutViaMake.variables?.plan === plan.slug) ||
@@ -361,6 +390,58 @@ export default function Pricing() {
               </div>
             </GlassCard>
           ))}
+
+          {/* 4th card — Enterprise (contact-only, no checkout) */}
+          <GlassCard
+            key="enterprise"
+            goldAccent={false}
+            className="p-7 flex flex-col relative ring-1 ring-white/15"
+          >
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-white/10 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap border border-white/20">
+              מותאם לסוכנויות גדולות
+            </div>
+            <h3 className="font-display text-2xl font-bold text-white mb-2 flex items-center gap-2">
+              <Crown className="h-5 w-5 text-gold" />
+              Enterprise
+            </h3>
+            <p className="text-white/60 text-sm mb-6 min-h-[44px]">
+              לסוכנויות גדולות עם דרישות מיוחדות — אינטגרציות, SLA, הטמעת CRM, ותמיכה טלפונית יעודית.
+            </p>
+            <div className="mb-2">
+              <span className="text-3xl font-bold text-white/90">מחיר מותאם</span>
+            </div>
+            <div className="text-white/50 text-xs mb-6 min-h-[18px]">
+              ההצעה אישית לאחר שיחת היכרות
+            </div>
+            <div className="rounded-lg border border-white/15 bg-white/[0.03] px-4 py-3 mb-6 space-y-1">
+              <div className="text-white text-sm font-bold">לקוחות וטריגרים — ללא הגבלה</div>
+              <div className="text-white/70 text-xs">כל הפיצ׳רים של Premium + תוספות מותאמות</div>
+            </div>
+            <button
+              onClick={() => setEnterpriseOpen(true)}
+              className="w-full py-3 rounded-lg font-medium transition-all mb-6 inline-flex items-center justify-center gap-2 bg-white/10 text-white hover:bg-white/20 border border-white/20"
+            >
+              <MessageCircle className="h-4 w-4" />
+              צרו קשר
+            </button>
+            <div className="space-y-3 flex-1">
+              <div className="text-white/60 text-[11px] uppercase tracking-wider mb-2">מה כלול בתוכנית</div>
+              {[
+                "כל תכולות Premium",
+                "ללא הגבלת לקוחות ומשתמשים",
+                "אינטגרציות CRM יעודיות (Salesforce / Priority)",
+                "SLA חוזה עם התחייבות זמינות",
+                "מנהל לקוח אישי ו-Onboarding מורחב",
+                "העברת נתונים יעודית מ-CRM ישן",
+                "הגדרות SSO / Active Directory",
+              ].map((feat) => (
+                <div key={feat} className="flex items-start gap-3">
+                  <Check className="h-4 w-4 text-gold shrink-0 mt-0.5" />
+                  <span className="text-white/85 text-sm leading-relaxed">{feat}</span>
+                </div>
+              ))}
+            </div>
+          </GlassCard>
         </div>
 
         {/* Comparison table */}
@@ -415,6 +496,7 @@ export default function Pricing() {
           </p>
         </div>
       </div>
+      <EnterpriseContactDialog open={enterpriseOpen} onOpenChange={setEnterpriseOpen} />
     </CinematicShell>
   );
 }

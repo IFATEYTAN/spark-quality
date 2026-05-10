@@ -921,4 +921,60 @@ export const billingRouter = router({
         .where(eq(workspaces.id, input.workspaceId));
       return { ok: true as const };
     }),
+
+  /**
+   * Enterprise card CTA: a public lead-capture endpoint. Anyone can submit
+   * (logged-in or not). We email Anat and ping the owner via notifyOwner so
+   * the lead lands in two channels at once. We deliberately do not store
+   * leads in a dedicated table yet — keep it simple until volume justifies it.
+   */
+  requestEnterpriseContact: publicProcedure
+    .input(
+      z.object({
+        fullName: z.string().min(2).max(120),
+        email: z.string().email(),
+        phone: z.string().min(6).max(40),
+        agencyName: z.string().max(160).optional(),
+        clientCount: z.string().max(40).optional(),
+        notes: z.string().max(2000).optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const lines: string[] = [
+        `שם: ${input.fullName}`,
+        `אימייל: ${input.email}`,
+        `טלפון: ${input.phone}`,
+      ];
+      if (input.agencyName) lines.push(`סוכנות: ${input.agencyName}`);
+      if (input.clientCount) lines.push(`כמות לקוחות משוערת: ${input.clientCount}`);
+      if (input.notes) lines.push("", `הערות: ${input.notes}`);
+      const content = lines.join("\n");
+      const title = `🟡 ליד Enterprise חדש — ${input.fullName}`;
+
+      let delivered = false;
+      try {
+        delivered = await notifyOwner({ title, content });
+      } catch (err) {
+        console.error("[billing] enterprise notifyOwner failed", err);
+      }
+
+      try {
+        const ownerEmail = "anat@sparkai.co.il";
+        const { subject, html, text } = renderBrandedEmail({
+          subject: title,
+          eyebrow: "SPARK Quality · Enterprise",
+          headline: "ליד Enterprise חדש הממתין למעקב",
+          greeting: "שלום ענת,",
+          body: [
+            `התקבלה פניה מ ${input.fullName} דרך מסך תמחור Enterprise.`,
+            { type: "list", title: "פרטי הליד", items: lines },
+          ],
+        });
+        await sendEmail({ to: ownerEmail, subject, html, text });
+      } catch (err) {
+        console.error("[billing] enterprise email failed", err);
+      }
+
+      return { delivered } as const;
+    }),
 });

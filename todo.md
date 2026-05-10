@@ -717,3 +717,30 @@
 
 ## Hot-fix — IntroStage spacing (2026-05-10)
 - [x] Add top spacing in IntroStage so the headline isn't crammed against the header
+
+
+## Round 83 — Subscription plans audit + spec (2026-05-10)
+
+- [x] Locate the plans/pricing page in the client and list every plan with name, price, billing cycle, and CTA
+- [x] Trace where each plan CTA leads (route, mutation, redirect target)
+- [x] Inspect the billing router to understand the server contract: plan keys, prices, what `requestCheckout` does today
+- [x] Identify every plan-aware UI surface (gates, badges, feature flags) and confirm whether they use the plan key consistently — finding: NO feature gating exists in code
+- [x] Write a short spec document mapping each plan → destination → capabilities → known gaps
+- [x] Deliver the spec to the user as a Markdown attachment
+
+
+## Round 84 — Plan feature gating + Enterprise card (2026-05-10)
+
+- [x] Build `shared/planFeatures.ts` — matrix of every gated feature × {basic, pro, premium, enterprise}, plus quotas (clients, flags) per plan
+- [x] Server: add `requireFeature(ctx, key)` helper that throws TRPCError FORBIDDEN with structured metadata
+- [x] Server: gate AI Composer, Briefing, Client-Summary, Smart Q&A by plan via requireFeature
+- [x] Server: enforce client-count quota at clients.create insertion time
+- [x] Server: block downgrades that violate quotas in admin.setWorkspacePlan (super-admin can `force: true`)
+- [x] Client: `useFeatureGate(key)` hook returning `{ allowed, requiredPlan, prompt, modalProps }`
+- [x] Client: wire `UpgradeModal` to AI Composer CTA so basic users see the modal instead of FORBIDDEN
+- [x] Client: Pricing page reads current plan from `myAccessStatus`; CTA label = "התוכנית הנוכחית" / "שדרוג ל-X" / "הורדת תוכנית ל-X"
+- [x] Client: Pricing — add 4th "Enterprise · מחיר מותאם" card with "צרו קשר" button (no checkout) wired to `requestEnterpriseContact`
+- [x] Server: new `billing.requestEnterpriseContact` procedure (notify owner + email Anat with workspace details)
+- [x] Vitest: planFeatures matrix shape + canDowngradeTo (12 tests, all passing)
+- [x] Run full TS check + targeted vitest — 153/163 pass, 10 pre-existing failures unchanged from HEAD
+- [x] Save Round 84 checkpoint

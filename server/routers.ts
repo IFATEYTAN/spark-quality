@@ -11,6 +11,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminRouter } from "./adminRouter";
 import { billingRouter } from "./billing";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { requireClientQuota, requireFeature } from "./featureGate";
 import { isValidIsraeliTaxId, normalizeIsraeliMobile } from "@shared/ilValidators";
 import { invokeLLM } from "./_core/llm";
 import {
@@ -467,6 +468,7 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
+        await requireClientQuota(ctx);
         const id = await db.createClient({
           workspaceId: ctx.user.workspaceId,
           ownerUserId: ctx.user.id,
@@ -653,7 +655,8 @@ export const appRouter = router({
           company: z.string().optional(),
         })
       )
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        await requireFeature(ctx, "ai.composer");
         const completion = await invokeLLM({
           messages: [
             { role: "system", content: COMPOSER_SYSTEM },
@@ -669,7 +672,8 @@ export const appRouter = router({
      */
     briefing: workspaceProcedure
       .input(z.object({ analysis: z.any(), agentName: z.string() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        await requireFeature(ctx, "ai.briefing");
         const completion = await invokeLLM({
           messages: [
             { role: "system", content: BRIEFING_SYSTEM },
@@ -691,7 +695,8 @@ export const appRouter = router({
      */
     clientSummary: workspaceProcedure
       .input(z.object({ client: z.any(), analysisContext: z.any().optional() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        await requireFeature(ctx, "ai.briefing");
         const completion = await invokeLLM({
           messages: [
             { role: "system", content: CLIENT_SUMMARY_SYSTEM },
@@ -706,7 +711,8 @@ export const appRouter = router({
      */
     qa: workspaceProcedure
       .input(z.object({ question: z.string(), analysis: z.any() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ ctx, input }) => {
+        await requireFeature(ctx, "ai.smartQA");
         const completion = await invokeLLM({
           messages: [
             { role: "system", content: QA_SYSTEM },

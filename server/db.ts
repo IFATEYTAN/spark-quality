@@ -854,6 +854,19 @@ export async function listAuditLog(opts?: { limit?: number; workspaceId?: number
     .limit(limit);
 }
 
+/**
+ * Counts clients in a workspace. Used by the plan-quota check before insert.
+ */
+export async function countClientsInWorkspace(workspaceId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const rows = await db
+    .select({ c: sql`count(*)` })
+    .from(clients)
+    .where(eq(clients.workspaceId, workspaceId));
+  return Number((rows[0] as any)?.c ?? 0);
+}
+
 export async function listAllWorkspacesWithStats() {
   const db = await getDb();
   if (!db) return [];
