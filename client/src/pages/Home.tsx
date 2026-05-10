@@ -18,6 +18,7 @@ import {
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { PRICING_COPY, SPARK_QUALITY_PRICING } from "@shared/copy";
 
 export default function Home() {
   const { isAuthenticated, user, loading } = useAuth();
@@ -31,6 +32,12 @@ export default function Home() {
   // are kept so that the inline CTAs ("כניסה למערכת") still work for logged-in
   // visitors, but no automatic navigation happens here anymore.
   void setLocation; // intentionally unused; kept to avoid wider refactor
+
+  // Landing-page pricing toggle — mirrors the same control on /pricing so
+  // visitors can flip between monthly (₪349) and annual-billed (₪297/mo)
+  // before clicking "הצטרפו ל-SPARK Quality".
+  const [pricingCycle, setPricingCycle] = useState<"monthly" | "yearly">("yearly");
+  const isYearly = pricingCycle === "yearly";
 
   // חלקיקי זהב מאנימציה
   const particles = useMemo(
@@ -383,19 +390,54 @@ export default function Home() {
             {/* SPARK Quality — single plan */}
             <div className="relative rounded-lg p-10 backdrop-blur-md bg-gradient-to-br from-gold/12 to-gold/5 border border-gold/45 shadow-[0_8px_32px_rgba(201,169,97,0.22)] flex flex-col">
               <div className="absolute -top-3 right-1/2 translate-x-1/2 px-3 py-1 bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] text-[11px] font-bold tracking-widest uppercase rounded-full shadow-lg whitespace-nowrap">
-                ★ כל היכולות · ללא מגבלה
+                {PRICING_COPY.badge}
               </div>
               <div className="text-[11px] tracking-[0.3em] uppercase text-gold mb-3">SPARK Quality</div>
               <h3 className="font-display text-2xl font-black text-white tracking-tight leading-snug">
-                תוכנית אחת. כל הכלים. ללא מגבלה.
+                {PRICING_COPY.headline}
               </h3>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="font-display text-6xl font-black text-gold">349</span>
+
+              {/* Monthly / Yearly toggle */}
+              <div className="mt-6 inline-flex rounded-full bg-white/5 border border-white/10 p-1 self-start">
+                <button
+                  type="button"
+                  onClick={() => setPricingCycle("monthly")}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-full transition-colors ${
+                    !isYearly ? "bg-gold text-[#06101F]" : "text-white/70 hover:text-white"
+                  }`}
+                  aria-pressed={!isYearly}
+                >
+                  חיוב חודשי
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPricingCycle("yearly")}
+                  className={`px-4 py-1.5 text-xs font-bold rounded-full transition-colors ${
+                    isYearly ? "bg-gold text-[#06101F]" : "text-white/70 hover:text-white"
+                  }`}
+                  aria-pressed={isYearly}
+                >
+                  חיוב שנתי · חיסכון {SPARK_QUALITY_PRICING.yearlyDiscountPct}%
+                </button>
+              </div>
+
+              <div className="mt-5 flex items-baseline gap-2">
+                <span className="font-display text-6xl font-black text-gold">
+                  {isYearly ? SPARK_QUALITY_PRICING.yearlyMonthlyIls : SPARK_QUALITY_PRICING.monthlyIls}
+                </span>
                 <span className="text-base text-white/60">₪ / חודש</span>
               </div>
-              <p className="text-sm text-white/65 mt-2">
-                או <span className="text-gold font-bold">297 ₪ / חודש</span> בחיוב שנתי
-                <span className="text-white/50"> · 3,567 ₪ לשנה · חיסכון של 15%</span>
+              <p className="text-sm text-white/65 mt-2 min-h-[3rem]">
+                {isYearly ? (
+                  <>
+                    חיוב שנתי מראש · <span className="text-gold font-bold">{SPARK_QUALITY_PRICING.yearlyTotalIls.toLocaleString("he-IL")} ₪ לשנה</span>
+                    <span className="text-white/50"> · חיסכון {SPARK_QUALITY_PRICING.yearlyDiscountPct}% מהמחיר החודשי</span>
+                  </>
+                ) : (
+                  <>
+                    חיוב חודשי · ניתן לעבור לחיוב שנתי בכל עת · <span className="text-gold font-bold">תחסכו {SPARK_QUALITY_PRICING.yearlyDiscountPct}%</span>
+                  </>
+                )}
               </p>
 
               <div className="mt-7 flex flex-wrap gap-6 pb-6 border-b border-white/10">
@@ -429,8 +471,11 @@ export default function Home() {
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />תמיכה אישית בוואטסאפ</li>
               </ul>
 
-              <Link href="/pricing" className="mt-7 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3.5 text-sm font-bold text-[#06101F] transition-all hover:scale-105 shadow-lg shadow-gold/30">
-                הצטרפו ל-SPARK Quality
+              <Link
+                href={`/pricing?cycle=${pricingCycle}`}
+                className="mt-7 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3.5 text-sm font-bold text-[#06101F] transition-all hover:scale-105 shadow-lg shadow-gold/30"
+              >
+                {PRICING_COPY.primaryCta}
               </Link>
             </div>
 
@@ -438,7 +483,7 @@ export default function Home() {
             <div className="rounded-lg p-10 backdrop-blur-md bg-white/[0.04] border border-white/12 flex flex-col">
               <div className="text-[11px] tracking-[0.3em] uppercase text-white/60 mb-3">Enterprise</div>
               <h3 className="font-display text-2xl font-black text-white tracking-tight leading-snug">
-                לסוכנויות גדולות · פתרון מותאם.
+                {PRICING_COPY.enterpriseHeadline}
               </h3>
               <p className="mt-5 text-sm text-white/70 leading-relaxed">
                 למעלה מ-10 סוכנים, אינטגרציות פנימיות, הטמעה אישית, SLA ייעודי, וחיבור למערכת ה-CRM שלכם. נשמח לבנות יחד את החבילה.

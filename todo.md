@@ -935,3 +935,13 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`.
 - [x] Onboarding plan picker mirrors the single tier (no multi-card picker; uses monthly/yearly toggle on the same SPARK Quality price).
 - [x] tsc clean for the touched files; the two pre-existing DemoExperience errors are unrelated to this round (tracked separately).
 - [x] Save checkpoint.
+
+## Round 102 — Follow-ups + Spec docs + MVP rollout (2026-05-11)
+- [x] Fix the two pre-existing TS errors in client/src/pages/DemoExperience.tsx — `tsc --noEmit` clean (the HMR-watcher cache was stale; a fresh tsc run returns exit 0).
+- [x] Landing pricing card: added an interactive monthly/yearly toggle on Home.tsx — ₪349 monthly vs ₪297 yearly-billed (₪3,567/yr), preserving the selection through the CTA query string `?cycle=...`.
+- [x] Pulled the SPARK Quality headline + sub-headline + CTA + Enterprise headline into shared/copy.ts; three variants exposed (default, ROI-focused, outcome-focused) for one-line A/B swaps.
+- [x] tsc clean (exit 0) + 25/25 targeted vitest suites still pass.
+- [ ] Save checkpoint
+- [ ] Author docs/system-spec.md — comprehensive end-to-end spec
+- [ ] Author docs/mvp-rollout.md — plan for the first 3–5 pilot agents
+- [ ] Deliver both docs + final checkpoint to the user

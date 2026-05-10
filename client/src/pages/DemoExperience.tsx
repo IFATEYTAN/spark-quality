@@ -23,6 +23,8 @@ import type { ParsedReport } from "@/lib/parseReport";
 //   work with their actual file, no need to bucket).
 // - Guests skip Upload entirely and instead pick a single analysis category
 //   so they don't drown in 16 triggers at once.
+// NOTE: The Stage union (in demoData.ts) is the source of truth; if a new stage is
+// added there, both maps below must list it explicitly so TS will enforce coverage.
 const STAGE_LABELS_ADMIN: Record<Stage, string> = {
   splash: "0 / 7 · פתיחה",
   intro: "0 / 7 · פתיחה",
