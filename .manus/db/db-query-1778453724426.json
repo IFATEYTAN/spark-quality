@@ -1,0 +1,21 @@
+{
+  "query": "SELECT (SELECT COUNT(*) FROM workspaces) AS workspaces, (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM clients) AS clients, (SELECT COUNT(*) FROM policies) AS policies, (SELECT COUNT(*) FROM reports) AS reports, (SELECT COUNT(*) FROM triggerHandled) AS trigger_handled, (SELECT COUNT(*) FROM messageGenerations) AS message_gens, (SELECT COUNT(*) FROM payment_attempts) AS pay_attempts, (SELECT COUNT(*) FROM contact_submissions) AS contacts;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT (SELECT COUNT(*) FROM workspaces) AS workspaces, (SELECT COUNT(*) FROM users) AS users, (SELECT COUNT(*) FROM clients) AS clients, (SELECT COUNT(*) FROM policies) AS policies, (SELECT COUNT(*) FROM reports) AS reports, (SELECT COUNT(*) FROM triggerHandled) AS trigger_handled, (SELECT COUNT(*) FROM messageGenerations) AS message_gens, (SELECT COUNT(*) FROM payment_attempts) AS pay_attempts, (SELECT COUNT(*) FROM contact_submissions) AS contacts;",
+  "rows": [
+    {
+      "workspaces": "5",
+      "users": "6",
+      "clients": "1460",
+      "policies": "0",
+      "reports": "11",
+      "trigger_handled": "0",
+      "message_gens": "0",
+      "pay_attempts": "5",
+      "contacts": "162"
+    }
+  ],
+  "messages": [],
+  "stdout": "workspaces\tusers\tclients\tpolicies\treports\ttrigger_handled\tmessage_gens\tpay_attempts\tcontacts\n5\t6\t1460\t0\t11\t0\t0\t5\t162\n",
+  "stderr": "",
+  "execution_time_ms": 1837
+}

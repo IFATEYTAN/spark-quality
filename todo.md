@@ -941,7 +941,7 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`.
 - [x] Landing pricing card: added an interactive monthly/yearly toggle on Home.tsx — ₪349 monthly vs ₪297 yearly-billed (₪3,567/yr), preserving the selection through the CTA query string `?cycle=...`.
 - [x] Pulled the SPARK Quality headline + sub-headline + CTA + Enterprise headline into shared/copy.ts; three variants exposed (default, ROI-focused, outcome-focused) for one-line A/B swaps.
 - [x] tsc clean (exit 0) + 25/25 targeted vitest suites still pass.
-- [ ] Save checkpoint
-- [ ] Author docs/system-spec.md — comprehensive end-to-end spec
-- [ ] Author docs/mvp-rollout.md — plan for the first 3–5 pilot agents
+- [x] Save checkpoint — 9a7736cf.
+- [x] Author docs/system-spec.md — comprehensive end-to-end spec (12 sections, entity inventory, architecture, AI usage, status, remaining work).
+- [x] Author docs/mvp-rollout.md — 6-week rollout plan, 3-tier KPIs, support model, risks, exit criteria.
 - [ ] Deliver both docs + final checkpoint to the user
