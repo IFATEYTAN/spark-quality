@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { PriorityActionGroups } from "@/components/PriorityActionGroups";
 import { InteractiveTriggersGrid } from "@/components/InteractiveTriggersGrid";
+import { AIBriefingModal } from "@/components/AIBriefingModal";
+import { AIQaModal } from "@/components/AIQaModal";
 import { trpc } from "@/lib/trpc";
 import {
   Building2,
@@ -16,12 +18,14 @@ import {
   Users,
   ArrowLeft,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 
 export default function Dashboard() {
   const { user, loading, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const [briefingOpen, setBriefingOpen] = useState(false);
+  const [qaOpen, setQaOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -99,6 +103,27 @@ export default function Dashboard() {
               : "הלקוחות שלכם, הדוחות והמשימות שלכם — במקום אחד."}
           </p>
         </div>
+
+        {/* AI Actions Bar */}
+        {totalClients > 0 && (
+          <div className="flex flex-wrap gap-3 mb-6">
+            <Button
+              onClick={() => setBriefingOpen(true)}
+              className="bg-gold hover:bg-gold/90 text-navy-deep font-bold"
+            >
+              <Sparkles className="h-4 w-4 me-2" />
+              תדריך בוקר עם AI
+            </Button>
+            <Button
+              onClick={() => setQaOpen(true)}
+              variant="outline"
+              className="border-gold/30 text-gold hover:bg-gold/10"
+            >
+              <Sparkles className="h-4 w-4 me-2" />
+              שאל את ה-AI על הנתונים
+            </Button>
+          </div>
+        )}
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8 sm:mb-10">
@@ -294,6 +319,18 @@ export default function Dashboard() {
             </Link>
           )}
         </div>
+
+        {/* AI Modals */}
+        <AIBriefingModal
+          isOpen={briefingOpen}
+          onClose={() => setBriefingOpen(false)}
+          analysisContext={metricsQuery.data}
+        />
+        <AIQaModal
+          isOpen={qaOpen}
+          onClose={() => setQaOpen(false)}
+          analysisContext={metricsQuery.data}
+        />
 
         {/* Empty state */}
         {totalClients === 0 && totalReports === 0 && (

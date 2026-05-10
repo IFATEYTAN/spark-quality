@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { X, Sparkles, Loader2, Send, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Sparkles, Loader2, Send, MessageSquare, Lightbulb } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 
 interface AIQaModalProps {
@@ -11,7 +11,24 @@ interface AIQaModalProps {
 export function AIQaModal({ isOpen, onClose, analysisContext }: AIQaModalProps) {
   const [question, setQuestion] = useState("");
   const [history, setHistory] = useState<{ q: string; a: string }[]>([]);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const qaMutation = trpc.reports.qa.useMutation();
+  const suggestionsMutation = trpc.reports.smartSuggestions.useMutation();
+
+  useEffect(() => {
+    if (isOpen && suggestions.length === 0 && !suggestionsMutation.isPending) {
+      suggestionsMutation.mutate(
+        { analysis: analysisContext },
+        {
+          onSuccess: (res) => {
+            if (res.suggestions && Array.isArray(res.suggestions)) {
+              setSuggestions(res.suggestions);
+            }
+          }
+        }
+      );
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -54,6 +71,25 @@ export function AIQaModal({ isOpen, onClose, analysisContext }: AIQaModalProps) 
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground opacity-60">
               <MessageSquare className="h-12 w-12 mb-4" />
               <p className="text-sm">שאל כל שאלה על הנתונים בדוח שהועלה.</p>
+            </div>
+          )}
+
+          {/* Smart Suggestions Chips */}
+          {history.length === 0 && suggestions.length > 0 && (
+            <div className="flex flex-wrap gap-2 justify-center mt-4">
+              {suggestions.map((sug, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setQuestion(sug);
+                    // We don't auto-submit so the user can read it first, but we could.
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gold/10 text-gold border border-gold/20 text-xs hover:bg-gold/20 transition-colors"
+                >
+                  <Lightbulb className="h-3 w-3" />
+                  {sug}
+                </button>
+              ))}
             </div>
           )}
           

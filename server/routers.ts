@@ -725,6 +725,55 @@ export const appRouter = router({
       }),
 
     /**
+     * Smart Suggestions — generate 3-4 proactive questions based on the data
+     */
+    smartSuggestions: workspaceProcedure
+      .input(z.object({ analysis: z.any() }))
+      .mutation(async ({ ctx, input }) => {
+        await requireFeature(ctx, "ai.smartQA");
+        const completion = await invokeLLM({
+          messages: [
+            { 
+              role: "system", 
+              content: "You are an AI assistant for an insurance agent. Based on the provided data, suggest 3-4 short, actionable questions the agent could ask you to get insights. Return ONLY a JSON array of strings. Example: [\"מי הלקוחות עם הצבירה הגבוהה ביותר?\", \"איפה יש הזדמנויות לניוד קרנות השתלמות?\"]" 
+            },
+            { 
+              role: "user", 
+              content: JSON.stringify(input.analysis).slice(0, 2000) 
+            },
+          ],
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "suggestions",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  suggestions: {
+                    type: "array",
+                    items: { type: "string" }
+                  }
+                },
+                required: ["suggestions"],
+                additionalProperties: false
+              }
+            }
+          }
+        });
+        
+        try {
+          const content = completion?.choices?.[0]?.message?.content;
+          if (!content) return { suggestions: [] };
+          const text = typeof content === "string" ? content : JSON.stringify(content);
+          const parsed = JSON.parse(text);
+          return { suggestions: parsed.suggestions || [] };
+        } catch (e) {
+          return { suggestions: [] };
+        }
+      }),
+
+    /**
      * Round 92 — WhatsApp Composer: ask Claude for 3 distinct variants in one shot,
      * persist to messageGenerations, and return them with the new generation id.
      */
