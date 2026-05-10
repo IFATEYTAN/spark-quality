@@ -811,10 +811,44 @@
 - [x] Regression vitest `server/parseReport.sheets.test.ts` (4/4) locks the spelling and the SKIP_HINTS list
 
 
-## Round 90 — Re-align parseShorensReport with the official surense-analyzer skill spec
-- [ ] Unzip surense-analyzer-skill-v2.0 and read SKILL.md + any column/sheet specs
-- [ ] Map every required sheet & column from the skill into a constants module
-- [ ] Rewrite parseShorensReport to follow the spec: sheet whitelist, column resolution, dedup, AUM, premiums, flags
-- [ ] Run the rewritten parser on the user's real xlsx via a Node script and confirm outputs
-- [ ] Add vitest fixtures for the new parser (real fields, dedup, status assignment)
-- [ ] Save checkpoint, ask user to Publish and reverify in /demo
+## Round 90 — Re-align parseShorensReport with the official surense-analyzer skill spec — DONE
+- [x] Unzip surense-analyzer-skill-v2.0 and read SKILL.md + field-reference.md
+- [x] Map every required sheet & column from the skill into the parser (PENSION_PRODUCT_TYPES, RISK_ZMANI_STATUSES, SELF_EMPLOYED_STATUSES, canonical column hints)
+- [x] Rewrite parseShorensReport to follow the spec: 3 real sheets, canonical column resolution, dedup-by-id, separate AUM (savings) vs premiums (insurance), priority-ordered classification
+- [x] Run rewritten parser on the user's real xlsx via scripts/verifyParser.mjs — sheet detection + column counts confirmed
+- [x] Add vitest fixtures (parseShorensReport.test 6/6, parseReport.test 6/6, parseReport.sheets 4/4, categoryFilter 4/4 — 20/20 green)
+- [x] Save checkpoint (ced0949f) — user to Publish and reverify /demo with their real דוח מוצרים בניהול
+
+
+---
+
+## 🅿️ Parked macro-topics — to revisit after Round 91 (in user-stated order)
+These are explicit user requests that are intentionally being deferred until the data-sync foundation is in place, because each of them depends on having real persisted customer data per workspace.
+
+- [ ] **Pricing & plans discussion** — revisit Base/Pro/Premium pricing, feature matrix, trial length and upgrade paths once the live SaaS flow can demonstrate value (depends on real /clients data being persisted per workspace).
+- [ ] **Security & multi-tenant isolation audit (RLS-style)** — every tRPC procedure must scope by `workspaceId` derived from `ctx.user`; no procedure may read/write rows across workspaces. Write a checklist + integration tests that prove user A cannot see user B's clients/reports/KPIs. Also document the cookie/session model and CSRF posture.
+- [ ] **End-to-end screen + entity audit** — walk every route (Landing, Onboarding, Dashboard, Upload, Clients, Team, Pricing, Billing, Demo, Settings) and verify the entity wiring: data source, write path, refresh strategy, empty/loading/error states, and inter-screen navigation. Produce a short matrix-style report.
+
+---
+
+## Round 91 — Sync analysis data into the SaaS (clients + dashboard) — ✅ DONE
+The user reported that uploading a Shorens report in `/upload-report` did not populate `/clients` or `/dashboard`. **Audit found the wiring was already in place** (Rounds 79-90 had built it incrementally): `reports.save` calls `bulkUpsertClients` scoped by `workspaceId`, `clients.list` and `workspaces.metrics` already read from DB, and `Dashboard.tsx` + `Clients.tsx` already call those procedures and invalidate after upload. Round 91 work was therefore an end-to-end **verification** rather than a build.
+
+The user just reported that uploading a Shorens report in `/upload-report` does not actually populate `/clients` or `/dashboard` — the parsed data lives only in client memory inside `/demo`. We need it to flow into the workspace's database so the agent can immediately operate on the customers right after upload.
+
+### Design
+- Extend the `customers` table with the canonical Shorens fields needed by /clients (national_id, dob, status enum, total_savings, monthly_premium, mgmt_fee_savings, mgmt_fee_premium, has_risk_zmani, has_pension, has_coverage_gap, vip flag, agent appointment number, last_updated_from_report).
+- Add a `report_kpis` table (one row per saved report) with totalAUM, totalCustomers, premiumMonthly, riskFlags, etc., scoped by workspaceId.
+- `reports.save` (server) already exists — extend it to UPSERT customers (dedup by national_id within workspace) + insert one `report_kpis` row.
+- `clients.list` returns real customers for the active workspace, with optional category filter and search.
+- `dashboard.summary` returns the latest report's KPIs + counts per category for the active workspace.
+
+### Tasks
+- [x] Schema audit — `clients` table already carries `flagStatus` enum + `isVip` + `totalBalance` + `idNumber` unique-per-workspace. No schema change needed for Round 91.
+- [x] Server audit — `reports.save` already persists customers via `bulkUpsertClients` (scoped to ctx.user.workspaceId) and creates a `reports` row.
+- [x] Server audit — `clients.list` and `workspaces.metrics` exist and return DB data (with role-based filtering: agents see only their own clients).
+- [x] Frontend audit — `/upload-report` calls `reports.save` then `utils.clients.list.invalidate()` + `utils.reports.list.invalidate()`. Success card already shows N לקוחות + CTAs to /dashboard and /clients.
+- [x] Frontend audit — `/dashboard` reads from `workspaces.metrics` (totalClients, vipClients, totalAum, 16 priority counts). `/clients` reads from `clients.list`.
+- [x] **End-to-end vitest** — `server/realXlsxRoundtrip.test.ts` loads the user's actual workbook (14 customers, ₪2.2M AUM), runs the full parser, builds the same `clientRows` payload that UploadReport.tsx sends to `reports.save`, asserts every row has a non-empty idNumber, valid flagStatus, non-zero AUM, and prints the dashboard preview the agent will see post-upload.
+- [ ] Save checkpoint, ask user to Publish and reverify by uploading her real xlsx (next step)
+- [ ] Defer to Round 92: workspace-isolation integration test (parked into the security audit macro-topic)
