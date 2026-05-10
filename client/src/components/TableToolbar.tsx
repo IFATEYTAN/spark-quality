@@ -1,8 +1,9 @@
 // SPARK AI · TableToolbar — סרגל פעולות אחיד לכל מסכי הטבלאות
 // Refresh / Export HTML / Export Excel + extension slot for custom filters
 import { Button } from "@/components/ui/button";
-import { Download, FileSpreadsheet, FileText, Loader2, RefreshCw } from "lucide-react";
+import { Download, FileSpreadsheet, FileText, Loader2, Lock, RefreshCw } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 
 export type ExportColumn<T> = {
   key: string;
@@ -27,6 +28,10 @@ export type TableToolbarProps<T> = {
   filtersSlot?: ReactNode;
   /** Optional summary string showing right next to the actions */
   summaryLabel?: string;
+  /** Round 98 export-lock — when false, export buttons surface a toast instead of downloading. */
+  exportEnabled?: boolean;
+  /** Hebrew reason shown in the toast when exportEnabled is false. */
+  exportLockReason?: string;
 };
 
 function buildHtml<T>(
@@ -105,11 +110,17 @@ export function TableToolbar<T>({
   reportTitle = "דוח לקוחות",
   filtersSlot,
   summaryLabel,
+  exportEnabled = true,
+  exportLockReason,
 }: TableToolbarProps<T>) {
   const [exportingHtml, setExportingHtml] = useState(false);
   const [exportingXlsx, setExportingXlsx] = useState(false);
 
   async function exportHtml() {
+    if (!exportEnabled) {
+      toast.error(exportLockReason ?? "ייצוא נתונים זמין רק למנוי פעיל.");
+      return;
+    }
     setExportingHtml(true);
     try {
       const html = buildHtml(rows, columns, reportTitle);
@@ -120,6 +131,10 @@ export function TableToolbar<T>({
   }
 
   async function exportXlsx() {
+    if (!exportEnabled) {
+      toast.error(exportLockReason ?? "ייצוא נתונים זמין רק למנוי פעיל.");
+      return;
+    }
     setExportingXlsx(true);
     try {
       const XLSX = await import("xlsx");
@@ -180,8 +195,10 @@ export function TableToolbar<T>({
         >
           {exportingHtml ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
+          ) : exportEnabled ? (
             <FileText className="h-3.5 w-3.5" />
+          ) : (
+            <Lock className="h-3.5 w-3.5" />
           )}
           ייצוא HTML
         </Button>
@@ -194,8 +211,10 @@ export function TableToolbar<T>({
         >
           {exportingXlsx ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
+          ) : exportEnabled ? (
             <FileSpreadsheet className="h-3.5 w-3.5" />
+          ) : (
+            <Lock className="h-3.5 w-3.5" />
           )}
           ייצוא Excel
         </Button>

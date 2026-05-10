@@ -70,6 +70,26 @@ const workspaceAdminProcedure = workspaceProcedure.use(async ({ ctx, next }) => 
   return next({ ctx });
 });
 
+/**
+ * workspaceActiveProcedure: Round 98 export-lock.
+ * Gates a procedure to subscriptions in `active` or `past_due` (grace) state.
+ * `pending_payment`, `suspended`, and `cancelled` are blocked with a clear Hebrew
+ * message so the agent knows export is reserved for live subscribers.
+ */
+const workspaceActiveProcedure = workspaceProcedure.use(async ({ ctx, next }) => {
+  const ws = await db.getWorkspaceById(ctx.user.workspaceId);
+  if (!ws) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Workspace not found." });
+  }
+  if (ws.subscriptionStatus !== "active" && ws.subscriptionStatus !== "past_due") {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "ייצוא נתונים זמין רק למנוי פעיל. הפעילו מנוי לדשבורד / חשבונות וחיוב.",
+    });
+  }
+  return next({ ctx });
+});
+
 export const appRouter = router({
   system: systemRouter,
 
@@ -917,6 +937,82 @@ export const appRouter = router({
     /** Map of triggerKey → handled count for the workspace (drives progress bars). */
     handledCounts: workspaceProcedure.query(async ({ ctx }) => {
       return db.countHandledByTrigger({ workspaceId: ctx.user.workspaceId });
+    }),
+  }),
+
+  // ========================================================
+  // EXPORTS (Round 98 — gated by workspaceActiveProcedure)
+  // Every export procedure is locked to an active paying subscription. The
+  // moment a workspace falls into pending_payment / suspended / cancelled, the
+  // procedures throw FORBIDDEN with a Hebrew message — preventing a customer
+  // from extracting bulk client/report data outside the paid window.
+  // ========================================================
+  exports: router({
+    /** Whether the caller's workspace can currently export (cheap pre-flight). */
+    status: workspaceProcedure.query(async ({ ctx }) => {
+      const ws = await db.getWorkspaceById(ctx.user.workspaceId);
+      const status = ws?.subscriptionStatus ?? "pending_payment";
+      const allowed = status === "active" || status === "past_due";
+      return {
+        allowed,
+        subscriptionStatus: status,
+        reason: allowed
+          ? null
+          : ("ייצוא נתונים זמין רק למנוי פעיל. הפעילו מנוי לדשבורד / חשבונות וחיוב." as const),
+      };
+    }),
+
+    /** CSV of every client in the workspace (agent → own clients only). */
+    clientsCsv: workspaceActiveProcedure.query(async ({ ctx }) => {
+      const rows = await db.listClients({
+        workspaceId: ctx.user.workspaceId,
+        userId: ctx.user.id,
+        workspaceRole: ctx.user.workspaceRole,
+      });
+      // Build a UTF-8 CSV with BOM so Excel opens Hebrew correctly.
+      const headers = [
+        "שם מלא",
+        "ת״ז",
+        "גיל",
+        "טלפון",
+        "מייל",
+        "דגל פעיל",
+        "VIP",
+        "AUM",
+        "הערות",
+      ];
+      const escapeCell = (v: unknown): string => {
+        if (v === null || v === undefined) return "";
+        const s = String(v);
+        return /[,"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const today = new Date();
+      const lines: string[] = [headers.join(",")];
+      for (const r of rows) {
+        const age = r.birthDate
+          ? Math.floor((today.getTime() - new Date(r.birthDate).getTime()) / (365.25 * 24 * 3600 * 1000))
+          : "";
+        lines.push(
+          [
+            escapeCell(r.fullName),
+            escapeCell(r.idNumber),
+            escapeCell(age),
+            escapeCell(r.phone ?? ""),
+            escapeCell(r.email ?? ""),
+            escapeCell(r.flagStatus ?? ""),
+            escapeCell(r.isVip ? "VIP" : ""),
+            escapeCell(r.totalBalance ?? ""),
+            escapeCell(r.notes ?? ""),
+          ].join(","),
+        );
+      }
+      const csvBody = "\ufeff" + lines.join("\r\n");
+      return {
+        filename: `spark-quality-clients-${today.toISOString().slice(0, 10)}.csv`,
+        contentType: "text/csv; charset=utf-8",
+        csv: csvBody,
+        rowCount: rows.length,
+      };
     }),
   }),
 

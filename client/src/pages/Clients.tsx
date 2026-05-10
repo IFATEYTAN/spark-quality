@@ -65,6 +65,12 @@ export default function Clients() {
   const clientsQuery = trpc.clients.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  // Round 98 — export-lock: query subscription status so the toolbar can disable
+  // export buttons (and surface the reason) when the workspace isn't on an
+  // active paying subscription.
+  const exportStatusQuery = trpc.exports.status.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   const filtered = useMemo(() => {
     let list = clientsQuery.data ?? [];
@@ -262,6 +268,8 @@ export default function Clients() {
           summaryLabel={`מציג ${filtered.length.toLocaleString("he-IL")} מתוך ${(clientsQuery.data?.length ?? 0).toLocaleString("he-IL")} לקוחות`}
           onRefresh={() => clientsQuery.refetch()}
           isRefreshing={clientsQuery.isRefetching}
+          exportEnabled={exportStatusQuery.data?.allowed ?? false}
+          exportLockReason={exportStatusQuery.data?.reason ?? undefined}
         />
 
         <ClientDetailDrawer
