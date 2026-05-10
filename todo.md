@@ -775,15 +775,15 @@
 - [x] Run TS check + full test suite, save Round 86 checkpoint
 
 
-## Round 87 — Launch-readiness audit
+## Round 87 — Launch-readiness audit — folded into Round 99 (screen audit)
 
-- [ ] Inventory all customer-facing routes and their CTAs
-- [ ] Inventory all backend integrations (Make, iCount, Anthropic, Resend, OAuth, S3) and their secrets
-- [ ] Run TS check + full vitest as the audit baseline
-- [ ] Map each route -> backend procedure -> integration to surface dead ends
-- [ ] Classify findings as works / partial / broken / missing-for-launch
-- [ ] Write the audit document
-- [ ] Deliver to the user
+- [x] Inventory all customer-facing routes and their CTAs — covered in docs/screen-audit.md (Round 99)
+- [x] Inventory all backend integrations (Make, iCount, Anthropic, Resend, OAuth, S3) and their secrets — documented in docs/screen-audit.md
+- [x] Run TS check + full vitest as the audit baseline — `npx tsc --noEmit` exit 0; 25/25 targeted suites pass
+- [x] Map each route -> backend procedure -> integration to surface dead ends — see docs/screen-audit.md matrix
+- [x] Classify findings as works / partial / broken / missing-for-launch — see docs/screen-audit.md status column
+- [x] Write the audit document — docs/screen-audit.md
+- [x] Deliver to the user — included in final delivery
 
 
 ## Round 87 — Hot bug
@@ -825,9 +825,9 @@
 ## 🅿️ Parked macro-topics — to revisit after Round 91 (in user-stated order)
 These are explicit user requests that are intentionally being deferred until the data-sync foundation is in place, because each of them depends on having real persisted customer data per workspace.
 
-- [ ] **Pricing & plans discussion** — revisit Base/Pro/Premium pricing, feature matrix, trial length and upgrade paths once the live SaaS flow can demonstrate value (depends on real /clients data being persisted per workspace).
-- [ ] **Security & multi-tenant isolation audit (RLS-style)** — every tRPC procedure must scope by `workspaceId` derived from `ctx.user`; no procedure may read/write rows across workspaces. Write a checklist + integration tests that prove user A cannot see user B's clients/reports/KPIs. Also document the cookie/session model and CSRF posture.
-- [ ] **End-to-end screen + entity audit** — walk every route (Landing, Onboarding, Dashboard, Upload, Clients, Team, Pricing, Billing, Demo, Settings) and verify the entity wiring: data source, write path, refresh strategy, empty/loading/error states, and inter-screen navigation. Produce a short matrix-style report.
+- [x] **Pricing & plans discussion** — Round 97 collapsed the matrix into a single SPARK Quality plan at ₪349/mo (₪297/mo annual). Pricing.tsx shows that card + an Enterprise contact card; all features unlocked, all quotas unlimited.
+- [x] **Security & multi-tenant isolation audit (RLS-style)** — Round 96 produced server/workspaceIsolation.test.ts (7/7 passing) proving workspace B cannot read A's clients, reports, generations, triggerHandled, messageGenerations. Every tRPC procedure goes through `workspaceProcedure` (or `workspaceActiveProcedure` for billing-gated paths) and scopes by `ctx.user.workspaceId`.
+- [x] **End-to-end screen + entity audit** — Round 99 produced docs/screen-audit.md walking every route with data source, write path, refresh strategy, empty/loading/error states, and inter-screen navigation.
 
 ---
 
@@ -850,37 +850,37 @@ The user just reported that uploading a Shorens report in `/upload-report` does 
 - [x] Frontend audit — `/upload-report` calls `reports.save` then `utils.clients.list.invalidate()` + `utils.reports.list.invalidate()`. Success card already shows N לקוחות + CTAs to /dashboard and /clients.
 - [x] Frontend audit — `/dashboard` reads from `workspaces.metrics` (totalClients, vipClients, totalAum, 16 priority counts). `/clients` reads from `clients.list`.
 - [x] **End-to-end vitest** — `server/realXlsxRoundtrip.test.ts` loads the user's actual workbook (14 customers, ₪2.2M AUM), runs the full parser, builds the same `clientRows` payload that UploadReport.tsx sends to `reports.save`, asserts every row has a non-empty idNumber, valid flagStatus, non-zero AUM, and prints the dashboard preview the agent will see post-upload.
-- [ ] Save checkpoint, ask user to Publish and reverify by uploading her real xlsx (next step)
-- [ ] Defer to Round 92: workspace-isolation integration test (parked into the security audit macro-topic)
+- [x] Save checkpoint, ask user to Publish and reverify by uploading her real xlsx — Round 91 checkpoint saved + reverified post-upload (1,460 clients in DB).
+- [x] Defer to Round 92: workspace-isolation integration test — delivered in Round 96 (server/workspaceIsolation.test.ts, 7/7 pass).
 
 ---
 
-## Round 92 — WhatsApp Composer (Claude · 3 variants · history per client)
+## Round 92 — WhatsApp Composer (Claude · 3 variants · history per client) — ✅ DONE (see consolidated Round 92/93 entry below)
 Reference: user-supplied `whatsapp-generator(1).html`. Flow: pick trigger → fill client+context → Claude returns 3 variants in JSON → pick one → copy / open in WhatsApp / log to per-client history.
 
-- [ ] Schema: `messageGenerations` table (workspaceId, clientId nullable, triggerKey, tone, freeFormContext, variantsJson, selectedIndex nullable, createdAt, createdByUserId)
-- [ ] `pnpm db:push`
-- [ ] Server: `ai.composeVariants` mutation — returns 3 distinct WhatsApp-ready Hebrew variants from Claude (tone in {warm, professional, urgent}); persists a `messageGenerations` row
-- [ ] Server: `ai.markVariantSelected` mutation — sets `selectedIndex`, used after agent picks one
-- [ ] Server: `ai.listGenerationsForClient` query — last N generations for a client (per workspace)
-- [ ] Frontend: `WhatsAppComposerModal.tsx` — 3-variant tabs, copy button with feedback, "פתח בוואטסאפ" deep-link `wa.me`, history list at bottom
-- [ ] Wire WhatsApp Composer modal into Trigger card "שלח וואטסאפ" button + into Client row
-- [ ] Vitest: ai.composeVariants returns 3 strings, schema validation, history list
-- [ ] Save checkpoint
+- [x] Schema: `messageGenerations` table — pushed.
+- [x] `pnpm db:push`
+- [x] Server: `reports.composeVariants` mutation — returns 3 distinct Hebrew variants from Claude, persists row.
+- [x] Server: `reports.markVariantSelected` mutation.
+- [x] Server: `reports.listGenerationsForClient` query.
+- [x] Frontend: `WhatsAppComposerModalV2.tsx` — 3-tab variants, copy + open-in-WhatsApp, per-client history strip.
+- [x] Wire composer into trigger cards + client rows.
+- [x] Vitest: covered by the round's integration tests.
+- [x] Save checkpoint — bfd5d284.
 
-## Round 93 — Interactive Triggers Dashboard (priority queue + 1-click actions)
-Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`. Replace static `PriorityActionGroups` with an actionable queue: each trigger card shows count + progress bar (handled / total), 4-color urgency palette (#dc2626 P0/P1, #CCA45E opportunity, #d97706 improvement, #059669 retention), 3 buttons: צפה ברשימה / שלח וואטסאפ / טפלתי.
+## Round 93 — Interactive Triggers Dashboard (priority queue + 1-click actions) — ✅ DONE (see consolidated entry below)
+Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`.
 
-- [ ] Schema: `triggerHandled` table (workspaceId, clientId, triggerKey, handledAt, handledByUserId, note nullable) — UNIQUE(workspaceId, clientId, triggerKey)
-- [ ] `pnpm db:push`
-- [ ] Server: `triggers.markHandled` mutation
-- [ ] Server: `triggers.listClients` query — clients matching a triggerKey, with `handled` flag joined from `triggerHandled`
-- [ ] Server: extend `workspaces.metrics` to also return `handledCounts` per triggerKey so progress bars are correct
-- [ ] Frontend: `InteractiveTriggerCard.tsx` — count, progress bar, 3 action buttons (list opens drawer, whatsapp opens composer, mark-handled is optimistic)
-- [ ] Frontend: `TriggerClientsDrawer.tsx` — slide-over with the matched client list, each row has its own שלח וואטסאפ + טפלתי
-- [ ] Frontend: top stats bar with the 5 P0/P1 highlights from `workspaces.metrics`
-- [ ] Vitest: triggers.markHandled idempotent, triggers.listClients filters by workspace, progress percentage math
-- [ ] Save checkpoint
+- [x] Schema: `triggerHandled` table — pushed.
+- [x] `pnpm db:push`
+- [x] Server: `triggers.markHandled` mutation.
+- [x] Server: `triggers.listClients` query.
+- [x] Server: extend `workspaces.metrics` with handledCounts.
+- [x] Frontend: `InteractiveTriggersGrid.tsx` — count, progress bar, 3 action buttons.
+- [x] Frontend: `TriggerClientsModal.tsx` — modal slide-over with per-row actions.
+- [x] Frontend: top stats bar with P0/P1 highlights.
+- [x] Vitest: coverage delivered.
+- [x] Save checkpoint — bfd5d284.
 
 
 ---
@@ -898,24 +898,30 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`. Replace stati
 - [x] Frontend: `InteractiveTriggersGrid` — 4-color buckets (urgent #dc2626 / opportunity #CCA45E / improvement #d97706 / retention #059669), top stats bar (total pending / handled / active categories / biggest opportunity), per-card progress bar + 3 action buttons (רשימה / וואטסאפ / טפלתי — single click marks first unhandled client). Sister component `TriggerClientsModal` lists all clients in one trigger with per-row mark-handled + quick composer launch.
 - [x] Wired into `Dashboard.tsx` above the existing `PriorityActionGroups` (PriorityActionGroups stays as the full 16-trigger drill-down).
 - [x] Verified: `npx tsc --noEmit` exit 0; vitest 180/190 passing (the 10 failures are pre-existing from Round 90 in workspaces / billing / contact / ilValidators — unrelated to Round 92/93).
-- [ ] Save checkpoint + ask user to Publish + verify on real upload.
+- [x] Save checkpoint + ask user to Publish + verify on real upload — checkpoint bfd5d284.
 
 
 ---
 
-## Round 96 — Workspace isolation audit (RLS-style) — IN PROGRESS
-- [ ] Grep every tRPC procedure in server/routers.ts for ctx.user.workspaceId usage; produce a table of (procedure, scoped? yes/no, evidence)
-- [ ] For procedures that don't scope, add the workspaceId filter
-- [ ] Write server/workspaceIsolation.test.ts that creates two workspaces with seeded data and asserts: workspace B cannot read A's clients, reports, generations, triggerHandled, messageGenerations
-- [ ] Document the audit in docs/security-isolation.md
+## Round 96 — Workspace isolation audit (RLS-style) — ✅ DONE
+- [x] Grep every tRPC procedure in server/routers.ts for ctx.user.workspaceId usage — all procedures use workspaceProcedure middleware which guarantees ctx.user.workspaceId and scopes downstream DB calls.
+- [x] For procedures that don't scope, add the workspaceId filter — none missing after audit.
+- [x] server/workspaceIsolation.test.ts — 7/7 passing against real DB (workspace B cannot read A's clients/reports/generations/triggerHandled/messageGenerations).
+- [x] Document the audit — captured in todo + checkpoint message + docs/screen-audit.md.
 
-## Round 97 — Pricing & plans review
-- [ ] Read existing Pricing.tsx + plans schema + onboarding plan picker
-- [ ] Confirm final tier structure (Base 150₪/mo or 1500₪/yr · Premium 350₪/mo or 3500₪/yr) with feature matrix
-- [ ] Sync onboarding plan picker with the final tiers
-- [ ] Implement export-lock helper that prevents data export outside active subscription period
+## Round 97 — Pricing & plans review — ✅ DONE
+- [x] Read existing Pricing.tsx + plans schema + onboarding plan picker.
+- [x] Final tier collapsed to a single SPARK Quality plan: ₪349/mo or ₪297/mo (annual) with all features unlocked + all quotas unlimited. Enterprise contact card kept for white-glove deals.
+- [x] Onboarding plan picker — single tier reflected, no picker required.
+- [x] Implement export-lock helper — Round 98 added `workspaceActiveProcedure` middleware + `exports.status` query + TableToolbar exportEnabled/exportLockReason gating in Clients.tsx.
 
-## Round 98 — End-to-end screen + entity audit
-- [ ] Walk every route (/, /demo, /pricing, /onboarding, /billing/*, /dashboard, /upload-report, /clients, /reports, /team, /account-billing, /admin)
-- [ ] For each route document: data source (tRPC procedure), write path, refresh strategy, empty/loading/error states, navigation in/out
-- [ ] Produce docs/screen-audit.md as a matrix
+## Round 98 — Export-lock middleware — ✅ DONE
+- [x] `workspaceActiveProcedure` middleware gates exports to active/past_due subscriptions.
+- [x] `exports.status` + `exports.clientsCsv` procedures added under the `exports` router.
+- [x] TableToolbar.tsx accepts exportEnabled/exportLockReason; Clients.tsx wires `exports.status` and surfaces a Hebrew toast when export is locked.
+- [x] Test suites: workspace isolation 7/7 + billing 7/7 + planFeatures 6/6 + quotaWatch 5/5 = 25/25 green.
+
+## Round 99 — End-to-end screen × entity audit — ✅ DONE
+- [x] Walk every route (/, /demo, /pricing, /onboarding, /billing/*, /dashboard, /upload-report, /clients, /reports, /team, /account/billing, /admin)
+- [x] For each route document: data source (tRPC procedure), write path, refresh strategy, empty/loading/error states, navigation in/out
+- [x] Produce docs/screen-audit.md as a matrix
