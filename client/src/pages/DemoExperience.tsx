@@ -106,13 +106,26 @@ export default function DemoExperience() {
 
   // When admin uploads a real file, kick off the LLM analyzer in background.
   // The result is stored on `analysis` and passed down to dashboard/actions/summary.
+  //
+  // IMPORTANT: this effect must depend ONLY on `parsedReport`. Including the
+  // `analyzeMutation` object in the dep array re-runs the effect on every
+  // render (its identity is unstable from `useMutation`), causing the analyzer
+  // to be invoked repeatedly in a loop. We rely on a stable `analyzedKeyRef`
+  // to ensure each unique parsed report is analyzed at most once per session.
+  const analyzedKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!parsedReport || analyzingRef.current) return;
+    if (!parsedReport) return;
+    // Build a stable key for the current parsed report. We use object identity
+    // (a counter on each parse) plus a short hash of the row count so that
+    // re-uploading the same file does still kick off a fresh analysis.
+    const key = `${parsedReport.fileName}|${parsedReport.rawRows}|${parsedReport.customerCount}`;
+    if (analyzedKeyRef.current === key || analyzingRef.current) return;
+    analyzedKeyRef.current = key;
     analyzingRef.current = true;
     setAnalysis(null);
     setAnalyzeTimedOut(false);
     const startedAt = Date.now();
-    const t = toast.loading("AI מנתח את התיק — מסתמלו על דעתכם…");
+    const t = toast.loading("AI מנתח את התיק שלכם…");
 
     // Watchdog: after ANALYZE_TIMEOUT_MS, mark as timed out so the gating
     // effect lets the user advance regardless of mutation state. We do NOT
@@ -147,11 +160,16 @@ export default function DemoExperience() {
       .finally(() => {
         analyzingRef.current = false;
       });
-  }, [parsedReport, analyzeMutation]);
+    // We deliberately exclude `analyzeMutation` from the deps to avoid
+    // re-running this effect when its identity changes between renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parsedReport]);
 
   const reset = useCallback(() => {
     setParsedReport(null);
     setAnalysis(null);
+    analyzedKeyRef.current = null;
+    analyzingRef.current = false;
     setStage("splash");
   }, []);
 
