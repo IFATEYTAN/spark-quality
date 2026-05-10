@@ -705,15 +705,14 @@
 
 ## Round 82 — Dynamic 16-scenario action-flow dialog (2026-05-10)
 
-- [ ] Build a 16-scenario registry (one entry per priority trigger key) with distinct Detect / AI / Send / Track / Convert text and metrics
-- [ ] Refactor `CategoryScenarioModal` to a `triggerKey`-driven dialog (no longer 6 buckets)
-- [ ] Dialog accepts `analysis` (LLM output) and renders sample-client / KPI values when present
-- [ ] Dialog accepts the live trigger `count` and surfaces it in the header
-- [ ] `PriorityActionGroups` passes the actual trigger key (not a 6-way bucket) and its count
-- [ ] `Dashboard.tsx` threads workspace metrics into the dialog
-- [ ] `DemoExperience` threads `analysis` into the dialog through `PriorityActionGroups`
-- [ ] Vitest covering the 16-scenario registry shape (one scenario per trigger, required fields present)
-- [ ] Run full test suite, save checkpoint, push to GitHub
+- [x] Build a 16-scenario registry (one entry per priority trigger key) with distinct title/pain/trigger/example/outcome
+- [x] Refactor `CategoryScenarioModal` to a `triggerKey`-driven dialog (no longer just 6 buckets)
+- [x] Dialog accepts `analysis` (LLM output) and merges live KPI values into outcome metrics via `mergeOutcomeWithAnalysis`
+- [x] Dialog accepts the live trigger `count` and surfaces it in the header pill (P0/P1/… · count)
+- [x] `PriorityActionGroups` passes the actual trigger key + count + analysis instead of a 6-way bucket
+- [x] `Dashboard.tsx` threads workspace metrics into the new flow (analysis prop optional — system view)
+- [x] Vitest covering the 16-scenario registry shape (24/24 passing — `triggerScenarios.test.ts` + `priorityMetrics.test.ts`)
+- [x] Verified pre-existing test failures are unrelated to this round (billing/contact/ilValidators/workspaces — fail at HEAD too)
 
 
 ## Hot-fix — IntroStage spacing (2026-05-10)

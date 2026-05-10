@@ -6,9 +6,9 @@
 // opens the existing scenario modal (CategoryScenarioModal) so we keep the
 // downstream flow.
 import { useMemo, useState, type ReactNode } from "react";
-import { ChevronDown } from "lucide-react";
 import { GoldEyebrow } from "./CinematicShell";
 import { CategoryScenarioModal } from "./CategoryScenarioModal";
+import type { TriggerKey } from "@/lib/triggerScenarios";
 
 export interface PriorityCounts {
   // P0
@@ -34,19 +34,10 @@ export interface PriorityCounts {
   noEmail: number;
 }
 
-type ScenarioKey =
-  | "vip"
-  | "lowYield"
-  | "190"
-  | "discount"
-  | "risk"
-  | "coverageGaps";
-
 type Priority = "P0" | "P1" | "P2" | "P3" | "P4";
 
 interface TriggerDef {
-  key: keyof PriorityCounts;
-  scenarioKey: ScenarioKey;
+  key: TriggerKey;
   name: string;
   description: string;
   cta: string;
@@ -70,7 +61,6 @@ const GROUPS: GroupDef[] = [
     triggers: [
       {
         key: "poaExpired",
-        scenarioKey: "190",
         name: "ייפוי כוח שפג",
         description: "חוזר 2013 — מינוי פג = חשיפה משפטית. טיפול לפני כל דבר.",
         cta: "חידוש דיגיטלי עכשיו ←",
@@ -78,7 +68,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "poaExpiring90d",
-        scenarioKey: "190",
         name: "מינוי פוקע — 90 יום",
         description: "פנייה לחידוש לפני שיפוג. תהליך דיגיטלי — 3 דקות.",
         cta: "שלח לחידוש ←",
@@ -94,7 +83,6 @@ const GROUPS: GroupDef[] = [
     triggers: [
       {
         key: "riskTemporary",
-        scenarioKey: "risk",
         name: "ריסק זמני",
         description: "כיסוי בסטטוס זמני — עלול להיקטע. טלפון תוך 48 שעות.",
         cta: "התקשר עכשיו ←",
@@ -102,7 +90,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "coverageEnding",
-        scenarioKey: "coverageGaps",
         name: "כיסויים שפוגים",
         description: "תאריך תום כיסוי מתקרב — הצעת חידוש מוכנה.",
         cta: "שלח הצעה ←",
@@ -118,7 +105,6 @@ const GROUPS: GroupDef[] = [
     triggers: [
       {
         key: "savingsNoInsurance",
-        scenarioKey: "coverageGaps",
         name: "חיסכון ללא ביטוח",
         description: "יש קרן / גמל — אין ביטוח. קרוס-סייל ישיר.",
         cta: "הגדר קמפיין ←",
@@ -126,7 +112,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "noActivePension",
-        scenarioKey: "coverageGaps",
         name: "ללא פנסיה פעילה",
         description: "חיסכון ללא קרן פנסיה — ממוינים לפי גיל.",
         cta: "ראה רשימה ←",
@@ -134,7 +119,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "age46NoLongTermCare",
-        scenarioKey: "coverageGaps",
         name: "46+ ללא ביטוח סיעוד",
         description: "לפני 60 הפרמיה נגישה — חלון הזמן מצטמצם.",
         cta: "שלח הצעה ←",
@@ -142,7 +126,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "aumFrozen",
-        scenarioKey: "lowYield",
         name: "AUM מוקפא",
         description: "מוצר לא פעיל + צבירה מעל 30K.",
         cta: "שיחת בירור ←",
@@ -158,7 +141,6 @@ const GROUPS: GroupDef[] = [
     triggers: [
       {
         key: "highFees",
-        scenarioKey: "discount",
         name: "דמי ניהול גבוהים",
         description: "מעל ממוצע השוק — משא ומתן מול החברה.",
         cta: "הצג עלות שנתית ←",
@@ -166,7 +148,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "trackMismatch",
-        scenarioKey: "lowYield",
         name: "מסלול לא מתאים לגיל",
         description: "55+ במסלול מניות — ייעוץ לפני פרישה.",
         cta: "ייעוץ מסלול ←",
@@ -174,7 +155,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "selfEmployedNoDeposit",
-        scenarioKey: "190",
         name: "עצמאים שלא הפקידו",
         description: "עצמאי / בעל שליטה — חשיפת מס.",
         cta: "שיחת ייעוץ ←",
@@ -182,7 +162,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "concentrationRisk",
-        scenarioKey: "lowYield",
         name: "ריכוז יתר בחברה",
         description: "מעל 35% AUM בחברה אחת.",
         cta: "ראה ניתוח ←",
@@ -198,7 +177,6 @@ const GROUPS: GroupDef[] = [
     triggers: [
       {
         key: "birthdayMilestone",
-        scenarioKey: "vip",
         name: "יום הולדת מפנה",
         description: "גיל 40 / 50 / 60 — וואטסאפ + הצעת פגישת סקירה.",
         cta: "שלח וואטסאפ ←",
@@ -206,7 +184,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "birthdayThisMonth",
-        scenarioKey: "vip",
         name: "יום הולדת החודש",
         description: "הודעת וואטסאפ אישית מוכנה — ללא מאמץ.",
         cta: "שלח ברכות ←",
@@ -214,7 +191,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "vipGoldPremium",
-        scenarioKey: "vip",
         name: "VIP · זהב · פרימיום",
         description: "לקוחות עם צבירה גבוהה — פגישה שנתית.",
         cta: "קבע פגישה ←",
@@ -222,7 +198,6 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "noEmail",
-        scenarioKey: "coverageGaps",
         name: "ללא מייל",
         description: "SMS לבקשת עדכון פרטי קשר — חיוני לדיוור.",
         cta: "שלח SMS ←",
@@ -274,6 +249,11 @@ const PRIORITY_COLORS: Record<Priority, { dot: string; pill: string; border: str
 
 interface PriorityActionGroupsProps {
   counts: PriorityCounts;
+  /**
+   * Optional LLM analysis JSON. When present the scenario modal injects live
+   * KPI numbers (kpis.<alias>) into the outcome metrics for that trigger.
+   */
+  analysis?: unknown;
   eyebrow?: string;
   title?: ReactNode;
   subtitle?: string;
@@ -281,11 +261,12 @@ interface PriorityActionGroupsProps {
 
 export function PriorityActionGroups({
   counts,
+  analysis,
   eyebrow = "SPARK QUALITY ENGINE · מרכז הפעולות",
   title,
   subtitle,
 }: PriorityActionGroupsProps) {
-  const [activeScenario, setActiveScenario] = useState<ScenarioKey | null>(null);
+  const [activeTrigger, setActiveTrigger] = useState<TriggerKey | null>(null);
   // Tabs: each priority is its own discrete "screen" — only the active one renders.
   const [activeTab, setActiveTab] = useState<Priority>("P0");
 
@@ -404,7 +385,7 @@ export function PriorityActionGroups({
               <button
                 key={t.key}
                 type="button"
-                onClick={() => setActiveScenario(t.scenarioKey)}
+                onClick={() => setActiveTrigger(t.key)}
                 className={`text-right rounded-lg border bg-white/[0.03] hover:bg-white/[0.06] hover:-translate-y-px p-4 flex flex-col gap-2 transition-all ${
                   isActive
                     ? `${activeColors.border} hover:shadow-md`
@@ -458,9 +439,11 @@ export function PriorityActionGroups({
       </div>
 
       <CategoryScenarioModal
-        categoryId={activeScenario}
-        onClose={() => setActiveScenario(null)}
-        onActivate={() => setActiveScenario(null)}
+        triggerKey={activeTrigger}
+        count={activeTrigger ? counts[activeTrigger] ?? 0 : undefined}
+        analysis={analysis}
+        onClose={() => setActiveTrigger(null)}
+        onActivate={() => setActiveTrigger(null)}
       />
     </section>
   );

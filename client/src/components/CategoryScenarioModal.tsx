@@ -23,6 +23,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { InteractiveFlowchart, FLOWCHART_DATA } from "./InteractiveFlowchart";
+import {
+  TRIGGER_SCENARIOS,
+  mergeOutcomeWithAnalysis,
+  type TriggerKey,
+} from "@/lib/triggerScenarios";
 
 interface ScenarioStep {
   icon: any;
@@ -168,7 +173,14 @@ const VARIANT_STYLES: Record<ScenarioStep["variant"], { ring: string; bg: string
 };
 
 interface CategoryScenarioModalProps {
-  categoryId: string | null;
+  /** Legacy 6-bucket key (vip / lowYield / 190 / discount / risk / coverageGaps). */
+  categoryId?: string | null;
+  /** Preferred: one of the 16 priority trigger keys. Takes precedence over categoryId. */
+  triggerKey?: TriggerKey | null;
+  /** Live trigger count from the workspace metrics (rendered in header pill). */
+  count?: number;
+  /** LLM analysis JSON used to inject live numbers into outcome metrics. */
+  analysis?: unknown;
   onClose: () => void;
   /**
    * Optional callback when the user wants to advance the demo flow from the modal.
@@ -177,14 +189,42 @@ interface CategoryScenarioModalProps {
   onActivate?: () => void;
 }
 
-export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioModalProps) {
-  const scenario = categoryId ? SCENARIOS[categoryId] : null;
+export function CategoryScenarioModal({
+  categoryId,
+  triggerKey,
+  count,
+  analysis,
+  onClose,
+}: CategoryScenarioModalProps) {
+  // Preferred path: 16-trigger registry. Each entry already maps to one of the
+  // existing flowchart visuals. We compose a synthetic scenario object that the
+  // rest of the modal can render unchanged.
+  const triggerScenario = triggerKey ? TRIGGER_SCENARIOS[triggerKey] : null;
+  const baseScenario = triggerScenario
+    ? SCENARIOS[triggerScenario.flowchartKey]
+    : categoryId
+    ? SCENARIOS[categoryId]
+    : null;
+
+  const scenario = triggerScenario && baseScenario
+    ? {
+        ...baseScenario,
+        id: triggerScenario.flowchartKey, // keep flowchart lookup stable
+        title: triggerScenario.title,
+        pain: triggerScenario.pain,
+        trigger: triggerScenario.trigger,
+        exampleCustomer: triggerScenario.exampleCustomer,
+        outcome: mergeOutcomeWithAnalysis(triggerScenario, analysis, count),
+      }
+    : baseScenario;
+
+  const isOpen = Boolean(scenario);
   const [view, setView] = useState<1 | 2>(1);
 
   // Reset view when opening a new scenario
   useEffect(() => {
-    if (categoryId) setView(1);
-  }, [categoryId]);
+    if (isOpen) setView(1);
+  }, [isOpen, triggerKey, categoryId]);
 
   // Lock body scroll while open
   useEffect(() => {
@@ -246,6 +286,14 @@ export function CategoryScenarioModal({ categoryId, onClose }: CategoryScenarioM
             <div className="flex items-center gap-2 mb-2">
               <div className="h-px w-10 bg-gold" />
               <span className="label-tag text-gold text-[10px]">סנריו אוטומטי · SPARK AI</span>
+              {triggerScenario && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-gold/40 bg-gold/10 px-2 py-0.5 text-[10px] font-bold text-gold">
+                  {triggerScenario.priority}
+                  {typeof count === "number" && count > 0 && (
+                    <span className="mono-num text-gold/85">· {count.toLocaleString("he-IL")}</span>
+                  )}
+                </span>
+              )}
               <span className="label-tag text-muted-foreground text-[10px]">· תצוגה {view} מתוך 2</span>
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-black text-navy-deep tracking-tight leading-tight">

@@ -107,7 +107,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
       channel: "WhatsApp דחוף + מייל גיבוי",
     },
     outcome: [
-      { label: "כיסויים בסיכון", value: "23" },
+      { label: "כיסויים בסיכון", value: "—" },
       { label: "אחוז חידוש צפוי", value: "82%" },
       { label: "פרמיות שימור", value: "₪95K/שנה" },
     ],
@@ -329,7 +329,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
       channel: "אימייל אישי + פגישת זום",
     },
     outcome: [
-      { label: "לקוחות זוהו", value: "42" },
+      { label: "לקוחות זוהו", value: "—" },
       { label: "AUM קבוצה", value: "₪47M" },
       { label: "פוטנציאל הכנסה", value: "₪380K" },
     ],
