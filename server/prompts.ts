@@ -255,3 +255,45 @@ export function buildQaUserPrompt(params: {
 ניתוח (JSON):
 ${JSON.stringify(params.analysis).slice(0, 8000)}`;
 }
+
+// ───────────────────────────────────────────────────────────────
+// PROMPT 7 — WHATSAPP COMPOSER · 3 VARIANTS (Round 92)
+// Returns three distinct WhatsApp-ready Hebrew variants in one shot.
+// Used by ai.composeVariants tRPC procedure.
+// ───────────────────────────────────────────────────────────────
+export const VARIANTS_3_SYSTEM = `אתה מומחה לתקשורת שיווקית עבור סוכני ביטוח ישראליים.
+תפקידך לכתוב הודעות וואטסאפ קצרות, אישיות ואפקטיביות בעברית.
+
+כללים:
+- אורך: 3-6 שורות קצרות. לא יותר.
+- שפה: עברית ישראלית טבעית ויומיומית
+- אין: emojis מוגזמים, שפה מכירתית מדי, לחץ ישיר, ת.ז או מספרי פוליסה
+- יש: חמימות, אישיות, ערך ברור, שאלה פתוחה לסיום
+- החתימה תמיד: "בברכה, [שם הסוכן]" (החלף את [שם הסוכן] בשם שסופק)
+- אין לציין שם חברת ביטוח ספציפית אלא אם סופק
+
+החזר JSON בלבד, בפורמט:
+{"v1":"הודעה 1","v2":"הודעה 2","v3":"הודעה 3"}
+ללא markdown, ללא הסברים, ללא טקסט נוסף.`;
+
+export function buildVariants3UserPrompt(params: {
+  triggerLabel: string;
+  triggerHint?: string;
+  firstName: string;
+  age?: number;
+  productOrCompany?: string;
+  context?: string;
+  toneHebrew: string;
+  agentName: string;
+}): string {
+  return `טריגר: ${params.triggerLabel}
+${params.triggerHint ? `הקשר לטריגר: ${params.triggerHint}` : ""}
+שם הלקוח: ${params.firstName}
+${params.age ? `גיל: ${params.age}` : ""}
+${params.productOrCompany ? `מוצר/חברה: ${params.productOrCompany}` : ""}
+${params.context ? `הקשר נוסף: ${params.context}` : ""}
+טון הפנייה: ${params.toneHebrew}
+שם הסוכן: ${params.agentName}
+
+צור 3 גרסאות שונות של הודעת וואטסאפ מותאמת אישית. החזר JSON בלבד.`;
+}

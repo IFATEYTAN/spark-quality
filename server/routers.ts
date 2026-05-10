@@ -25,6 +25,8 @@ import {
   buildClientSummaryUserPrompt,
   QA_SYSTEM,
   buildQaUserPrompt,
+  VARIANTS_3_SYSTEM,
+  buildVariants3UserPrompt,
 } from "./prompts";
 
 function escapeHtml(value: string): string {
@@ -721,6 +723,152 @@ export const appRouter = router({
         });
         return { answer: completion?.choices?.[0]?.message?.content ?? "" };
       }),
+
+    /**
+     * Round 92 — WhatsApp Composer: ask Claude for 3 distinct variants in one shot,
+     * persist to messageGenerations, and return them with the new generation id.
+     */
+    composeVariants: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive().nullable().optional(),
+          triggerKey: z.string().min(1).max(64),
+          triggerLabel: z.string().min(1).max(120),
+          triggerHint: z.string().max(400).optional(),
+          firstName: z.string().min(1).max(80),
+          age: z.number().int().min(0).max(130).optional(),
+          productOrCompany: z.string().max(120).optional(),
+          context: z.string().max(800).optional(),
+          tone: z.enum(["warm", "professional", "urgent"]),
+          agentName: z.string().min(1).max(120),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        await requireFeature(ctx, "ai.composer");
+        const toneHebrew = ({ warm: "חם ואישי", professional: "מקצועי", urgent: "דחוף" } as const)[input.tone];
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: VARIANTS_3_SYSTEM },
+            { role: "user", content: buildVariants3UserPrompt({ ...input, toneHebrew }) },
+          ],
+        });
+        const rawContent = completion?.choices?.[0]?.message?.content ?? "";
+        const raw = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+        let parsed: { v1?: string; v2?: string; v3?: string } = {};
+        try {
+          parsed = JSON.parse(cleaned);
+        } catch (err) {
+          console.warn("[composeVariants] JSON.parse failed, using raw text as v1", err);
+          parsed = { v1: raw, v2: "", v3: "" };
+        }
+        const variants = [parsed.v1 ?? "", parsed.v2 ?? "", parsed.v3 ?? ""];
+        const generationId = await db.createMessageGeneration({
+          workspaceId: ctx.user.workspaceId,
+          clientId: input.clientId ?? null,
+          triggerKey: input.triggerKey,
+          tone: input.tone,
+          freeFormContext: input.context ?? null,
+          variantsJson: variants,
+          createdByUserId: ctx.user.id,
+        });
+        return { generationId, variants } as const;
+      }),
+
+    /** Round 92 — mark which of the 3 variants the agent picked. */
+    markVariantSelected: workspaceProcedure
+      .input(
+        z.object({
+          generationId: z.number().int().positive(),
+          selectedIndex: z.number().int().min(0).max(2),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        await db.markMessageGenerationSelected({
+          workspaceId: ctx.user.workspaceId,
+          generationId: input.generationId,
+          selectedIndex: input.selectedIndex,
+        });
+        return { ok: true } as const;
+      }),
+
+    /** Round 92 — history of generations for one client (per workspace). */
+    listGenerationsForClient: workspaceProcedure
+      .input(z.object({ clientId: z.number().int().positive(), limit: z.number().int().min(1).max(100).optional() }))
+      .query(async ({ ctx, input }) => {
+        return db.listMessageGenerationsForClient({
+          workspaceId: ctx.user.workspaceId,
+          clientId: input.clientId,
+          limit: input.limit,
+        });
+      }),
+
+    /** Round 92 — recent generations across the workspace (dashboard strip). */
+    listGenerationsForWorkspace: workspaceProcedure
+      .input(z.object({ limit: z.number().int().min(1).max(200).optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return db.listMessageGenerationsForWorkspace({
+          workspaceId: ctx.user.workspaceId,
+          limit: input?.limit,
+        });
+      }),
+  }),
+
+  // ========================================================
+  // TRIGGERS (Round 93 — Interactive Triggers Dashboard)
+  // ========================================================
+  triggers: router({
+    /** List clients matching a trigger key (e.g. 'high_fees', 'vip', 'liquid_fund') */
+    listClients: workspaceProcedure
+      .input(z.object({ triggerKey: z.string().min(1).max(64) }))
+      .query(async ({ ctx, input }) => {
+        return db.listClientsForTrigger({
+          workspaceId: ctx.user.workspaceId,
+          triggerKey: input.triggerKey,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+      }),
+    /** Mark a (clientId, triggerKey) pair as handled by the current user. Idempotent. */
+    markHandled: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive(),
+          triggerKey: z.string().min(1).max(64),
+          note: z.string().max(2000).optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        await db.markTriggerHandled({
+          workspaceId: ctx.user.workspaceId,
+          clientId: input.clientId,
+          triggerKey: input.triggerKey,
+          handledByUserId: ctx.user.id,
+          handledAt: new Date(),
+          note: input.note ?? null,
+        });
+        return { ok: true } as const;
+      }),
+    /** Undo a handled mark. */
+    unmarkHandled: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive(),
+          triggerKey: z.string().min(1).max(64),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        await db.unmarkTriggerHandled({
+          workspaceId: ctx.user.workspaceId,
+          clientId: input.clientId,
+          triggerKey: input.triggerKey,
+        });
+        return { ok: true } as const;
+      }),
+    /** Map of triggerKey → handled count for the workspace (drives progress bars). */
+    handledCounts: workspaceProcedure.query(async ({ ctx }) => {
+      return db.countHandledByTrigger({ workspaceId: ctx.user.workspaceId });
+    }),
   }),
 
   admin: adminRouter,

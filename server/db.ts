@@ -1213,3 +1213,199 @@ export async function adminArchivePaymentAttempt(requestId: string): Promise<voi
     })
     .where(eq(paymentAttempts.requestId, requestId));
 }
+
+
+// ============================================================
+// MESSAGE GENERATIONS (Round 92 — WhatsApp Composer history)
+// ============================================================
+import {
+  messageGenerations,
+  triggerHandled,
+  type InsertMessageGeneration,
+  type InsertTriggerHandled,
+} from "../drizzle/schema";
+
+/** Persist a Claude composeVariants call. Returns the new row id. */
+export async function createMessageGeneration(
+  data: InsertMessageGeneration,
+): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  const result = await db.insert(messageGenerations).values(data);
+  return Number((result as unknown as { insertId?: number }).insertId ?? 0);
+}
+
+/** Set selectedIndex on a generation row (after the agent picks one). */
+export async function markMessageGenerationSelected(opts: {
+  workspaceId: number;
+  generationId: number;
+  selectedIndex: number;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(messageGenerations)
+    .set({ selectedIndex: opts.selectedIndex })
+    .where(
+      and(
+        eq(messageGenerations.id, opts.generationId),
+        eq(messageGenerations.workspaceId, opts.workspaceId),
+      ),
+    );
+}
+
+/** Last N generations for a specific client (per workspace). */
+export async function listMessageGenerationsForClient(opts: {
+  workspaceId: number;
+  clientId: number;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(messageGenerations)
+    .where(
+      and(
+        eq(messageGenerations.workspaceId, opts.workspaceId),
+        eq(messageGenerations.clientId, opts.clientId),
+      ),
+    )
+    .orderBy(desc(messageGenerations.createdAt))
+    .limit(opts.limit ?? 20);
+}
+
+/** Recent generations across the workspace (history strip on dashboard). */
+export async function listMessageGenerationsForWorkspace(opts: {
+  workspaceId: number;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(messageGenerations)
+    .where(eq(messageGenerations.workspaceId, opts.workspaceId))
+    .orderBy(desc(messageGenerations.createdAt))
+    .limit(opts.limit ?? 50);
+}
+
+// ============================================================
+// TRIGGER HANDLED (Round 93 — Interactive Triggers Dashboard)
+// ============================================================
+
+/**
+ * Mark a (client, trigger) pair as handled. Idempotent via UNIQUE +
+ * ON DUPLICATE KEY UPDATE so re-marking just refreshes handledAt/note.
+ */
+export async function markTriggerHandled(
+  data: InsertTriggerHandled,
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .insert(triggerHandled)
+    .values(data)
+    .onDuplicateKeyUpdate({
+      set: {
+        handledByUserId: data.handledByUserId,
+        handledAt: data.handledAt ?? new Date(),
+        note: data.note ?? null,
+      },
+    });
+}
+
+/** Remove a handled mark. */
+export async function unmarkTriggerHandled(opts: {
+  workspaceId: number;
+  clientId: number;
+  triggerKey: string;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .delete(triggerHandled)
+    .where(
+      and(
+        eq(triggerHandled.workspaceId, opts.workspaceId),
+        eq(triggerHandled.clientId, opts.clientId),
+        eq(triggerHandled.triggerKey, opts.triggerKey),
+      ),
+    );
+}
+
+/** Count handled rows per triggerKey for a workspace. */
+export async function countHandledByTrigger(opts: {
+  workspaceId: number;
+}): Promise<Record<string, number>> {
+  const db = await getDb();
+  if (!db) return {};
+  const rows = await db
+    .select({
+      triggerKey: triggerHandled.triggerKey,
+      n: sql<number>`count(*)`,
+    })
+    .from(triggerHandled)
+    .where(eq(triggerHandled.workspaceId, opts.workspaceId))
+    .groupBy(triggerHandled.triggerKey);
+  const result: Record<string, number> = {};
+  for (const row of rows) {
+    result[row.triggerKey] = Number(row.n);
+  }
+  return result;
+}
+
+/**
+ * List the clients in a workspace that match a trigger key. Uses the
+ * existing flagStatus column + isVip flag — no recomputation. Each client
+ * gets a `handled` boolean (joined from triggerHandled).
+ *
+ * Recognized triggerKeys:
+ *   vip, liquid_fund, tikun_190, high_fees, risk_ending, coverage_gaps, regular
+ *
+ * Sub-tenant filtering: agent users see only their own clients; admins
+ * see the whole workspace (mirrors clients.list).
+ */
+export async function listClientsForTrigger(opts: {
+  workspaceId: number;
+  triggerKey: string;
+  userId: number;
+  workspaceRole: "owner" | "admin" | "agent" | null | undefined;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const limit = opts.limit ?? 500;
+  const isAgent = opts.workspaceRole === "agent";
+
+  const triggerFilter =
+    opts.triggerKey === "vip"
+      ? eq(clients.isVip, true)
+      : eq(clients.flagStatus, opts.triggerKey);
+
+  const whereClauses = [
+    eq(clients.workspaceId, opts.workspaceId),
+    triggerFilter,
+    ...(isAgent ? [eq(clients.ownerUserId, opts.userId)] : []),
+  ];
+
+  const handledRows = await db
+    .select({ clientId: triggerHandled.clientId })
+    .from(triggerHandled)
+    .where(
+      and(
+        eq(triggerHandled.workspaceId, opts.workspaceId),
+        eq(triggerHandled.triggerKey, opts.triggerKey),
+      ),
+    );
+  const handledSet = new Set(handledRows.map(r => r.clientId));
+
+  const clientRows = await db
+    .select()
+    .from(clients)
+    .where(and(...whereClauses))
+    .orderBy(desc(clients.totalBalance))
+    .limit(limit);
+
+  return clientRows.map(c => ({ ...c, handled: handledSet.has(c.id) }));
+}

@@ -467,3 +467,74 @@ export const paymentAttempts = mysqlTable(
 );
 export type PaymentAttempt = typeof paymentAttempts.$inferSelect;
 export type InsertPaymentAttempt = typeof paymentAttempts.$inferInsert;
+
+
+// ============================================================
+// MESSAGE GENERATIONS (Round 92 — WhatsApp Composer history)
+// Each row = one Claude composeVariants call. variantsJson is an array
+// of 3 strings (Hebrew WhatsApp messages). selectedIndex is set when the
+// agent picks one of the variants in the modal. Optional clientId lets the
+// per-client history view list past messages for that customer.
+// ============================================================
+export const messageGenerations = mysqlTable(
+  "messageGenerations",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** Optional — null when composer is opened without a specific client (free-form preview) */
+    clientId: int("clientId").references(() => clients.id),
+    /** Trigger key (e.g. "vip", "risk_zmani", "tikun_190", or any free-form key) */
+    triggerKey: varchar("triggerKey", { length: 64 }).notNull(),
+    /** "warm" | "professional" | "urgent" — Hebrew labels stored as enum-like strings */
+    tone: varchar("tone", { length: 32 }).notNull(),
+    /** Optional free-form context the agent typed in the form */
+    freeFormContext: text("freeFormContext"),
+    /** JSON array of 3 strings */
+    variantsJson: json("variantsJson").notNull(),
+    /** 0 / 1 / 2 once the agent picks one; null if they bailed */
+    selectedIndex: int("selectedIndex"),
+    /** Snapshot of which user generated it */
+    createdByUserId: int("createdByUserId").references(() => users.id).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("msggen_workspace_idx").on(table.workspaceId),
+    clientIdx: index("msggen_client_idx").on(table.clientId),
+    triggerIdx: index("msggen_trigger_idx").on(table.triggerKey),
+    createdIdx: index("msggen_created_idx").on(table.createdAt),
+  }),
+);
+export type MessageGeneration = typeof messageGenerations.$inferSelect;
+export type InsertMessageGeneration = typeof messageGenerations.$inferInsert;
+
+// ============================================================
+// TRIGGER HANDLED (Round 93 — Interactive Triggers Dashboard)
+// One row per (clientId, triggerKey) inside a workspace once the agent
+// clicks "טפלתי". Used to compute progress bars (handled / total). Optional
+// note lets the agent jot down what they did.
+// ============================================================
+export const triggerHandled = mysqlTable(
+  "triggerHandled",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    clientId: int("clientId").references(() => clients.id).notNull(),
+    triggerKey: varchar("triggerKey", { length: 64 }).notNull(),
+    handledByUserId: int("handledByUserId").references(() => users.id).notNull(),
+    handledAt: timestamp("handledAt").defaultNow().notNull(),
+    note: text("note"),
+  },
+  table => ({
+    workspaceIdx: index("trighandled_workspace_idx").on(table.workspaceId),
+    clientIdx: index("trighandled_client_idx").on(table.clientId),
+    triggerIdx: index("trighandled_trigger_idx").on(table.triggerKey),
+    /** A given (client, trigger) pair can only be marked handled once per workspace */
+    uniqueClientTriggerPerWorkspace: unique("uq_trighandled_client_trigger_per_ws").on(
+      table.workspaceId,
+      table.clientId,
+      table.triggerKey,
+    ),
+  }),
+);
+export type TriggerHandled = typeof triggerHandled.$inferSelect;
+export type InsertTriggerHandled = typeof triggerHandled.$inferInsert;

@@ -3,6 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { PriorityActionGroups } from "@/components/PriorityActionGroups";
+import { InteractiveTriggersGrid } from "@/components/InteractiveTriggersGrid";
 import { trpc } from "@/lib/trpc";
 import {
   Building2,
@@ -168,7 +169,34 @@ export default function Dashboard() {
           </GlassCard>
         </div>
 
-        {/* Priority Action Groups — 16 triggers in 5 priority buckets (P0–P4) */}
+        {/* Round 93 — Interactive Triggers Queue (top, fast actions) */}
+        {totalClients > 0 && (
+          <div className="mb-8 sm:mb-10">
+            <InteractiveTriggersGrid
+              agentName={user?.name ?? "סוכן"}
+              counts={{
+                poaExpired: metricsQuery.data?.poaExpired ?? 0,
+                poaExpiring90d: metricsQuery.data?.poaExpiring90d ?? 0,
+                riskTemporary: metricsQuery.data?.riskTemporary ?? 0,
+                coverageEnding: metricsQuery.data?.coverageEnding ?? 0,
+                savingsNoInsurance: metricsQuery.data?.savingsNoInsurance ?? 0,
+                noActivePension: metricsQuery.data?.noActivePension ?? 0,
+                age46NoLongTermCare: metricsQuery.data?.age46NoLongTermCare ?? 0,
+                aumFrozen: metricsQuery.data?.aumFrozen ?? 0,
+                highFees: metricsQuery.data?.highFees ?? 0,
+                trackMismatch: metricsQuery.data?.trackMismatch ?? 0,
+                selfEmployedNoDeposit: metricsQuery.data?.selfEmployedNoDeposit ?? 0,
+                concentrationRisk: metricsQuery.data?.concentrationRisk ?? 0,
+                birthdayMilestone: metricsQuery.data?.birthdayMilestone ?? 0,
+                birthdayThisMonth: metricsQuery.data?.birthdayThisMonth ?? 0,
+                vipGoldPremium: metricsQuery.data?.vipGoldPremium ?? 0,
+                noEmail: metricsQuery.data?.noEmail ?? 0,
+              }}
+            />
+          </div>
+        )}
+
+        {/* Priority Action Groups — full 16-trigger view in 5 priority buckets (P0–P4) */}
         {totalClients > 0 && (
           <PriorityActionGroups
             counts={{

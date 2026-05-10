@@ -852,3 +852,50 @@ The user just reported that uploading a Shorens report in `/upload-report` does 
 - [x] **End-to-end vitest** — `server/realXlsxRoundtrip.test.ts` loads the user's actual workbook (14 customers, ₪2.2M AUM), runs the full parser, builds the same `clientRows` payload that UploadReport.tsx sends to `reports.save`, asserts every row has a non-empty idNumber, valid flagStatus, non-zero AUM, and prints the dashboard preview the agent will see post-upload.
 - [ ] Save checkpoint, ask user to Publish and reverify by uploading her real xlsx (next step)
 - [ ] Defer to Round 92: workspace-isolation integration test (parked into the security audit macro-topic)
+
+---
+
+## Round 92 — WhatsApp Composer (Claude · 3 variants · history per client)
+Reference: user-supplied `whatsapp-generator(1).html`. Flow: pick trigger → fill client+context → Claude returns 3 variants in JSON → pick one → copy / open in WhatsApp / log to per-client history.
+
+- [ ] Schema: `messageGenerations` table (workspaceId, clientId nullable, triggerKey, tone, freeFormContext, variantsJson, selectedIndex nullable, createdAt, createdByUserId)
+- [ ] `pnpm db:push`
+- [ ] Server: `ai.composeVariants` mutation — returns 3 distinct WhatsApp-ready Hebrew variants from Claude (tone in {warm, professional, urgent}); persists a `messageGenerations` row
+- [ ] Server: `ai.markVariantSelected` mutation — sets `selectedIndex`, used after agent picks one
+- [ ] Server: `ai.listGenerationsForClient` query — last N generations for a client (per workspace)
+- [ ] Frontend: `WhatsAppComposerModal.tsx` — 3-variant tabs, copy button with feedback, "פתח בוואטסאפ" deep-link `wa.me`, history list at bottom
+- [ ] Wire WhatsApp Composer modal into Trigger card "שלח וואטסאפ" button + into Client row
+- [ ] Vitest: ai.composeVariants returns 3 strings, schema validation, history list
+- [ ] Save checkpoint
+
+## Round 93 — Interactive Triggers Dashboard (priority queue + 1-click actions)
+Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`. Replace static `PriorityActionGroups` with an actionable queue: each trigger card shows count + progress bar (handled / total), 4-color urgency palette (#dc2626 P0/P1, #CCA45E opportunity, #d97706 improvement, #059669 retention), 3 buttons: צפה ברשימה / שלח וואטסאפ / טפלתי.
+
+- [ ] Schema: `triggerHandled` table (workspaceId, clientId, triggerKey, handledAt, handledByUserId, note nullable) — UNIQUE(workspaceId, clientId, triggerKey)
+- [ ] `pnpm db:push`
+- [ ] Server: `triggers.markHandled` mutation
+- [ ] Server: `triggers.listClients` query — clients matching a triggerKey, with `handled` flag joined from `triggerHandled`
+- [ ] Server: extend `workspaces.metrics` to also return `handledCounts` per triggerKey so progress bars are correct
+- [ ] Frontend: `InteractiveTriggerCard.tsx` — count, progress bar, 3 action buttons (list opens drawer, whatsapp opens composer, mark-handled is optimistic)
+- [ ] Frontend: `TriggerClientsDrawer.tsx` — slide-over with the matched client list, each row has its own שלח וואטסאפ + טפלתי
+- [ ] Frontend: top stats bar with the 5 P0/P1 highlights from `workspaces.metrics`
+- [ ] Vitest: triggers.markHandled idempotent, triggers.listClients filters by workspace, progress percentage math
+- [ ] Save checkpoint
+
+
+---
+
+## Round 92/93 — WhatsApp Composer (Claude 3-variants) + Interactive Triggers Queue — ✅ DONE (2026-05-10)
+
+**Round 92** — Real Claude-powered WhatsApp message generator:
+- [x] Schema: `messageGenerations` table (workspaceId, clientId, triggerKey, tone, freeFormContext, variantsJson, selectedIndex, createdByUserId, createdAt) — pushed via `pnpm db:push`.
+- [x] Server: `reports.composeVariants` (returns `{generationId, variants[3]}`, persists call), `reports.markVariantSelected`, `reports.listGenerationsForClient`, `reports.listGenerationsForWorkspace`. New `VARIANTS_3_SYSTEM` + `buildVariants3UserPrompt` in `server/prompts.ts`.
+- [x] Frontend: `WhatsAppComposerModalV2` — tone picker (חם / מקצועי / דחוף), free-form context, 3-tab variant view, copy + open-in-WhatsApp (auto-normalises Israeli mobiles to `wa.me/972...`), per-client history strip, marks selected variant in DB on copy/open.
+
+**Round 93** — Interactive Triggers Queue:
+- [x] Schema: `triggerHandled(workspaceId, clientId, triggerKey, handledAt, handledByUserId, note)` with UNIQUE on (workspaceId, clientId, triggerKey) — pushed.
+- [x] Server: `triggers.listClients` (workspace + agent-role-scoped), `triggers.markHandled` / `triggers.unmarkHandled` (idempotent), `triggers.handledCounts` (drives progress bars).
+- [x] Frontend: `InteractiveTriggersGrid` — 4-color buckets (urgent #dc2626 / opportunity #CCA45E / improvement #d97706 / retention #059669), top stats bar (total pending / handled / active categories / biggest opportunity), per-card progress bar + 3 action buttons (רשימה / וואטסאפ / טפלתי — single click marks first unhandled client). Sister component `TriggerClientsModal` lists all clients in one trigger with per-row mark-handled + quick composer launch.
+- [x] Wired into `Dashboard.tsx` above the existing `PriorityActionGroups` (PriorityActionGroups stays as the full 16-trigger drill-down).
+- [x] Verified: `npx tsc --noEmit` exit 0; vitest 180/190 passing (the 10 failures are pre-existing from Round 90 in workspaces / billing / contact / ilValidators — unrelated to Round 92/93).
+- [ ] Save checkpoint + ask user to Publish + verify on real upload.
