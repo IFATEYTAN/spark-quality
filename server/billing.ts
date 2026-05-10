@@ -50,12 +50,17 @@ type MemberRow = { email: string | null; name: string | null };
 // To change pricing, edit ONLY this constant; the client reads `billing.plans`.
 // Discount is calculated dynamically so we don't drift between client and
 // server.
-const YEARLY_DISCOUNT = 0.16; // 16% off when paying yearly up-front
+// Single-tier mode (Round 97): SPARK Quality is one plan at ₪349/month with
+// 15% off when paid yearly (₪297/mo · ₪3,564/yr). All plan keys map to the
+// same price so legacy invoices and the iCount pipeline keep working without
+// migration.
+const YEARLY_DISCOUNT = 0.15;
+const SPARK_QUALITY_MONTHLY = 349;
 
 const MONTHLY_PRICE = {
-  basic: 150,
-  pro: 249,
-  premium: 389,
+  basic: SPARK_QUALITY_MONTHLY,
+  pro: SPARK_QUALITY_MONTHLY,
+  premium: SPARK_QUALITY_MONTHLY,
 } as const;
 
 function yearlyTotal(plan: keyof typeof MONTHLY_PRICE): number {
@@ -69,22 +74,22 @@ const PLAN_PRICES = {
 } as const;
 
 const PLAN_LABELS = {
-  basic: "Base",
-  pro: "Pro",
-  premium: "Premium",
+  basic: "SPARK Quality",
+  pro: "SPARK Quality",
+  premium: "SPARK Quality",
 } as const;
 
-// Quota of "flags" (דגלים / התראות פעילות) the user can have open at any moment.
+// Single-tier mode: all limits are unlimited regardless of plan key.
 const PLAN_FLAGS_QUOTA = {
-  basic: 50,
-  pro: 200,
-  premium: -1, // -1 = unlimited
+  basic: -1,
+  pro: -1,
+  premium: -1,
 } as const;
 
 const PLAN_CLIENT_LIMIT = {
-  basic: 300,
-  pro: 1000,
-  premium: -1, // -1 = unlimited
+  basic: -1,
+  pro: -1,
+  premium: -1,
 } as const;
 
 const PERIOD_LABELS = {

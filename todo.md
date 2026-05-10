@@ -899,3 +899,23 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`. Replace stati
 - [x] Wired into `Dashboard.tsx` above the existing `PriorityActionGroups` (PriorityActionGroups stays as the full 16-trigger drill-down).
 - [x] Verified: `npx tsc --noEmit` exit 0; vitest 180/190 passing (the 10 failures are pre-existing from Round 90 in workspaces / billing / contact / ilValidators — unrelated to Round 92/93).
 - [ ] Save checkpoint + ask user to Publish + verify on real upload.
+
+
+---
+
+## Round 96 — Workspace isolation audit (RLS-style) — IN PROGRESS
+- [ ] Grep every tRPC procedure in server/routers.ts for ctx.user.workspaceId usage; produce a table of (procedure, scoped? yes/no, evidence)
+- [ ] For procedures that don't scope, add the workspaceId filter
+- [ ] Write server/workspaceIsolation.test.ts that creates two workspaces with seeded data and asserts: workspace B cannot read A's clients, reports, generations, triggerHandled, messageGenerations
+- [ ] Document the audit in docs/security-isolation.md
+
+## Round 97 — Pricing & plans review
+- [ ] Read existing Pricing.tsx + plans schema + onboarding plan picker
+- [ ] Confirm final tier structure (Base 150₪/mo or 1500₪/yr · Premium 350₪/mo or 3500₪/yr) with feature matrix
+- [ ] Sync onboarding plan picker with the final tiers
+- [ ] Implement export-lock helper that prevents data export outside active subscription period
+
+## Round 98 — End-to-end screen + entity audit
+- [ ] Walk every route (/, /demo, /pricing, /onboarding, /billing/*, /dashboard, /upload-report, /clients, /reports, /team, /account-billing, /admin)
+- [ ] For each route document: data source (tRPC procedure), write path, refresh strategy, empty/loading/error states, navigation in/out
+- [ ] Produce docs/screen-audit.md as a matrix

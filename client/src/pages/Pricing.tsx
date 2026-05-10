@@ -9,9 +9,7 @@ import { toast } from "sonner";
 import { useLocation } from "wouter";
 import type { PlanKey } from "@shared/planFeatures";
 
-const PLAN_RANK: Record<PlanKey, number> = { basic: 1, pro: 2, premium: 3, enterprise: 4 };
-
-type PaidPlan = "basic" | "pro" | "premium";
+type PaidPlan = "basic";
 
 type PlanCard = {
   slug: PaidPlan;
@@ -26,74 +24,31 @@ type PlanCard = {
   popular: boolean;
 };
 
-const PLANS: PlanCard[] = [
-  {
-    slug: "basic",
-    name: "Base Plan",
-    description: "לסוכן שרוצה לפספס פחות — 3 הטריגרים החשובים ביותר",
-    monthlyPrice: 150,
-    annualPrice: 128, // 150 * 0.85 ≈ 128 (15% off, billed yearly = 1,530₪)
-    flagsQuota: "3 טריגרים מרמת P1–P3",
-    clientLimit: "עד 300 לקוחות בתיק",
-    features: [
-      "עד 300 לקוחות בתיק",
-      "3 טריגרים מרמת P1–P3 (ריסק זמני, פנסיה חסרה, דמי ניהול גבוהים)",
-      "הפקת דוחות חודשיים",
-      "תמיכה במייל",
-    ],
-    missing: [
-      "AI Composer (הודעות שליחה מוכנות)",
-      "ייפוי כוח (P0)",
-      "טריגרי P4 (ימי הולדת, VIP, ללא מייל)",
-      "אוטומציות WhatsApp / Email",
-    ],
-    popular: false,
-  },
-  {
-    slug: "pro",
-    name: "Pro Plan",
-    description: "לסוכנות שרוצה לצמוח בלי לעבוד יותר — 10 טריגרים P0–P3",
-    monthlyPrice: 249,
-    annualPrice: 212, // 249 * 0.85 ≈ 212 (15% off, billed yearly = 2,539₪)
-    flagsQuota: "10 טריגרים מרמת P0–P3",
-    clientLimit: "עד 1,000 לקוחות בתיק",
-    features: [
-      "עד 1,000 לקוחות בתיק",
-      "10 טריגרים ב-P0–P3: ייפוי כוח, ריסק זמני, פנסיה/ביטוח/סיעוד/AUM, דמי ניהול",
-      "AI Composer — הודעות מוכנות לשליחה",
-      "ייצוא נתונים מלא",
-      "תמיכה בוואטסאפ",
-      "סיכום תיק לפגישה (AI)",
-      "דוח שבועי",
-    ],
-    missing: [
-      "טריגרי P4 (ימי הולדת, VIP, ללא מייל)",
-      "אוטומציות שליחה (WhatsApp / Email)",
-      "רשימת משימות יומית (AI)",
-    ],
-    popular: true,
-  },
-  {
-    slug: "premium",
-    name: "Premium Plan",
-    description: "לסוכנויות גדולות — כל 16 הטריגרים ואוטומציה מלאה",
-    monthlyPrice: 389,
-    annualPrice: 331, // 389 * 0.85 ≈ 331 (15% off, billed yearly = 3,967₪)
-    flagsQuota: "כל 16 הטריגרים · P0–P4",
-    clientLimit: "לקוחות ללא הגבלה",
-    features: [
-      "לקוחות ללא הגבלה",
-      "כל 16 הטריגרים ב-P0–P4 (כולל ימי הולדת, VIP, ללא מייל)",
-      "אוטומציות WhatsApp / Email",
-      "רשימת משימות יומית (AI)",
-      "Smart Q&A על הדוח",
-      "מנהל לקוח אישי + Onboarding",
-      "דוח יומי · תמיכת VIP",
-    ],
-    missing: [],
-    popular: false,
-  },
-];
+// SPARK Quality moved to a single-tier model. The `basic` slug is reused for
+// backwards compatibility with the billing pipeline, but all gates are open.
+const PLAN: PlanCard = {
+  slug: "basic",
+  name: "SPARK Quality",
+  description: "כל מה שסוכן צריך — ללא הגבלהת לקוחות, כל 16 הטריגרים, AI מלא",
+  monthlyPrice: 349,
+  annualPrice: 297, // 349 × 0.85 ≈ 297 (15% off; billed yearly = 3,564₪)
+  flagsQuota: "כל 16 הטריגרים · P0–P4",
+  clientLimit: "לקוחות ללא הגבלה",
+  features: [
+    "לקוחות ללא הגבלה — טענו תיקים בכל גודל",
+    "כל 16 הטריגרים: ייפוי כוח, ריסק זמני, פנסיה/ביטוח/סיעודי/AUM, דמי ניהול, VIP וימי הולדת",
+    "AI Composer — 3 גרסאות מוכנות לכל הודעת וואטסאפ בלחיצה אחת",
+    "תדריך בוקר עם AI ו'שאל את ה-AI על הנתונים'",
+    "רשימת משימות יומית · דוח יומי + שבועי",
+    "אוטומציות WhatsApp / Email",
+    "ייצוא נתונים מלא (נעול לתקופת מנוי פעיל)",
+    "תמיכת וואטסאפ + מייל בימי העסקים",
+  ],
+  missing: [],
+  popular: true,
+};
+
+
 
 export default function Pricing() {
   const [isAnnual, setIsAnnual] = useState(true);
@@ -169,7 +124,8 @@ export default function Pricing() {
 
   const userWorkspaceId = (user as { workspaceId?: number } | null | undefined)?.workspaceId ?? null;
 
-  // Resolve current plan to drive CTA labels ("התוכנית הנוכחית" / "שדרוג" / "הורדת תוכנית").
+  // Single-tier model: we still query the access status so the CTA can read
+  // "התוכנית שלכם" when the user already has an active SPARK Quality plan.
   const accessQuery = trpc.billing.myAccessStatus.useQuery(undefined, {
     enabled: !!isAuthenticated,
     staleTime: 60_000,
@@ -205,20 +161,15 @@ export default function Pricing() {
     });
   };
 
+  // Single-tier CTA label — either "התוכנית שלכם פעילה" (no-op) or "הצטרפו ל-SPARK Quality".
   const ctaLabel = (plan: PlanCard): string => {
-    if (!isAuthenticated || !userWorkspaceId) {
-      return `בחר ${plan.name}`;
-    }
-    if (!currentPlan) return `שדרוג ל-${plan.name}`;
-    if (currentPlan === plan.slug) return "התוכנית הנוכחית";
-    if (PLAN_RANK[plan.slug] > PLAN_RANK[currentPlan]) return `שדרוג ל-${plan.name}`;
-    return `הורדת תוכנית ל-${plan.name}`;
+    if (isCurrent(plan)) return "התוכנית שלכם פעילה";
+    if (!isAuthenticated || !userWorkspaceId) return `הצטרפו ל-${plan.name}`;
+    return `שדרוג ל-${plan.name}`;
   };
 
-  // Disable the CTA on the user's currently active plan to prevent accidental
-  // re-checkout. All other plans (upgrade or downgrade) remain clickable.
   const isCurrent = (plan: PlanCard): boolean =>
-    !!isAuthenticated && !!userWorkspaceId && currentPlan === plan.slug;
+    !!isAuthenticated && !!userWorkspaceId && !!currentPlan;
 
   // Returning users landing on /pricing should be able to enter the app
   // without going through onboarding again. Authenticated -> /dashboard;
@@ -307,8 +258,8 @@ export default function Pricing() {
           </div>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 max-w-7xl mx-auto">
-          {PLANS.map((plan) => (
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {[PLAN].map((plan: PlanCard) => (
             <GlassCard
               key={plan.slug}
               goldAccent={plan.popular}
@@ -364,7 +315,7 @@ export default function Pricing() {
                 <div className="text-white/60 text-[11px] uppercase tracking-wider mb-2">
                   כלול בתוכנית
                 </div>
-                {plan.features.map((feature) => (
+                {plan.features.map((feature: string) => (
                   <div key={feature} className="flex items-start gap-3">
                     <Check className="h-4 w-4 text-gold shrink-0 mt-0.5" />
                     <span className="text-white/85 text-sm leading-relaxed">{feature}</span>
@@ -377,7 +328,7 @@ export default function Pricing() {
                     <div className="text-white/40 text-[11px] uppercase tracking-wider mt-5 mb-2">
                       לא כלול בתוכנית
                     </div>
-                    {plan.missing.map((feature) => (
+                    {plan.missing.map((feature: string) => (
                       <div key={feature} className="flex items-start gap-3 opacity-60">
                         <X className="h-4 w-4 text-white/40 shrink-0 mt-0.5" />
                         <span className="text-white/55 text-sm leading-relaxed line-through">
@@ -444,46 +395,7 @@ export default function Pricing() {
           </GlassCard>
         </div>
 
-        {/* Comparison table */}
-        <div className="mt-20 max-w-5xl mx-auto">
-          <h2 className="text-center font-display text-2xl font-bold text-white mb-8">השוואה מלאה בין התוכניות</h2>
-          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="py-4 px-5 text-right font-semibold text-white/70 uppercase tracking-wider text-[11px]">תכונה</th>
-                  <th className="py-4 px-5 text-center font-semibold text-white/70 uppercase tracking-wider text-[11px]">Base</th>
-                  <th className="py-4 px-5 text-center font-semibold text-gold uppercase tracking-wider text-[11px] bg-gold/[0.04]">Pro ★</th>
-                  <th className="py-4 px-5 text-center font-semibold text-white/70 uppercase tracking-wider text-[11px]">Premium</th>
-                </tr>
-              </thead>
-              <tbody className="text-white/85">
-                {[
-                  ["מספר לקוחות", "עד 300", "עד 1,000", "ללא הגבלה"],
-                  ["מספר טריגרים", "3", "10", "16"],
-                  ["תדירות דוחות", "חודשי", "שבועי", "יומי"],
-                  ["ייפוי כוח (P0)", "✕", "✓", "✓"],
-                  ["ריסק זמני (P1)", "✓", "✓", "✓"],
-                  ["פנסיה / ביטוח / סיעוד / AUM (P2)", "קטן", "✓", "✓"],
-                  ["דמי ניהול / מסלול / עצמאים (P3)", "קטן", "✓", "✓"],
-                  ["ימי הולדת + VIP + ללא מייל (P4)", "✕", "✕", "✓"],
-                  ["AI Composer (הודעות מוכנות)", "✕", "✓", "✓"],
-                  ["אוטומציות שליחה", "✕", "✕", "✓"],
-                  ["רשימת משימות יומית (AI)", "✕", "✕", "✓"],
-                  ["Smart Q&A על הדוח", "✕", "✕", "✓"],
-                  ["תמיכה", "מייל", "וואטסאפ", "VIP"],
-                ].map((row, i) => (
-                  <tr key={i} className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 px-5 text-right text-white/85 font-medium">{row[0]}</td>
-                    <td className="py-3 px-5 text-center text-white/70">{row[1] === "✓" ? <span className="text-gold">✓</span> : row[1] === "✕" ? <span className="text-white/25">✕</span> : row[1]}</td>
-                    <td className="py-3 px-5 text-center text-white/70 bg-gold/[0.04]">{row[2] === "✓" ? <span className="text-gold">✓</span> : row[2] === "✕" ? <span className="text-white/25">✕</span> : row[2]}</td>
-                    <td className="py-3 px-5 text-center text-white/70">{row[3] === "✓" ? <span className="text-gold">✓</span> : row[3] === "✕" ? <span className="text-white/25">✕</span> : row[3]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+
         <div className="mt-16 grid gap-3 text-center max-w-3xl mx-auto">
           <p className="text-white/50 text-sm">
             * הגישה למערכת מוגבלת לסוכן ביטוח בעל רישיון בתוקף, ומותנית באימות הרישיון בתהליך ההרשמה.

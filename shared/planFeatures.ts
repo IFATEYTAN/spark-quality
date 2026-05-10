@@ -63,28 +63,36 @@ export type FeatureKey =
   | "support.whatsapp"
   | "support.vip";
 
-/** Minimum plan required for each capability. */
+/**
+ * Minimum plan required for each capability.
+ *
+ * SPARK Quality moved to a single-tier model in Round 96. All paid capabilities
+ * are now available at the `basic` plan rank, which is the only paid tier the
+ * customer sees on /pricing. The 4 legacy plan keys are kept in the type system
+ * so that historic database rows, Stripe price IDs, and existing tests keep
+ * compiling — but `FEATURE_MIN_PLAN` now opens every gate at `basic`.
+ */
 export const FEATURE_MIN_PLAN: Readonly<Record<FeatureKey, PlanKey>> = {
-  // Triggers
-  "trigger.p0": "pro",
+  // Triggers — all 16 are available on the single SPARK Quality plan.
+  "trigger.p0": "basic",
   "trigger.p1": "basic",
-  "trigger.p2": "basic", // basic gets a small subset; pro gets full
-  "trigger.p3": "basic", // same — handled by quota count, not by key
-  "trigger.p4": "premium",
-  // AI
-  "ai.composer": "pro",
-  "ai.dailyTasks": "premium",
-  "ai.smartQA": "premium",
-  "ai.briefing": "pro",
-  // Operations
-  "ops.exportFull": "premium",
-  "ops.automations": "premium",
-  "ops.weeklyReport": "pro",
-  "ops.dailyReport": "premium",
-  // Support
+  "trigger.p2": "basic",
+  "trigger.p3": "basic",
+  "trigger.p4": "basic",
+  // AI — full suite included.
+  "ai.composer": "basic",
+  "ai.dailyTasks": "basic",
+  "ai.smartQA": "basic",
+  "ai.briefing": "basic",
+  // Operations — full export, automations, daily/weekly reports.
+  "ops.exportFull": "basic",
+  "ops.automations": "basic",
+  "ops.weeklyReport": "basic",
+  "ops.dailyReport": "basic",
+  // Support — WhatsApp + email; VIP reserved for enterprise contact route.
   "support.email": "basic",
-  "support.whatsapp": "pro",
-  "support.vip": "premium",
+  "support.whatsapp": "basic",
+  "support.vip": "basic",
 };
 
 /** Quotas — per-plan numeric limits. -1 = unlimited. */
@@ -98,12 +106,11 @@ export interface PlanQuotas {
 }
 
 export const PLAN_QUOTAS: Readonly<Record<PlanKey, PlanQuotas>> = {
-  basic: { maxClients: 300, maxActiveFlags: 50, maxTriggerKeys: 3 },
-  pro: { maxClients: 1000, maxActiveFlags: 200, maxTriggerKeys: 10 },
-  premium: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: 16 },
-  // Enterprise has no caps; -1 across the board so the UI renders "ללא הגבלה"
-  // for every meter and `canDowngradeTo` recognizes Enterprise as a strict
-  // superset of Premium.
+  // SPARK Quality (single tier) — no quotas. Same shape kept for `basic` so
+  // legacy code that reads `PLAN_QUOTAS.basic` stays compatible.
+  basic: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: -1 },
+  pro: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: -1 },
+  premium: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: -1 },
   enterprise: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: -1 },
 };
 

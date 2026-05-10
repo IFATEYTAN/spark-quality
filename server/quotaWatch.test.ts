@@ -13,15 +13,10 @@ describe("quotaWatch module shape", () => {
     expect(typeof quotaWatchHandler).toBe("function");
   });
 
-  it("finite-quota plans (basic, pro) must define a positive maxClients", () => {
-    for (const plan of ["basic", "pro"] as const) {
-      expect(PLAN_QUOTAS[plan].maxClients).toBeGreaterThan(0);
+  it("all plans use the -1 sentinel for maxClients (single-tier mode)", () => {
+    for (const plan of ["basic", "pro", "premium", "enterprise"] as const) {
+      expect(PLAN_QUOTAS[plan].maxClients, `${plan}.maxClients`).toBe(-1);
     }
-  });
-
-  it("unlimited-quota plans (premium, enterprise) must use the -1 sentinel", () => {
-    expect(PLAN_QUOTAS.premium.maxClients).toBe(-1);
-    expect(PLAN_QUOTAS.enterprise.maxClients).toBe(-1);
   });
 
   it("the 90% threshold (0.9) is below 1.0 and above 0.5 — sanity", () => {

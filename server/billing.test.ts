@@ -40,21 +40,27 @@ describe("billing router", () => {
     mockSendEmail.mockResolvedValue({ ok: true, id: "test-id" });
   });
 
-  it("plans query returns the canonical price table", async () => {
+  it("plans query returns the single-tier SPARK Quality price table", async () => {
     const caller = billingRouter.createCaller(makeCtx());
     const result = await caller.plans();
-    expect(result.basic.monthly).toBe(150);
-    expect(result.basic.yearlyPerMonth).toBe(150);
-    expect(result.basic.clientLimit).toBe(300);
-    expect(result.pro.monthly).toBe(249);
-    expect(result.pro.clientLimit).toBe(1000);
-    expect(result.premium.monthly).toBe(389);
+    // Every plan key resolves to the same SPARK Quality price (₪349/mo).
+    expect(result.basic.monthly).toBe(349);
+    expect(result.pro.monthly).toBe(349);
+    expect(result.premium.monthly).toBe(349);
+    // Yearly is 15% off, billed once.
+    const expectedYearly = Math.round(349 * 12 * 0.85);
+    expect(result.basic.yearlyTotal).toBe(expectedYearly);
+    expect(result.premium.yearlyTotal).toBe(expectedYearly);
+    // All plans are unlimited clients (single-tier model).
+    expect(result.basic.clientLimit).toBe(-1);
+    expect(result.pro.clientLimit).toBe(-1);
     expect(result.premium.clientLimit).toBe(-1);
     expect(typeof result.icountReady).toBe("boolean");
   });
 
-  it("requestCheckout for premium yearly notifies owner + emails Anat with the right amount", async () => {
+  it("requestCheckout (yearly) notifies owner + emails Anat with the SPARK Quality yearly amount", async () => {
     const caller = billingRouter.createCaller(makeCtx());
+    const yearlyAmount = Math.round(349 * 12 * 0.85);
     const result = await caller.requestCheckout({
       plan: "premium",
       period: "yearly",
@@ -62,39 +68,41 @@ describe("billing router", () => {
 
     expect(result.ok).toBe(true);
     expect(result.mode).toBe("manual_followup");
-    expect(result.amount).toBe(389 * 12);
+    expect(result.amount).toBe(yearlyAmount);
 
     expect(mockNotifyOwner).toHaveBeenCalledTimes(1);
     const notify = mockNotifyOwner.mock.calls[0][0] as { title: string; content: string };
-    expect(notify.title).toContain("Premium");
+    expect(notify.title).toContain("SPARK Quality");
     expect(notify.title).toContain("שנתי");
     expect(notify.content).toContain("anat@example.com");
 
-    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    // requestCheckout sends 2 emails: Anat (owner alert) + customer confirmation.
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
     const email = mockSendEmail.mock.calls[0][0] as { to: string; subject: string; html?: string; replyTo?: string };
     expect(email.to).toBe("anathemell@gmail.com");
-    expect(email.subject).toContain("Premium");
+    expect(email.subject).toContain("SPARK Quality");
     expect(email.replyTo).toBe("anat@example.com");
-    expect(email.html).toContain((389 * 12).toLocaleString("he-IL"));
+    expect(email.html).toContain(yearlyAmount.toLocaleString("he-IL"));
   });
 
-  it("requestCheckout for basic monthly uses ₪150", async () => {
+  it("requestCheckout (monthly) uses ₪349 regardless of plan key", async () => {
     const caller = billingRouter.createCaller(makeCtx());
     const result = await caller.requestCheckout({ plan: "basic", period: "monthly" });
-    expect(result.amount).toBe(150);
-    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    expect(result.amount).toBe(349);
+    // Anat alert + customer confirmation = 2 emails.
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
     const email = mockSendEmail.mock.calls[0][0] as { html?: string };
-    expect(email.html).toContain("150");
-    expect(email.html).toContain("Base");
+    expect(email.html).toContain("349");
+    expect(email.html).toContain("SPARK Quality");
   });
 
-  it("requestCheckout for pro monthly uses ₪249", async () => {
+  it("requestCheckout for pro key also resolves to ₪349 (legacy slug)", async () => {
     const caller = billingRouter.createCaller(makeCtx());
     const result = await caller.requestCheckout({ plan: "pro", period: "monthly" });
-    expect(result.amount).toBe(249);
+    expect(result.amount).toBe(349);
     const email = mockSendEmail.mock.calls[0][0] as { html?: string };
-    expect(email.html).toContain("249");
-    expect(email.html).toContain("Pro");
+    expect(email.html).toContain("349");
+    expect(email.html).toContain("SPARK Quality");
   });
 
   it("includes workspaceName when provided (e.g. fresh signup)", async () => {
@@ -114,7 +122,8 @@ describe("billing router", () => {
     const result = await caller.requestCheckout({ plan: "basic", period: "yearly" });
     expect(result.ok).toBe(true);
     expect(result.delivered).toBe(false);
-    expect(mockSendEmail).toHaveBeenCalledTimes(1);
+    // 2 emails still go out (Anat alert + customer confirmation).
+    expect(mockSendEmail).toHaveBeenCalledTimes(2);
   });
 
   it("rejects unauthenticated callers", async () => {
