@@ -345,21 +345,22 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
 
   // Process sheets selectively to avoid double-counting financials.
-  // Savings (מוצרי חיסון) provides accumulation. Insurance (מוצרי ביטוח) provides premium.
+  // Savings (מוצרי חיסכון) provides accumulation. Insurance (מוצרי ביטוח) provides premium.
   // Skip summary/aggregate sheets (דוח מסכם) which would inflate counts.
   const allCustomers = new Map<string, Customer>();
   let totalRows = 0;
-  const SAVINGS_SHEET_HINTS = ["חיסון", "חיסון", "פנסיה", "גמל", "פינסים", "השתלמות"];
+  // NOTE: Sheets in real Shorens reports are spelled "מוצרי חיסכון" / "פנסיה" /
+  // "גמל" / "השתלמות". An older typo ("חיסון" / "פינסים") used to live
+  // here and silently broke parsing for every real upload — fixed in Round 89.
+  const SAVINGS_SHEET_HINTS = ["חיסכון", "פנסיה", "גמל", "השתלמות"];
   const INSURANCE_SHEET_HINTS = ["ביטוח"];
-  const SKIP_HINTS = ["מסכם", "מסלול", "כיסוי"]; // skip aggregates and coverage detail sheet
+  const SKIP_HINTS = ["מסכם", "מסלול", "כיסוי"]; // skip aggregates, investment-track detail and coverage detail sheets
   
   for (const sheetName of wb.SheetNames) {
     if (SKIP_HINTS.some(h => sheetName.includes(h))) continue;
     const sheet = wb.Sheets[sheetName];
     const isInsurance = INSURANCE_SHEET_HINTS.some(h => sheetName.includes(h));
-    const isSavings = !isInsurance && (
-      SAVINGS_SHEET_HINTS.some(h => sheetName.includes(h)) || sheetName.includes("חיסון")
-    );
+    const isSavings = !isInsurance && SAVINGS_SHEET_HINTS.some(h => sheetName.includes(h));
     const customers = buildCustomersFromSheet(sheet);
     totalRows += customers.length;
     for (const c of customers) {

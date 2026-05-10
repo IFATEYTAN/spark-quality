@@ -802,3 +802,10 @@
       so each picked analysis filters customers + actions to a focused story
 - [x] vitest coverage for `filterCustomersByCategory` (server/categoryFilter.test.ts — 4/4 pass)
 - [x] TypeScript clean (`npx tsc --noEmit` returns 0 errors)
+
+
+## Round 89 — Real upload still shows hardcoded numbers (post Round 88) — DONE
+- [x] Reproduced: opened the user's xlsx in Python and confirmed sheet names are "מוצרי חיסכון" / "מוצרי ביטוח" etc.
+- [x] Root cause: `SAVINGS_SHEET_HINTS` in parseReport.ts was misspelled `"חיסון"` (no כ) and `"פינסים"` — every real Shorens upload silently failed, parsed came back null, dashboard fell back to STATS=487M
+- [x] Fix: corrected hints to `"חיסכון" / "פנסיה" / "גמל" / "השתלמות"`
+- [x] Regression vitest `server/parseReport.sheets.test.ts` (4/4) locks the spelling and the SKIP_HINTS list
