@@ -165,7 +165,7 @@ export function IntroStage({ onContinue }: IntroStageProps) {
 
           {/* PHASE 4: PROMISE - the solution intro */}
           {phase === "promise" && (
-            <div className="animate-fade-up">
+            <div className="animate-fade-up pt-12 lg:pt-20">
               {/* Tagline only (Logo removed) */}
               <div className="text-center mb-6">
                 <p className="font-display-light text-white/85 text-2xl lg:text-3xl">

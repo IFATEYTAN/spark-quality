@@ -714,3 +714,7 @@
 - [ ] `DemoExperience` threads `analysis` into the dialog through `PriorityActionGroups`
 - [ ] Vitest covering the 16-scenario registry shape (one scenario per trigger, required fields present)
 - [ ] Run full test suite, save checkpoint, push to GitHub
+
+
+## Hot-fix — IntroStage spacing (2026-05-10)
+- [x] Add top spacing in IntroStage so the headline isn't crammed against the header
