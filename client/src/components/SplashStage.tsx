@@ -7,8 +7,6 @@ import { X } from "lucide-react";
 import { useLocation } from "wouter";
 import { LOGO } from "@/lib/demoData";
 
-const FAIRY_IMAGE = "/manus-storage/spark-fairy-clean_1c43284b.png";
-
 interface SplashStageProps {
   onComplete: () => void;
   durationMs?: number;
@@ -136,26 +134,12 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
         <div className="min-h-full w-full flex flex-col items-center justify-center text-center">
           {/* Top label */}
           <div
-            className="mb-6 sm:mb-10 animate-fade-in"
+            className="mb-4 sm:mb-6 animate-fade-in"
             style={{ animationDelay: "0.2s", animationDuration: "1.4s" }}
           >
             <p className="label-tag text-[10px] sm:text-[11px] text-gold/80 tracking-[0.35em] sm:tracking-[0.45em]">
               Sprinkle AI · Automation Magic
             </p>
-          </div>
-
-          {/* Floating fairy above logo */}
-          <div
-            className="relative mb-2 sm:mb-3 animate-fade-in"
-            style={{ animationDelay: "0.3s", animationDuration: "1.4s" }}
-          >
-            <img
-              src={FAIRY_IMAGE}
-              alt="SPARK Fairy"
-              className="w-[80px] sm:w-[110px] lg:w-[130px] h-auto object-contain animate-fairy-float select-none"
-              style={{ filter: "drop-shadow(0 0 25px rgba(201,169,97,0.7))" }}
-              draggable={false}
-            />
           </div>
 
           {/* SPARK AI logo */}
@@ -173,7 +157,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
           {/* Product name */}
           <div
-            className="mt-3 sm:mt-6 animate-fade-in"
+            className="mt-2 sm:mt-4 animate-fade-in"
             style={{ animationDelay: "0.7s", animationDuration: "1.4s" }}
           >
             <p className="font-brand text-xl sm:text-3xl lg:text-4xl text-gold-light tracking-[0.16em] sm:tracking-[0.22em]">
@@ -187,7 +171,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
           {/* Golden divider */}
           <div
-            className="relative mt-6 sm:mt-14 animate-fade-in w-full max-w-[380px]"
+            className="relative mt-5 sm:mt-8 animate-fade-in w-full max-w-[380px]"
             style={{ animationDelay: "1.1s", animationDuration: "1s" }}
           >
             <div className="h-px w-full bg-gradient-to-r from-transparent via-gold to-transparent" />
@@ -196,7 +180,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
           {/* Tagline */}
           <div
-            className="mt-5 sm:mt-10 animate-fade-up max-w-3xl w-full"
+            className="mt-4 sm:mt-6 animate-fade-up max-w-3xl w-full"
             style={{ animationDelay: "1.4s", animationDuration: "1.2s" }}
           >
             <p className="font-display-light text-lg sm:text-3xl lg:text-4xl text-white tracking-wide leading-relaxed px-2">
@@ -206,7 +190,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
             {/* Team credits */}
             <div
-              className="mt-8 sm:mt-10 animate-fade-up"
+              className="mt-5 sm:mt-6 animate-fade-up"
               style={{ animationDelay: "1.7s", animationDuration: "1.2s" }}
             >
               <p className="label-tag text-[9px] sm:text-[10px] text-gold/70 tracking-[0.35em] sm:tracking-[0.4em] mb-2 sm:mb-3">
@@ -226,7 +210,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
             </div>
 
             <p
-              className="mt-6 sm:mt-8 label-tag text-[10px] sm:text-[11px] text-gold-soft/80 tracking-[0.35em] sm:tracking-[0.4em] animate-fade-in"
+              className="mt-4 sm:mt-5 label-tag text-[10px] sm:text-[11px] text-gold-soft/80 tracking-[0.35em] sm:tracking-[0.4em] animate-fade-in"
               style={{ animationDelay: "2s", animationDuration: "1s" }}
             >
               LIVE DEMO · SPARK AI · 2026
@@ -235,7 +219,7 @@ export function SplashStage({ onComplete, durationMs = 12000 }: SplashStageProps
 
           {/* Skip hint */}
           <div
-            className="mt-8 sm:mt-12 mb-4 sm:mb-6 animate-fade-in"
+            className="mt-5 sm:mt-7 mb-2 sm:mb-3 animate-fade-in"
             style={{ animationDelay: "2.4s", animationDuration: "1s" }}
           >
             <p className="label-tag text-[9px] sm:text-[10px] text-white/45 tracking-[0.3em]">
