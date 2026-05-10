@@ -1,0 +1,43 @@
+---
+title: SPARK Quality · זרימה 5 · טריגרים, קטגוריות ו-'טפלתי'
+---
+flowchart TD
+    Dashboard["/dashboard"]
+
+    Dashboard --> Grid[InteractiveTriggersGrid<br/>4 דליי צבע]
+    Grid --> Urgent["דחוף<br/>#dc2626"]
+    Grid --> Opportunity["הזדמנות<br/>#CCA45E"]
+    Grid --> Improvement["שיפור<br/>#d97706"]
+    Grid --> Retention["שימור<br/>#059669"]
+
+    Urgent -->|'רשימה'| TCM[TriggerClientsModal<br/>triggers.listClients]
+    Opportunity -->|'רשימה'| TCM
+    Improvement -->|'רשימה'| TCM
+    Retention -->|'רשימה'| TCM
+
+    Urgent -->|'וואטסאפ'| Composer["WhatsAppComposerModalV2<br/>(זרימה 4)"]
+    Opportunity -->|'וואטסאפ'| Composer
+
+    Urgent -->|'טפלתי'| MarkOne[triggers.markHandled<br/>סימון לקוח ראשון<br/>בקטגוריה כטופל]
+    MarkOne --> Progress[Progress bar עולה<br/>handled / total]
+
+    TCM --> Row[שורת לקוח]
+    Row -->|'וואטסאפ'| Composer
+    Row -->|'טפלתי'| MarkRow[triggers.markHandled<br/>סימון לקוח ספציפי]
+    MarkRow --> Counts[triggers.handledCounts<br/>מעדכן progress]
+
+    Dashboard --> ActionGroups["PriorityActionGroups<br/>(16 טריגרים מפורטים)"]
+    ActionGroups -->|לחיצה על טריגר| Scenario[ScenarioModal<br/>תיאור + מדדי הצלחה]
+
+    classDef saas fill:#1a2541,stroke:#CCA45E,color:#fff
+    classDef urgent fill:#dc2626,stroke:#fca5a5,color:#fff
+    classDef opp fill:#CCA45E,stroke:#fde68a,color:#06101F
+    classDef imp fill:#d97706,stroke:#fdba74,color:#fff
+    classDef ret fill:#059669,stroke:#86efac,color:#fff
+    classDef proc fill:#0d3a2c,stroke:#10b981,color:#fff
+    class Dashboard,Grid,TCM,ActionGroups,Scenario,Composer saas
+    class Urgent urgent
+    class Opportunity opp
+    class Improvement imp
+    class Retention ret
+    class MarkOne,MarkRow,Counts,Progress proc

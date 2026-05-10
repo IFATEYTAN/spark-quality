@@ -1,0 +1,20 @@
+---
+title: SPARK Quality · זרימה 2 · העלאת דוח Shorens
+---
+flowchart TD
+    Dashboard["/dashboard"]
+    Dashboard -->|לחיצה על 'העלה דוח'| Upload["/upload-report<br/>UploadReport.tsx"]
+    Upload -->|בחירת קובץ XLSX| Parse["parseReport.ts<br/>(client-side parser)"]
+    Parse --> Preview["ActionCenter Preview<br/>16 ספירות טריגרים<br/>+ רשימת לקוחות"]
+    Preview -->|לחיצה על 'שמור לדשבורד'| Save["reports.save<br/>(tRPC mutation)"]
+    Save --> BulkUpsert["bulkUpsertClients<br/>(server/db.ts)<br/>UPSERT לפי idNumber + workspaceId"]
+    BulkUpsert --> SuccessCard["כרטיס הצלחה<br/>'נשמרו N לקוחות' + CTAs"]
+    SuccessCard -->|'לדשבורד'| Dashboard
+    SuccessCard -->|'לרשימת לקוחות'| Clients["/clients<br/>Clients.tsx"]
+
+    classDef saas fill:#1a2541,stroke:#CCA45E,color:#fff
+    classDef proc fill:#0d3a2c,stroke:#10b981,color:#fff
+    classDef preview fill:#1a1a2e,stroke:#CCA45E,color:#fff
+    class Dashboard,Upload,Clients saas
+    class Parse,Save,BulkUpsert proc
+    class Preview,SuccessCard preview

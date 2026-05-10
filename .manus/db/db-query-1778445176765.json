@@ -1,0 +1,14 @@
+{
+  "query": "SELECT workspaceId, COUNT(*) as client_count FROM clients GROUP BY workspaceId ORDER BY client_count DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT workspaceId, COUNT(*) as client_count FROM clients GROUP BY workspaceId ORDER BY client_count DESC;",
+  "rows": [
+    {
+      "workspaceId": "1",
+      "client_count": "1460"
+    }
+  ],
+  "messages": [],
+  "stdout": "workspaceId\tclient_count\n1\t1460\n",
+  "stderr": "",
+  "execution_time_ms": 1979
+}

@@ -1,0 +1,17 @@
+{
+  "query": "SELECT \n  COUNT(*) total, \n  COUNT(DISTINCT idNumber) distinct_id, \n  SUM(CASE WHEN idNumber IS NULL OR idNumber = '' THEN 1 ELSE 0 END) null_id,\n  SUM(CASE WHEN idNumber LIKE 'NO_ID%' THEN 1 ELSE 0 END) no_id_prefix,\n  SUM(CASE WHEN createdAt > DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) last_7d\nFROM clients WHERE workspaceId = 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT \n  COUNT(*) total, \n  COUNT(DISTINCT idNumber) distinct_id, \n  SUM(CASE WHEN idNumber IS NULL OR idNumber = '' THEN 1 ELSE 0 END) null_id,\n  SUM(CASE WHEN idNumber LIKE 'NO_ID%' THEN 1 ELSE 0 END) no_id_prefix,\n  SUM(CASE WHEN createdAt > DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 ELSE 0 END) last_7d\nFROM clients WHERE workspaceId = 1;",
+  "rows": [
+    {
+      "total": "1460",
+      "distinct_id": "1460",
+      "null_id": "0",
+      "no_id_prefix": "0",
+      "last_7d": "1460"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tdistinct_id\tnull_id\tno_id_prefix\tlast_7d\n1460\t1460\t0\t0\t1460\n",
+  "stderr": "",
+  "execution_time_ms": 1834
+}

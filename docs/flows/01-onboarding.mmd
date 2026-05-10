@@ -1,0 +1,31 @@
+---
+title: SPARK Quality · זרימה 1 · Onboarding (כניסה ראשונה למערכת)
+---
+flowchart TD
+    Start([אורח גולש לאתר])
+    Start --> Landing["/  Landing Page<br/>Home.tsx"]
+    Landing -->|לחיצה על 'התחברות'| OAuth[Manus OAuth]
+    Landing -->|לחיצה על 'דמו'| Demo["/demo<br/>DemoExperience.tsx"]
+    Landing -->|לחיצה על 'תמחור'| Pricing["/pricing<br/>Pricing.tsx"]
+
+    OAuth --> AuthCheck{יש workspace?}
+    AuthCheck -->|כן| Dashboard["/dashboard<br/>(זרימה נפרדת)"]
+    AuthCheck -->|לא| Onboarding["/onboarding<br/>שם workspace + תוכנית + מספר רישיון + חיוב"]
+
+    Onboarding --> PlanCheck{תוכנית בחורה?}
+    PlanCheck -->|תקופת ניסיון| Dashboard
+    PlanCheck -->|תוכנית בתשלום| Waiting["/billing/waiting<br/>BillingWaiting.tsx"]
+
+    Waiting --> PayCheck{תשלום עבר?}
+    PayCheck -->|כן| Success["/billing/success<br/>BillingSuccess.tsx"]
+    PayCheck -->|לא| Failed["/billing/failed<br/>BillingFailed.tsx<br/>חזרה ל-Onboarding"]
+
+    Success --> Dashboard
+    Failed --> Onboarding
+
+    classDef public fill:#06101F,stroke:#CCA45E,color:#fff
+    classDef saas fill:#1a2541,stroke:#CCA45E,color:#fff
+    classDef decision fill:#fff7e0,stroke:#CCA45E,color:#06101F
+    class Landing,Demo,Pricing public
+    class Onboarding,Waiting,Success,Failed,Dashboard saas
+    class AuthCheck,PlanCheck,PayCheck decision

@@ -1,0 +1,89 @@
+flowchart TD
+    %% =====================================================
+    %% SPARK Quality - Screen Flow Diagram
+    %% Last updated: Round 94 (May 2026)
+    %% =====================================================
+
+    Start([User visits site])
+    Start --> Landing["/  Landing Page<br/>Home.tsx"]
+    
+    Landing -->|Click 'Demo'| Demo["/demo  DemoExperience.tsx<br/>(Splash + Intro + Upload + Analyzing<br/>+ Dashboard + Actions + Summary)"]
+    Landing -->|Click 'Login'| OAuth[Manus OAuth]
+    Landing -->|Click 'Pricing'| Pricing["/pricing  Pricing.tsx"]
+    
+    OAuth --> AuthCheck{Has workspace?}
+    AuthCheck -->|No| Onboarding["/onboarding  Onboarding.tsx<br/>(Workspace name, plan, license, billing)"]
+    AuthCheck -->|Yes| Dashboard
+    
+    Onboarding --> BillingFlow{Plan selected?}
+    BillingFlow -->|Free trial| Dashboard
+    BillingFlow -->|Paid| BillingWaiting["/billing/waiting  BillingWaiting.tsx"]
+    BillingWaiting --> BillingResult{Payment OK?}
+    BillingResult -->|Yes| BillingSuccess["/billing/success  BillingSuccess.tsx"]
+    BillingResult -->|No| BillingFailed["/billing/failed  BillingFailed.tsx"]
+    BillingSuccess --> Dashboard
+    BillingFailed --> Onboarding
+    
+    %% =====================================================
+    %% Main SaaS Workspace (After Onboarding)
+    %% =====================================================
+    Dashboard["/dashboard  Dashboard.tsx<br/>4 KPI cards + AI buttons +<br/>InteractiveTriggersGrid +<br/>PriorityActionGroups"]
+    
+    Dashboard -->|Click 'תדריך בוקר עם AI'| AIBriefing[AIBriefingModal<br/>reports.briefing]
+    Dashboard -->|Click 'שאל את ה-AI'| AIQa[AIQaModal<br/>reports.qa + smartSuggestions]
+    Dashboard -->|Click trigger row 'וואטסאפ'| WhatsAppComposer
+    Dashboard -->|Click trigger row 'רשימה'| TriggerClientsModal[TriggerClientsModal<br/>triggers.listClients]
+    Dashboard -->|Click trigger row 'טפלתי'| MarkHandled[triggers.markHandled<br/>updates progress bar]
+    Dashboard -->|Click 'העלה דוח'| Upload["/upload-report  UploadReport.tsx"]
+    Dashboard -->|Sidebar: Clients| Clients
+    Dashboard -->|Sidebar: Team| Team
+    Dashboard -->|Sidebar: Account & Billing| AccountBilling
+    Dashboard -->|Sidebar: Admin| AdminPanel
+    
+    %% =====================================================
+    %% Upload Flow
+    %% =====================================================
+    Upload --> ParseClient[parseReport.ts<br/>Client-side XLSX parser]
+    ParseClient --> ActionCenter[ActionCenter preview<br/>16-trigger counts]
+    ParseClient -->|Click 'שמור לדשבורד'| SaveReport[reports.save<br/>bulkUpsertClients]
+    SaveReport --> SaveSuccess[Success card with CTAs]
+    SaveSuccess --> Dashboard
+    SaveSuccess --> Clients
+    
+    %% =====================================================
+    %% Clients Drilldown
+    %% =====================================================
+    Clients["/clients  Clients.tsx<br/>Table with search + filter"]
+    Clients -->|Click client row| ClientDrawer[ClientDetailDrawer<br/>full profile + actions]
+    ClientDrawer --> WhatsAppComposer
+    TriggerClientsModal -->|Click row 'וואטסאפ'| WhatsAppComposer
+    
+    %% =====================================================
+    %% WhatsApp Composer (Round 92)
+    %% =====================================================
+    WhatsAppComposer[WhatsAppComposerModalV2<br/>tone + context input]
+    WhatsAppComposer -->|Click 'הפק 3 גרסאות'| ComposeAPI[reports.composeVariants<br/>Claude returns 3 variants<br/>persists to messageGenerations]
+    ComposeAPI --> Variants[3 variant tabs]
+    Variants -->|Click 'העתק'| MarkSelected1[reports.markVariantSelected]
+    Variants -->|Click 'פתח בוואטסאפ'| MarkSelected2[reports.markVariantSelected<br/>+ open wa.me URL]
+    Variants -->|See history| History[reports.listGenerationsForClient]
+    
+    %% =====================================================
+    %% Team & Admin
+    %% =====================================================
+    Team["/team  Team.tsx<br/>Invite agents, set roles"]
+    AccountBilling["/account-billing  AccountBilling.tsx<br/>Plan, invoices, PM"]
+    AdminPanel["/admin  AdminPanel.tsx<br/>Owner-only platform admin"]
+    
+    %% =====================================================
+    %% Styling
+    %% =====================================================
+    classDef public fill:#06101F,stroke:#CCA45E,color:#fff
+    classDef saas fill:#1a2541,stroke:#CCA45E,color:#fff
+    classDef ai fill:#CCA45E,stroke:#06101F,color:#06101F
+    classDef api fill:#059669,stroke:#fff,color:#fff
+    
+    class Landing,Demo,Pricing public
+    class Dashboard,Clients,Team,AccountBilling,AdminPanel,Onboarding,Upload saas
+    class AIBriefing,AIQa,WhatsAppComposer,TriggerClientsModal ai
+    class ComposeAPI,SaveReport,MarkHandled,MarkSelected1,MarkSelected2,History,ParseClient api

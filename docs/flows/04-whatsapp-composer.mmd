@@ -1,0 +1,29 @@
+---
+title: SPARK Quality · זרימה 4 · WhatsApp Composer (3 גרסאות מ-Claude)
+---
+flowchart TD
+    Trigger["נקודות כניסה<br/>InteractiveTriggersGrid · TriggerClientsModal · ClientDetailDrawer"]
+    Trigger -->|לחיצה על 'וואטסאפ' / 'הודעה'| Composer[WhatsAppComposerModalV2]
+
+    Composer --> Inputs["טון: חם / מקצועי / דחוף<br/>הקשר חופשי (אופציונלי)<br/>פרטי לקוח: שם, גיל, מוצר"]
+
+    Inputs -->|'הפק 3 גרסאות'| Generate[reports.composeVariants<br/>tRPC mutation]
+    Generate --> Claude["Claude<br/>VARIANTS_3_SYSTEM<br/>response_format json_schema"]
+    Claude --> Persist[messageGenerations<br/>שמירה ב-DB]
+    Persist --> Variants["3 טאבים — גרסה א/ב/ג"]
+
+    Variants -->|'העתק'| MarkCopy[reports.markVariantSelected<br/>type=copy]
+    Variants -->|'פתח בוואטסאפ'| MarkOpen[reports.markVariantSelected<br/>type=open]
+    MarkOpen --> WaUrl["wa.me/972XXXXXXXX?text=...<br/>(פתיחת tab חדש)"]
+
+    Variants -->|'ראה היסטוריה'| History[reports.listGenerationsForClient]
+    History --> HistoryStrip["רצועת הפקות קודמות<br/>לאותו לקוח"]
+
+    classDef ui fill:#1a2541,stroke:#CCA45E,color:#fff
+    classDef ai fill:#3a2d0d,stroke:#CCA45E,color:#fff
+    classDef proc fill:#0d3a2c,stroke:#10b981,color:#fff
+    classDef external fill:#0d3a3a,stroke:#25D366,color:#fff
+    class Trigger,Composer,Variants,HistoryStrip ui
+    class Generate,Claude,Persist,MarkCopy,MarkOpen,History proc
+    class Inputs ai
+    class WaUrl external

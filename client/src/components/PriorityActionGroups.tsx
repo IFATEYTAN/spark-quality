@@ -254,6 +254,10 @@ interface PriorityActionGroupsProps {
    * KPI numbers (kpis.<alias>) into the outcome metrics for that trigger.
    */
   analysis?: unknown;
+  /** Honest count: number of distinct clients with at least one active trigger. */
+  distinctClientsWithAnyTrigger?: number;
+  /** Total clients in workspace, for share calculation. */
+  totalClients?: number;
   eyebrow?: string;
   title?: ReactNode;
   subtitle?: string;
@@ -262,6 +266,8 @@ interface PriorityActionGroupsProps {
 export function PriorityActionGroups({
   counts,
   analysis,
+  distinctClientsWithAnyTrigger,
+  totalClients,
   eyebrow = "SPARK QUALITY ENGINE · מרכז הפעולות",
   title,
   subtitle,
@@ -273,6 +279,9 @@ export function PriorityActionGroups({
   const totalActive = useMemo(() => {
     return Object.values(counts).reduce((s, n) => s + (n ?? 0), 0);
   }, [counts]);
+
+  // Format numbers with thousands separators for clarity
+  const formatNum = (n: number) => n.toLocaleString("he-IL");
 
   const groupTotals = useMemo(() => {
     const map: Partial<Record<Priority, number>> = {};
@@ -294,11 +303,30 @@ export function PriorityActionGroups({
           {title ?? (
             <>
               הצעדים הבאים שלכם —{" "}
-              <span className="text-gold mono-num">{totalActive}</span>{" "}
-              הזדמנויות פעילות
+              {distinctClientsWithAnyTrigger != null && distinctClientsWithAnyTrigger > 0 ? (
+                <>
+                  <span className="text-gold mono-num">{formatNum(distinctClientsWithAnyTrigger)}</span>{" "}
+                  לקוחות עם הזדמנות פעילה לפחות
+                </>
+              ) : (
+                <>
+                  <span className="text-gold mono-num">{formatNum(totalActive)}</span>{" "}
+                  טריגרים פעילים
+                </>
+              )}
             </>
           )}
         </h2>
+        {distinctClientsWithAnyTrigger != null && distinctClientsWithAnyTrigger > 0 && (
+          <p className="mt-2 text-sm text-white/60">
+            <span className="mono-num text-white/85">{formatNum(totalActive)}</span> טריגרים פעילים סה״כ (לקוח יכול להופיע בכמה מהם){" "}
+            {totalClients != null && totalClients > 0 && (
+              <span className="text-white/45">
+                · מתוך {formatNum(totalClients)} לקוחות בתיק ({Math.round((distinctClientsWithAnyTrigger / totalClients) * 100)}%)
+              </span>
+            )}
+          </p>
+        )}
         {subtitle && (
           <p className="mt-2 text-sm text-white/65 max-w-2xl leading-relaxed">
             {subtitle}

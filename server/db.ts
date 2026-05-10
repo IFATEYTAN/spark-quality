@@ -561,6 +561,7 @@ export async function getWorkspaceMetrics(opts: {
     birthdayThisMonth: 0,
     vipGoldPremium: 0,
     noEmail: 0,
+    distinctClientsWithAnyTrigger: 0,
   };
   if (!db) return empty;
 
@@ -725,6 +726,43 @@ export async function getWorkspaceMetrics(opts: {
     else if (n.includes("ייפוי כוח") || n.includes("poa")) poaExpiring90d++;
   }
 
+  // Distinct count of clients that have at least one trigger active —
+  // honest "opportunities" headline number that does not double-count clients
+  // appearing in multiple triggers.
+  let distinctClientsWithAnyTrigger = 0;
+  for (const r of rows) {
+    const ps = policiesByClient.get(r.id) ?? [];
+    const active = ps.filter(p => p.status === "active");
+    const hasPension = active.some(
+      p => (p.productType ?? "").toLowerCase().includes("pension") ||
+        (p.productType ?? "").includes("פנס")
+    );
+    const hasInsurance = active.some(
+      p => (p.productType ?? "").toLowerCase().match(/risk|health|life|elementary/) ||
+        (p.productType ?? "").match(/ריסק|בריאות|חיים|סיעוד/)
+    );
+    const hasSavings = active.some(
+      p => (p.productType ?? "").toLowerCase().match(/saving|gemel|hishtalmut/) ||
+        (p.productType ?? "").match(/חיסכון|גמל|השתלמות/)
+    );
+    let age = -1;
+    if (r.birthDate) {
+      const dob = new Date(r.birthDate);
+      if (!Number.isNaN(dob.getTime())) {
+        age = now.getFullYear() - dob.getFullYear() -
+          (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
+      }
+    }
+    const hasAnyTrigger =
+      r.flagStatus !== "none" ||
+      r.isVip ||
+      !r.email ||
+      !hasPension ||
+      (hasSavings && !hasInsurance) ||
+      (age >= 46 && age < 60);
+    if (hasAnyTrigger) distinctClientsWithAnyTrigger++;
+  }
+
   return {
     // Legacy fields
     totalClients,
@@ -751,6 +789,8 @@ export async function getWorkspaceMetrics(opts: {
     birthdayThisMonth,
     vipGoldPremium,
     noEmail,
+    // Honest distinct-clients KPI — number of clients with at least one active trigger.
+    distinctClientsWithAnyTrigger,
   };
 }
 

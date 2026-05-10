@@ -242,6 +242,8 @@ export default function Dashboard() {
               vipGoldPremium: metricsQuery.data?.vipGoldPremium ?? 0,
               noEmail: metricsQuery.data?.noEmail ?? 0,
             }}
+            distinctClientsWithAnyTrigger={metricsQuery.data?.distinctClientsWithAnyTrigger ?? 0}
+            totalClients={metricsQuery.data?.totalClients ?? 0}
             subtitle="כל לקוח, כל הזדמנות, כל סיכון — מסודרים לפי דחיפות. טאב זו = מסך התראות ברמת עדיפות."
           />
         )}

@@ -1,0 +1,29 @@
+---
+title: SPARK Quality · זרימה 3 · /dashboard כמרכז הפעולות
+---
+flowchart TD
+    Dashboard["/dashboard<br/>Dashboard.tsx"]
+
+    Dashboard --> Stats["4 כרטיסי KPI<br/>לקוחות · דוחות · VIP · AUM<br/>(workspaces.metrics)"]
+
+    Dashboard --> AIRow["שורת AI<br/>תדריך בוקר · שאל את ה-AI"]
+    AIRow -->|'תדריך בוקר עם AI'| Briefing[AIBriefingModal<br/>reports.briefing]
+    AIRow -->|'שאל את ה-AI'| Qa[AIQaModal<br/>reports.qa + smartSuggestions]
+
+    Dashboard --> InteractiveGrid["InteractiveTriggersGrid<br/>4 דליי צבע + progress<br/>(זרימה 5)"]
+
+    Dashboard --> ActionGroups["PriorityActionGroups<br/>16 טריגרים מפורטים<br/>(זרימה 5)"]
+
+    Dashboard -.->|sidebar| Clients["/clients"]
+    Dashboard -.->|sidebar| Reports["/reports"]
+    Dashboard -.->|sidebar| Team["/team"]
+    Dashboard -.->|sidebar| Billing["/account-billing"]
+    Dashboard -.->|sidebar 'admin only'| Admin["/admin"]
+    Dashboard -.->|CTA| Upload["/upload-report"]
+
+    classDef saas fill:#1a2541,stroke:#CCA45E,color:#fff
+    classDef ai fill:#3a2d0d,stroke:#CCA45E,color:#fff
+    classDef widget fill:#0d2a3a,stroke:#5fb3d9,color:#fff
+    class Dashboard,Clients,Reports,Team,Billing,Admin,Upload saas
+    class Briefing,Qa ai
+    class Stats,AIRow,InteractiveGrid,ActionGroups widget

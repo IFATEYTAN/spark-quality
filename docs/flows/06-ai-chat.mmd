@@ -1,0 +1,26 @@
+---
+title: SPARK Quality · זרימה 6 · תדריך + 'שאל את ה-AI'
+---
+flowchart TD
+    Dashboard["/dashboard"]
+
+    Dashboard -->|'תדריך בוקר עם AI'| Briefing[AIBriefingModal]
+    Briefing --> BriefingProc[reports.briefing<br/>tRPC mutation]
+    BriefingProc --> ClaudeBrief["Claude<br/>BRIEFING_SYSTEM<br/>+ analysisContext (KPIs מ-DB)"]
+    ClaudeBrief --> BriefingOut["סיכום בוקר:<br/>3-5 פעולות עדיפות<br/>(Streamdown)"]
+
+    Dashboard -->|'שאל את ה-AI'| Qa[AIQaModal]
+    Qa --> Suggestions[reports.smartSuggestions<br/>3-4 שאלות יזומות]
+    Suggestions --> Chips["צ'יפים: 'כמה לקוחות בלי פנסיה?' /<br/>'מי הלקוחות הכי חשובים השבוע?' / ..."]
+
+    Chips -->|לחיצה| AskQa[reports.qa<br/>tRPC mutation]
+    Qa -->|הקלדה ידנית| AskQa
+    AskQa --> ClaudeQa["Claude<br/>QA_SYSTEM<br/>+ analysisContext"]
+    ClaudeQa --> QaOut["תשובה במרקדאון<br/>(Streamdown)"]
+
+    classDef saas fill:#1a2541,stroke:#CCA45E,color:#fff
+    classDef ai fill:#3a2d0d,stroke:#CCA45E,color:#fff
+    classDef proc fill:#0d3a2c,stroke:#10b981,color:#fff
+    class Dashboard,Briefing,Qa,BriefingOut,QaOut,Chips saas
+    class ClaudeBrief,ClaudeQa ai
+    class BriefingProc,Suggestions,AskQa proc
