@@ -26,63 +26,65 @@ const PLANS: PlanCard[] = [
   {
     slug: "basic",
     name: "Base Plan",
-    description: "לסוכן עצמאי שמתחיל לעבוד חכם עם תיק לקוחות מצומצם",
+    description: "לסוכן שרוצה לפספס פחות — 3 הטריגרים החשובים ביותר",
     monthlyPrice: 150,
-    annualPrice: 126, // 150 * 0.84 ≈ 126 (~16% discount, billed yearly = 1,512₪)
-    flagsQuota: "עד 50 דגלים פעילים בו-זמנית",
+    annualPrice: 128, // 150 * 0.85 ≈ 128 (15% off, billed yearly = 1,530₪)
+    flagsQuota: "3 טריגרים מרמת P1–P3",
     clientLimit: "עד 300 לקוחות בתיק",
     features: [
-      "עד 300 לקוחות בתיק (כלל ברזל)",
-      "עד 50 דגלים פעילים בו-זמנית",
-      "זיהוי דגלים אוטומטי בסיסי (ריסק, פנסיה, חוסרי כיסוי)",
-      "דשבורד עם 6 קטגוריות הזדמנויות",
-      "העלאת דוחות חודשית",
-      "תמיכה במייל בלבד",
+      "עד 300 לקוחות בתיק",
+      "3 טריגרים מרמת P1–P3 (ריסק זמני, פנסיה חסרה, דמי ניהול גבוהים)",
+      "הפקת דוחות חודשיים",
+      "תמיכה במייל",
     ],
     missing: [
-      "אוטומציות WhatsApp ו-Email",
-      "ייצוא נתונים ל-CRM חיצוני",
-      "תמיכה טלפונית VIP",
-      "ניתוח AI מתקדם של תרחישים",
+      "AI Composer (הודעות שליחה מוכנות)",
+      "ייפוי כוח (P0)",
+      "טריגרי P4 (ימי הולדת, VIP, ללא מייל)",
+      "אוטומציות WhatsApp / Email",
     ],
     popular: false,
   },
   {
     slug: "pro",
     name: "Pro Plan",
-    description: "לסוכן צומח שרוצה לנהל תיק בינוני עם אוטומציה",
+    description: "לסוכנות שרוצה לצמוח בלי לעבוד יותר — 10 טריגרים P0–P3",
     monthlyPrice: 249,
-    annualPrice: 209, // 249 * 0.84 ≈ 209 (~16% discount, billed yearly = 2,508₪)
-    flagsQuota: "עד 200 דגלים פעילים בו-זמנית",
+    annualPrice: 212, // 249 * 0.85 ≈ 212 (15% off, billed yearly = 2,539₪)
+    flagsQuota: "10 טריגרים מרמת P0–P3",
     clientLimit: "עד 1,000 לקוחות בתיק",
     features: [
       "עד 1,000 לקוחות בתיק",
-      "עד 200 דגלים פעילים בו-זמנית",
-      "כל הדגלים של Base, וגם:",
-      "זיהוי הזדמנויות פיננסיות (תיקון 190, השתלמות נזילה)",
-      "אוטומציות WhatsApp ו-Email מובנות",
-      "דוחות חודשיים מלאים + ייצוא ל-Excel",
-      "תמיכה במייל ובצ'אט",
+      "10 טריגרים ב-P0–P3: ייפוי כוח, ריסק זמני, פנסיה/ביטוח/סיעוד/AUM, דמי ניהול",
+      "AI Composer — הודעות מוכנות לשליחה",
+      "ייצוא נתונים מלא",
+      "תמיכה בוואטסאפ",
+      "סיכום תיק לפגישה (AI)",
+      "דוח שבועי",
     ],
-    missing: ["ייצוא נתונים ל-CRM חיצוני", "תמיכה טלפונית VIP"],
+    missing: [
+      "טריגרי P4 (ימי הולדת, VIP, ללא מייל)",
+      "אוטומציות שליחה (WhatsApp / Email)",
+      "רשימת משימות יומית (AI)",
+    ],
     popular: true,
   },
   {
     slug: "premium",
     name: "Premium Plan",
-    description: "לסוכנות שמנהלת תיק גדול ודורשת כלים ללא הגבלה",
+    description: "לסוכנויות גדולות — כל 16 הטריגרים ואוטומציה מלאה",
     monthlyPrice: 389,
-    annualPrice: 327, // 389 * 0.84 ≈ 327 (~16% discount, billed yearly = 3,924₪)
-    flagsQuota: "דגלים ללא הגבלה",
+    annualPrice: 331, // 389 * 0.85 ≈ 331 (15% off, billed yearly = 3,967₪)
+    flagsQuota: "כל 16 הטריגרים · P0–P4",
     clientLimit: "לקוחות ללא הגבלה",
     features: [
-      "לקוחות ללא הגבלה (1,000+ בתיק)",
-      "דגלים פעילים ללא הגבלה",
-      "כל הדגלים של Pro, וגם:",
-      "זיהוי הזדמנויות VIP מלא",
-      "ניתוח AI מתקדם של תרחישים פנסיוניים",
-      "ייצוא נתונים מלא ל-CRM (מותנה במנוי פעיל)",
-      "תמיכה טלפונית VIP + Onboarding אישי",
+      "לקוחות ללא הגבלה",
+      "כל 16 הטריגרים ב-P0–P4 (כולל ימי הולדת, VIP, ללא מייל)",
+      "אוטומציות WhatsApp / Email",
+      "רשימת משימות יומית (AI)",
+      "Smart Q&A על הדוח",
+      "מנהל לקוח אישי + Onboarding",
+      "דוח יומי · תמיכת VIP",
     ],
     missing: [],
     popular: false,
@@ -361,6 +363,46 @@ export default function Pricing() {
           ))}
         </div>
 
+        {/* Comparison table */}
+        <div className="mt-20 max-w-5xl mx-auto">
+          <h2 className="text-center font-display text-2xl font-bold text-white mb-8">השוואה מלאה בין התוכניות</h2>
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="py-4 px-5 text-right font-semibold text-white/70 uppercase tracking-wider text-[11px]">תכונה</th>
+                  <th className="py-4 px-5 text-center font-semibold text-white/70 uppercase tracking-wider text-[11px]">Base</th>
+                  <th className="py-4 px-5 text-center font-semibold text-gold uppercase tracking-wider text-[11px] bg-gold/[0.04]">Pro ★</th>
+                  <th className="py-4 px-5 text-center font-semibold text-white/70 uppercase tracking-wider text-[11px]">Premium</th>
+                </tr>
+              </thead>
+              <tbody className="text-white/85">
+                {[
+                  ["מספר לקוחות", "עד 300", "עד 1,000", "ללא הגבלה"],
+                  ["מספר טריגרים", "3", "10", "16"],
+                  ["תדירות דוחות", "חודשי", "שבועי", "יומי"],
+                  ["ייפוי כוח (P0)", "✕", "✓", "✓"],
+                  ["ריסק זמני (P1)", "✓", "✓", "✓"],
+                  ["פנסיה / ביטוח / סיעוד / AUM (P2)", "קטן", "✓", "✓"],
+                  ["דמי ניהול / מסלול / עצמאים (P3)", "קטן", "✓", "✓"],
+                  ["ימי הולדת + VIP + ללא מייל (P4)", "✕", "✕", "✓"],
+                  ["AI Composer (הודעות מוכנות)", "✕", "✓", "✓"],
+                  ["אוטומציות שליחה", "✕", "✕", "✓"],
+                  ["רשימת משימות יומית (AI)", "✕", "✕", "✓"],
+                  ["Smart Q&A על הדוח", "✕", "✕", "✓"],
+                  ["תמיכה", "מייל", "וואטסאפ", "VIP"],
+                ].map((row, i) => (
+                  <tr key={i} className="border-b border-white/5 last:border-b-0 hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3 px-5 text-right text-white/85 font-medium">{row[0]}</td>
+                    <td className="py-3 px-5 text-center text-white/70">{row[1] === "✓" ? <span className="text-gold">✓</span> : row[1] === "✕" ? <span className="text-white/25">✕</span> : row[1]}</td>
+                    <td className="py-3 px-5 text-center text-white/70 bg-gold/[0.04]">{row[2] === "✓" ? <span className="text-gold">✓</span> : row[2] === "✕" ? <span className="text-white/25">✕</span> : row[2]}</td>
+                    <td className="py-3 px-5 text-center text-white/70">{row[3] === "✓" ? <span className="text-gold">✓</span> : row[3] === "✕" ? <span className="text-white/25">✕</span> : row[3]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
         <div className="mt-16 grid gap-3 text-center max-w-3xl mx-auto">
           <p className="text-white/50 text-sm">
             * הגישה למערכת מוגבלת לסוכן ביטוח בעל רישיון בתוקף, ומותנית באימות הרישיון בתהליך ההרשמה.
