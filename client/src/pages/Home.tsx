@@ -23,20 +23,14 @@ export default function Home() {
   const { isAuthenticated, user, loading } = useAuth();
   const [, setLocation] = useLocation();
 
-  // אם המשתמש כבר מחובר — נתב אותו למסך הנכון לפי מצב הסוכנות.
-  // יוצא מן הכלל: אם הגענו עם ?contact=1 (סריקת QR מהדמו) — נישאר על דף הבית כדי להציג את טופס יצירת הקשר.
-  // משתמשים ב-setLocation (ניווט פנימי ללא טעינה מחדש) במקום window.location.replace שגרם לטעינת עמוד כפול.
-  const isContactMode = typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("contact") === "1";
-  // אם משתמש מחובר ולחץ על כפתור "אתר" ב-TopZoneNav הוא גיגלית לעמוד הבית הציבורי — גם ?view=site מבטל את ה-redirect האוטומטי.
-  const isSiteViewMode = typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("view") === "site";
-  const willRedirect = !loading && isAuthenticated && Boolean(user) && !isContactMode && !isSiteViewMode;
-  useEffect(() => {
-    if (!willRedirect) return;
-    const hasWorkspace = Boolean((user as { workspaceId?: number | null } | null)?.workspaceId);
-    setLocation(hasWorkspace ? "/dashboard" : "/onboarding", { replace: true });
-  }, [willRedirect, user, setLocation]);
+  // ⚠️ Round 86 decision: "/" is now the public landing page for everyone, all
+  // the time — including authenticated users. The previous auto-redirect to
+  // /dashboard hid the marketing site from the very people who paid for it,
+  // and conflicted with the user's expectation that visiting the home URL
+  // should always show the website ("האתר"). The useLocation/useAuth wires
+  // are kept so that the inline CTAs ("כניסה למערכת") still work for logged-in
+  // visitors, but no automatic navigation happens here anymore.
+  void setLocation; // intentionally unused; kept to avoid wider refactor
 
   // חלקיקי זהב מאנימציה
   const particles = useMemo(
@@ -64,8 +58,9 @@ export default function Home() {
     }
   }, []);
 
-  // אם עומדים להפנות משתמש מחובר — לא מציירים את דף הבית כלל כדי למנוע הבזק המטעה הכפול.
-  if (willRedirect) return null;
+  // No more early return — the landing page is always rendered. Authenticated
+  // users still see it; they can choose to enter the app via the explicit CTAs.
+  void isAuthenticated; void user; void loading; // referenced only by markup below
 
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-[#06101F] text-white">

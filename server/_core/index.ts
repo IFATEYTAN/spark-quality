@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { registerICountRoutes } from "./iCountRoutes";
 import { registerMakeRoutes } from "./makeRoutes";
 import { abandonedCartsHandler } from "../jobs/abandonedCarts";
+import { quotaWatchHandler } from "../quotaWatch";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -43,6 +44,7 @@ async function startServer() {
   registerMakeRoutes(app);
   // Heartbeat scheduled callbacks (cron-only).
   app.post("/api/scheduled/abandonedCarts", abandonedCartsHandler);
+  app.post("/api/scheduled/quotaWatch", quotaWatchHandler);
   // tRPC API
   app.use(
     "/api/trpc",

@@ -760,3 +760,16 @@
 - [x] Save Round 85 checkpoint
 - [x] Vitest: cover billing.history shape + PLAN_QUOTAS + trigger key catalog (covered by billingHistory.test.ts)
 - [x] Run pnpm test — 160/170 pass, 10 pre-existing failures (same as Round 84)
+
+
+## Round 86 — Default route + 3 Round-85 follow-ups
+
+- [ ] Audit current routing — what `/` serves today vs the public landing page
+- [ ] Change `/` to render the public landing/marketing site; expose dashboard at `/dashboard`
+- [ ] Update every internal link/redirect that assumed `/` = dashboard (login redirect, AccessGuard, Header logo, etc.)
+- [ ] Add a 90-day client-count usage chart to `/account/billing` (recharts) — backed by a new server procedure
+- [ ] New `billing.usageHistory` tRPC procedure returning daily client-count snapshots for the workspace
+- [ ] Add "הורדת חשבונית" button next to each row in the billing history table — server proxy procedure that fetches PDF from iCount and streams it back
+- [ ] Add a daily quota-watch background job that emails the workspace owner at ≥ 90% of any quota
+- [ ] Vitest: cover usageHistory shape, invoice-proxy auth gate, and quota-watch threshold logic
+- [ ] Run TS check + full test suite, save Round 86 checkpoint

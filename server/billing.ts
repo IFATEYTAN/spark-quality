@@ -1008,4 +1008,87 @@ export const billingRouter = router({
       .limit(25);
     return rows;
   }),
+
+  /**
+   * Returns daily client-count snapshots for the last 90 days. Used by the
+   * usage chart on /account/billing. We don't keep a dedicated snapshot
+   * table; instead we derive the cumulative count from `clients.createdAt`,
+   * which is monotonically increasing per workspace.
+   *
+   * Output: Array<{ date: 'YYYY-MM-DD'; count: number }>
+   */
+  usageHistory: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.user.workspaceId) return [] as Array<{ date: string; count: number }>;
+    const db = await requireDb();
+    const { clients } = await import("../drizzle/schema");
+    const rows = await db
+      .select({ createdAt: clients.createdAt })
+      .from(clients)
+      .where(eq(clients.workspaceId, ctx.user.workspaceId));
+
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    const days: Array<{ date: string; count: number }> = [];
+    for (let i = 89; i >= 0; i--) {
+      const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+      const yyyy = d.getUTCFullYear();
+      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(d.getUTCDate()).padStart(2, "0");
+      days.push({ date: `${yyyy}-${mm}-${dd}`, count: 0 });
+    }
+
+    for (const row of rows) {
+      const created = new Date(row.createdAt);
+      created.setUTCHours(0, 0, 0, 0);
+      for (const day of days) {
+        const dayDate = new Date(`${day.date}T00:00:00Z`);
+        if (dayDate.getTime() >= created.getTime()) day.count++;
+      }
+    }
+
+    return days;
+  }),
+
+  /**
+   * Exchanges a paymentAttempts.invoiceId for a downloadable iCount URL.
+   * Validates the invoice belongs to the caller's workspace before hitting
+   * iCount, never exposes credentials to the client. Returns null when the
+   * invoice can't be resolved or iCount isn't configured.
+   */
+  invoiceUrl: protectedProcedure
+    .input(z.object({ invoiceId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      if (!ctx.user.workspaceId) return { url: null as string | null };
+      const db = await requireDb();
+      const { paymentAttempts } = await import("../drizzle/schema");
+      const { and } = await import("drizzle-orm");
+      const owned = await db
+        .select({ id: paymentAttempts.id })
+        .from(paymentAttempts)
+        .where(
+          and(
+            eq(paymentAttempts.workspaceId, ctx.user.workspaceId),
+            eq(paymentAttempts.invoiceId, input.invoiceId),
+          ),
+        )
+        .limit(1);
+      if (owned.length === 0) return { url: null };
+
+      const apiUser = process.env.ICOUNT_API_USER;
+      const apiToken = process.env.ICOUNT_API_TOKEN;
+      const company = process.env.ICOUNT_COMPANY_ID;
+      if (!apiUser || !apiToken || !company) return { url: null };
+
+      try {
+        const resp = await fetch(
+          `https://api.icount.co.il/api/v3.php/doc/info?cid=${encodeURIComponent(company)}&user=${encodeURIComponent(apiUser)}&pass=${encodeURIComponent(apiToken)}&doc_type=invoice&docnum=${encodeURIComponent(input.invoiceId)}`,
+        );
+        if (!resp.ok) return { url: null };
+        const data = (await resp.json()) as { doc_url?: string; pdf_link?: string };
+        return { url: data.doc_url ?? data.pdf_link ?? null };
+      } catch (err) {
+        console.warn("[billing.invoiceUrl] iCount fetch failed:", err);
+        return { url: null };
+      }
+    }),
 });

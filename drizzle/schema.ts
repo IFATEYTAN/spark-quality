@@ -85,6 +85,7 @@ export const workspaces = mysqlTable("workspaces", {
   iCountSubscriptionId: varchar("iCountSubscriptionId", { length: 64 }),
   /** Last iCount document (chashbonit) ID issued for this workspace. */
   iCountLastInvoiceId: varchar("iCountLastInvoiceId", { length: 64 }),
+  quotaWarningSentAt: timestamp("quotaWarningSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

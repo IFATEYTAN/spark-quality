@@ -78,6 +78,13 @@
       "when": 1778367133387,
       "tag": "0010_redundant_demogoblin",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1778394197446,
+      "tag": "0011_next_centennial",
+      "breakpoints": true
     }
   ]
 }

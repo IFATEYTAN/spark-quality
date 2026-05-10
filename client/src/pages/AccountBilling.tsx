@@ -22,9 +22,23 @@ import {
   type PlanKey,
 } from "@shared/planFeatures";
 import { useLocation } from "wouter";
+import { toast } from "sonner";
+import { useState } from "react";
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   CreditCard,
+  Download,
   ExternalLink,
+  LineChart,
+  Loader2,
   Receipt,
   TrendingUp,
   Users,
@@ -111,6 +125,29 @@ export default function AccountBilling() {
   const accessQuery = trpc.billing.myAccessStatus.useQuery();
   const metricsQuery = trpc.workspaces.metrics.useQuery();
   const historyQuery = trpc.billing.history.useQuery();
+  const usageQuery = trpc.billing.usageHistory.useQuery();
+  const invoiceMutation = trpc.billing.invoiceUrl.useMutation();
+  const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null);
+
+  async function handleDownloadInvoice(invoiceId: string) {
+    setPendingInvoiceId(invoiceId);
+    try {
+      const result = await invoiceMutation.mutateAsync({ invoiceId });
+      if (result.url) {
+        window.open(result.url, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("לא ניתן להוריד את החשבונית כעת. נסי שוב מאוחר יותר.");
+      }
+    } catch {
+      toast.error("שגיאה בהבאת החשבונית.");
+    } finally {
+      setPendingInvoiceId(null);
+    }
+  }
+
+  const usagePoints = (usageQuery.data ?? []) as Array<{ date: string; count: number }>;
+  // Sub-sample to weekly for a cleaner chart
+  const chartData = usagePoints.filter((_, i) => i % 7 === 0 || i === usagePoints.length - 1);
 
   const accessData = accessQuery.data as
     | { plan?: string; billingPeriod?: string | null; status?: string; paymentMethod?: string | null }
@@ -230,7 +267,68 @@ export default function AccountBilling() {
           </CardContent>
         </Card>
 
-        {/* Section 2 — Usage */}
+        {/* Section 2a — Usage chart (90 days) */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <LineChart className="h-4 w-4" />
+              מגמת לקוחות — 90 ימים אחרונים
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {usageQuery.isPending ? (
+              <div className="text-sm text-muted-foreground py-12 text-center">טוען גרף…</div>
+            ) : chartData.length === 0 ? (
+              <div className="text-sm text-muted-foreground py-12 text-center">אין עדיין נתונים להצגת הגרף.</div>
+            ) : (
+              <div style={{ width: "100%", height: 220 }}>
+                <ResponsiveContainer>
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="clientCountFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#C9A961" stopOpacity={0.4} />
+                        <stop offset="95%" stopColor="#C9A961" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(d: string) => {
+                        const dt = new Date(d);
+                        return `${dt.getDate()}/${dt.getMonth() + 1}`;
+                      }}
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={11}
+                    />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                      labelFormatter={(d: string) => new Date(d).toLocaleDateString("he-IL")}
+                      formatter={(v: number) => [v.toLocaleString("he-IL"), "לקוחות"]}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="count"
+                      stroke="#C9A961"
+                      fill="url(#clientCountFill)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+            <div className="text-xs text-muted-foreground mt-3">
+              הגרף מציג את מספר הלקוחות המצטבר בתיק לאורך 90 הימים האחרונים. מספר להעריך מתי הגיע הזמן לשדרג את התוכנית.
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Section 2b — Usage meters */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
@@ -308,7 +406,20 @@ export default function AccountBilling() {
                           </td>
                           <td className="py-3 px-3">
                             {row.invoiceId ? (
-                              <span className="text-xs text-muted-foreground">{row.invoiceId}</span>
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadInvoice(row.invoiceId!)}
+                                disabled={pendingInvoiceId === row.invoiceId}
+                                className="text-primary inline-flex items-center gap-1 text-xs hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                                title={`הורדת חשבונית ${row.invoiceId}`}
+                              >
+                                {pendingInvoiceId === row.invoiceId ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Download className="h-3 w-3" />
+                                )}
+                                #{row.invoiceId}
+                              </button>
                             ) : row.paymentUrl ? (
                               <a
                                 href={row.paymentUrl}
