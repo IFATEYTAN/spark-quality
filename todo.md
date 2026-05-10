@@ -744,3 +744,19 @@
 - [x] Vitest: planFeatures matrix shape + canDowngradeTo (12 tests, all passing)
 - [x] Run full TS check + targeted vitest — 153/163 pass, 10 pre-existing failures unchanged from HEAD
 - [x] Save Round 84 checkpoint
+
+
+## Round 85 — Billing UX upgrades (toggle + header badge + billing settings)
+
+- [x] Audit Pricing.tsx, Header / DashboardLayout, billing router to know what's already there
+- [x] Pricing: monthly/annual toggle (already implemented — verified in current Pricing.tsx, default=annual, sends `period` to startCheckoutViaMake)
+- [x] Pricing: single price per card based on toggle (already implemented)
+- [x] Header: render `<PlanBadge>` in sidebar footer showing plan label + live client count, clickable → /account/billing
+- [x] Header: badge collapses to icon-only when sidebar is collapsed (uses `group-data-[collapsible=icon]:hidden`)
+- [x] New page `/account/billing` with three sections: current plan + usage meters + billing history table
+- [x] Server: `billing.history` procedure returning latest 25 paymentAttempts for the workspace
+- [x] Vitest: 7 new tests covering router shape + PLAN_QUOTAS contract + 16-trigger key catalog
+- [x] Bug fix discovered by tests: `PLAN_QUOTAS.enterprise.maxTriggerKeys` was 16, should be -1 (unlimited)
+- [x] Save Round 85 checkpoint
+- [x] Vitest: cover billing.history shape + PLAN_QUOTAS + trigger key catalog (covered by billingHistory.test.ts)
+- [x] Run pnpm test — 160/170 pass, 10 pre-existing failures (same as Round 84)

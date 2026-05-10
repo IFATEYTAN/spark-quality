@@ -101,7 +101,10 @@ export const PLAN_QUOTAS: Readonly<Record<PlanKey, PlanQuotas>> = {
   basic: { maxClients: 300, maxActiveFlags: 50, maxTriggerKeys: 3 },
   pro: { maxClients: 1000, maxActiveFlags: 200, maxTriggerKeys: 10 },
   premium: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: 16 },
-  enterprise: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: 16 },
+  // Enterprise has no caps; -1 across the board so the UI renders "ללא הגבלה"
+  // for every meter and `canDowngradeTo` recognizes Enterprise as a strict
+  // superset of Premium.
+  enterprise: { maxClients: -1, maxActiveFlags: -1, maxTriggerKeys: -1 },
 };
 
 // ----------------------------------------------------------------------------

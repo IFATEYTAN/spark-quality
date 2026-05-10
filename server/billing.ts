@@ -977,4 +977,35 @@ export const billingRouter = router({
 
       return { delivered } as const;
     }),
+
+  /**
+   * Returns the most recent payment attempts for the caller's workspace,
+   * newest first. Drives the "Billing history" table on /account/billing.
+   * Limits to the latest 25 rows because the table is append-only and we
+   * never want this to become a paginated nightmare on the client.
+   */
+  history: protectedProcedure.query(async ({ ctx }) => {
+    if (!ctx.user.workspaceId) return [] as const;
+    const db = await requireDb();
+    const { paymentAttempts } = await import("../drizzle/schema");
+    const { desc } = await import("drizzle-orm");
+    const rows = await db
+      .select({
+        id: paymentAttempts.id,
+        requestId: paymentAttempts.requestId,
+        plan: paymentAttempts.plan,
+        billingPeriod: paymentAttempts.billingPeriod,
+        amount: paymentAttempts.amount,
+        status: paymentAttempts.status,
+        invoiceId: paymentAttempts.invoiceId,
+        paymentUrl: paymentAttempts.paymentUrl,
+        callbackAt: paymentAttempts.callbackAt,
+        createdAt: paymentAttempts.createdAt,
+      })
+      .from(paymentAttempts)
+      .where(eq(paymentAttempts.workspaceId, ctx.user.workspaceId))
+      .orderBy(desc(paymentAttempts.createdAt))
+      .limit(25);
+    return rows;
+  }),
 });

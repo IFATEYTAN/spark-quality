@@ -15,6 +15,7 @@ import Pricing from "./pages/Pricing";
 import BillingWaiting from "./pages/BillingWaiting";
 import BillingSuccess from "./pages/BillingSuccess";
 import BillingFailed from "./pages/BillingFailed";
+import AccountBilling from "./pages/AccountBilling";
 import Team from "./pages/Team";
 import UploadReport from "./pages/UploadReport";
 
@@ -34,6 +35,7 @@ function Router() {
       <Route path={"/billing/waiting"} component={BillingWaiting} />
       <Route path={"/billing/success"} component={BillingSuccess} />
       <Route path={"/billing/failed"} component={BillingFailed} />
+      <Route path={"/account/billing"} component={AccountBilling} />
       <Route path={"/legal/terms"}>{() => <Legal kind="terms" />}</Route>
       <Route path={"/legal/privacy"}>{() => <Legal kind="privacy" />}</Route>
       <Route path={"/legal/accessibility"}>{() => <Legal kind="accessibility" />}</Route>

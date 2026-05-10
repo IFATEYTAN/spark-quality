@@ -25,6 +25,7 @@ import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
+import { PlanBadge } from './PlanBadge';
 import { Button } from "./ui/button";
 
 const menuItems = [
@@ -217,6 +218,9 @@ function DashboardLayoutContent({
                     <p className="text-xs text-muted-foreground truncate mt-1.5">
                       {user?.email || "-"}
                     </p>
+                    <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                      <PlanBadge />
+                    </div>
                   </div>
                 </button>
               </DropdownMenuTrigger>
