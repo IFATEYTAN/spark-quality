@@ -10,18 +10,24 @@ import { Header } from "@/components/Header";
 import { SplashStage } from "@/components/SplashStage";
 import { IntroStage } from "@/components/IntroStage";
 import { UploadStage } from "@/components/UploadStage";
+import { CategoryPickerStage } from "@/components/CategoryPickerStage";
 import { AnalyzingStage } from "@/components/AnalyzingStage";
 import { DashboardStage } from "@/components/DashboardStage";
 import { ActionsStage } from "@/components/ActionsStage";
 import { SummaryStage } from "@/components/SummaryStage";
-import type { Stage } from "@/lib/demoData";
+import type { Stage, AnalysisCategory } from "@/lib/demoData";
 import type { ParsedReport } from "@/lib/parseReport";
 
-// Two distinct stage maps: admins see Upload (real-data path); guests skip it (canned demo).
+// Two distinct stage maps:
+// - Admins see Upload (real-data path) and skip the Category picker (they
+//   work with their actual file, no need to bucket).
+// - Guests skip Upload entirely and instead pick a single analysis category
+//   so they don't drown in 16 triggers at once.
 const STAGE_LABELS_ADMIN: Record<Stage, string> = {
   splash: "0 / 7 · פתיחה",
   intro: "0 / 7 · פתיחה",
   upload: "1 / 7 · העלאת דוח",
+  category: "—",
   analyzing: "2 / 7 · ניתוח AI",
   dashboard: "3א / 7 · תוצאות",
   dashboard2: "3ב / 7 · תוצאות",
@@ -31,15 +37,16 @@ const STAGE_LABELS_ADMIN: Record<Stage, string> = {
 };
 
 const STAGE_LABELS_GUEST: Record<Stage, string> = {
-  splash: "0 / 6 · פתיחה",
-  intro: "0 / 6 · פתיחה",
+  splash: "0 / 7 · פתיחה",
+  intro: "0 / 7 · פתיחה",
   upload: "—",
-  analyzing: "1 / 6 · ניתוח AI",
-  dashboard: "2א / 6 · תוצאות",
-  dashboard2: "2ב / 6 · תוצאות",
-  dashboard3: "2ג / 6 · תוצאות",
-  actions: "3 / 6 · פעולות אוטומטיות",
-  summary: "4 / 6 · סיכום",
+  category: "1 / 7 · בחירת ניתוח",
+  analyzing: "2 / 7 · ניתוח AI",
+  dashboard: "3א / 7 · תוצאות",
+  dashboard2: "3ב / 7 · תוצאות",
+  dashboard3: "3ג / 7 · תוצאות",
+  actions: "4 / 7 · פעולות אוטומטיות",
+  summary: "5 / 7 · סיכום",
 };
 
 const STAGE_ORDER_ADMIN: Stage[] = [
@@ -55,6 +62,7 @@ const STAGE_ORDER_ADMIN: Stage[] = [
 
 const STAGE_ORDER_GUEST: Stage[] = [
   "intro",
+  "category",
   "analyzing",
   "dashboard",
   "dashboard2",
@@ -91,6 +99,10 @@ export default function DemoExperience() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
   const [analysis, setAnalysis] = useState<unknown>(null);
+  // Guest-only: which analysis category the user picked on the CategoryPickerStage.
+  // Used to filter Dashboard/Actions/Summary so the agent doesn't drown in
+  // 16 triggers at once. Defaults to "all" until they pick.
+  const [selectedCategory, setSelectedCategory] = useState<AnalysisCategory>("all");
   // Timed-out flag: if the LLM doesn't respond within ANALYZE_TIMEOUT_MS we mark
   // it as "timed out" so the AnalyzingStage gating effect can advance with the
   // canned dataset rather than block forever.
@@ -259,7 +271,11 @@ export default function DemoExperience() {
       {/* Slide-mode main on desktop (≥lg). On mobile we let content scroll naturally so nothing is clipped. */}
       <main className="flex-1 min-h-0 lg:overflow-hidden relative pb-24 lg:pb-0">
         {stage === "intro" && (
-          <IntroStage onContinue={() => setStage("upload")} />
+          <IntroStage
+            onContinue={() =>
+              setStage(isAdmin ? "upload" : "category")
+            }
+          />
         )}
         {stage === "upload" && isAdmin && (
           <UploadStage
@@ -269,8 +285,22 @@ export default function DemoExperience() {
             }}
           />
         )}
-        {/* Safety net: if a non-admin somehow lands on "upload", jump them forward. */}
+        {/* Safety net: if a non-admin somehow lands on "upload", route them
+            to the category picker instead. */}
         {stage === "upload" && !isAdmin && (() => {
+          queueMicrotask(() => setStage("category"));
+          return null;
+        })()}
+        {stage === "category" && !isAdmin && (
+          <CategoryPickerStage
+            onSelect={(cat) => {
+              setSelectedCategory(cat);
+              setStage("analyzing");
+            }}
+          />
+        )}
+        {/* Safety net: admins shouldn't see the category picker; bounce them. */}
+        {stage === "category" && isAdmin && (() => {
           queueMicrotask(() => setStage("analyzing"));
           return null;
         })()}
@@ -294,18 +324,48 @@ export default function DemoExperience() {
           />
         )}
         {stage === "dashboard" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} analysis={analysis} slide={1} />
+          <DashboardStage
+            onAction={() => setStage("actions")}
+            parsed={parsedReport}
+            analysis={analysis}
+            category={!isAdmin ? selectedCategory : undefined}
+            slide={1}
+          />
         )}
         {stage === "dashboard2" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} analysis={analysis} slide={2} />
+          <DashboardStage
+            onAction={() => setStage("actions")}
+            parsed={parsedReport}
+            analysis={analysis}
+            category={!isAdmin ? selectedCategory : undefined}
+            slide={2}
+          />
         )}
         {stage === "dashboard3" && (
-          <DashboardStage onAction={() => setStage("actions")} parsed={parsedReport} analysis={analysis} slide={3} />
+          <DashboardStage
+            onAction={() => setStage("actions")}
+            parsed={parsedReport}
+            analysis={analysis}
+            category={!isAdmin ? selectedCategory : undefined}
+            slide={3}
+          />
         )}
         {stage === "actions" && (
-          <ActionsStage onComplete={() => setStage("summary")} parsed={parsedReport} analysis={analysis} />
+          <ActionsStage
+            onComplete={() => setStage("summary")}
+            parsed={parsedReport}
+            analysis={analysis}
+            category={!isAdmin ? selectedCategory : undefined}
+          />
         )}
-        {stage === "summary" && <SummaryStage onReset={reset} parsed={parsedReport} analysis={analysis} />}
+        {stage === "summary" && (
+          <SummaryStage
+            onReset={reset}
+            parsed={parsedReport}
+            analysis={analysis}
+            category={!isAdmin ? selectedCategory : undefined}
+          />
+        )}
       </main>
 
       {/* Floating navigation cluster - bottom-left corner (away from RTL primary action zone) */}

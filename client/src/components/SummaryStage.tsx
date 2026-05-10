@@ -11,9 +11,11 @@ interface SummaryStageProps {
   parsed?: ParsedReport | null;
   /** LLM analysis JSON returned by reports.analyze (Surense Skill v2). */
   analysis?: unknown;
+  /** Guest-mode analysis category (for badge / context). */
+  category?: import("@/lib/demoData").AnalysisCategory;
 }
 
-export function SummaryStage({ onReset, parsed, analysis }: SummaryStageProps) {
+export function SummaryStage({ onReset, parsed, analysis, category: _category }: SummaryStageProps) {
   // Optional KPIs from LLM analysis override local heuristics when present.
   const llmKpis = (analysis as { kpis?: Record<string, number>; summary_he?: string } | null)?.kpis;
   const llmSummaryHe = (analysis as { summary_he?: string } | null)?.summary_he;

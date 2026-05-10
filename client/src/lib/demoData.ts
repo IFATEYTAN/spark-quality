@@ -12,7 +12,129 @@ export const ASSETS = {
   summary: "https://d2xsxph8kpxj0f.cloudfront.net/99541940/ZqvPyEVdTkw9DPvc2ezGwV/spark_summary_v2-Kf7bPwjNXxfHimS7o3PJHf.webp",
 };
 
-export type Stage = "splash" | "intro" | "upload" | "analyzing" | "dashboard" | "dashboard2" | "dashboard3" | "actions" | "summary";
+export type Stage =
+  | "splash"
+  | "intro"
+  | "upload"
+  | "category"
+  | "analyzing"
+  | "dashboard"
+  | "dashboard2"
+  | "dashboard3"
+  | "actions"
+  | "summary";
+
+/**
+ * Analysis category buckets that drive the guest demo experience.
+ * Each value maps to a `flagStatus` produced by the parser, so we can
+ * filter `customers` and tailor stats/triggers/actions per selection.
+ */
+export type AnalysisCategory =
+  | "all"
+  | "vip"
+  | "tikun_190"
+  | "liquid_fund"
+  | "high_fees"
+  | "risk_ending"
+  | "coverage_gaps";
+
+export interface AnalysisCategoryDef {
+  id: AnalysisCategory;
+  name: string;
+  subtitle: string;
+  description: string;
+  /** P-bucket label shown on the picker card */
+  priorityLabel: string;
+  /** Tailwind classes for the badge accent */
+  accent: string;
+}
+
+/**
+ * Maps each analysis category to the set of customer `status` values that
+ * belong to it. "all" returns null (no filter).
+ */
+export const CATEGORY_TO_STATUSES: Record<AnalysisCategory, ReadonlyArray<Customer["status"]> | null> = {
+  all: null,
+  risk_ending: ["ריסק זמני", "תום הנחה"],
+  coverage_gaps: ["ללא פנסיה"],
+  tikun_190: ["תיקון 190"],
+  liquid_fund: ["השתלמות נזילה"],
+  high_fees: ["תשואה חלשה", "דמי ניהול גבוהים"],
+  vip: ["VIP"],
+};
+
+/**
+ * Filter helper: given a list of customers and an AnalysisCategory, return
+ * only those whose `status` belongs to the category. Order is preserved.
+ */
+export function filterCustomersByCategory<T extends { status: Customer["status"] }>(
+  customers: T[],
+  category: AnalysisCategory,
+): T[] {
+  const allowed = CATEGORY_TO_STATUSES[category];
+  if (!allowed) return customers;
+  const set = new Set(allowed);
+  return customers.filter((c) => set.has(c.status));
+}
+
+export const ANALYSIS_CATEGORIES: AnalysisCategoryDef[] = [
+  {
+    id: "all",
+    name: "תמונת מלאה של התיק",
+    subtitle: "כל הטריגרים במבט אחד",
+    description: "להציג את כל המדדים, הטריגרים וההמלצות הללו בתמונה מלאה — גם אם למעיטה המשמעות המידית נמוכה יותר.",
+    priorityLabel: "תצוגת מוגדרת",
+    accent: "text-white",
+  },
+  {
+    id: "risk_ending",
+    name: "ריסק זמני · כיסוי מסתיים",
+    subtitle: "P1 · דורש טיפול מיידי",
+    description: "לקוחות שהכיסוי הזמני שלהם עומד להסתיים, לפני שתיווצר חלל בכיסוי. מציע רשימת פעולה לטיפול מיידי.",
+    priorityLabel: "P1 · לטיפול מיידי",
+    accent: "text-rose-300",
+  },
+  {
+    id: "coverage_gaps",
+    name: "ללא פנסיה · חוסר כיסויים",
+    subtitle: "P1 · הזדמנות להשלמת תיק",
+    description: "לקוחות עם חסכון אבל ללא מוצר פנסיוני פעיל, או תיק חלקי ללא כיסויים משלימים. ליד ׺סל לקרן פנסיה מקיפה / כיסוי חיים.",
+    priorityLabel: "P1 · השלמת תיק",
+    accent: "text-amber-300",
+  },
+  {
+    id: "tikun_190",
+    name: "תיקון 190 / עצמאי",
+    subtitle: "P2 · פטור ממס רווחי הון",
+    description: "לקוחות מעל גיל 60 עם צבירה משמעותית שלא בקרן פנסיה. הזדמנות להפקדה לפי תיקון 190 לניצול פטור ממס רווחי הון.",
+    priorityLabel: "P2 · פטור ממס",
+    accent: "text-gold",
+  },
+  {
+    id: "liquid_fund",
+    name: "השתלמויות נזילות",
+    subtitle: "P2 · הזדמנות להשקעה / IRA",
+    description: "קרנות השתלמות שעברו 6 שנים — לקוח יכול למשוך את הכסף ללא תשלום מס. הזדמנות מצוינת לשיחת השקעה מחדש.",
+    priorityLabel: "P2 · הזדמנות השקעה",
+    accent: "text-emerald-300",
+  },
+  {
+    id: "high_fees",
+    name: "תשואה חלשה / דמי ניהול גבוהים",
+    subtitle: "P3 · שימור והוזלה",
+    description: "לקוחות עם תשואה מתחת למדד או דמי ניהול גבוהים. פגישת שימור להוזלת דמי ניהול או מעבר למסלול רווחי.",
+    priorityLabel: "P3 · שימור",
+    accent: "text-sky-300",
+  },
+  {
+    id: "vip",
+    name: "לקוחות VIP / זהב",
+    subtitle: "P4 · מגע אישי",
+    description: "לקוחות עם צבירה מעל 1M ₪. מגע אישי, תכנון פיננסי מקיף וניהול עושר — לקוחות שמזיזים את רוב הכנסה של המשרד.",
+    priorityLabel: "P4 · מגע אישי",
+    accent: "text-gold",
+  },
+];
 
 export interface Customer {
   id: string;

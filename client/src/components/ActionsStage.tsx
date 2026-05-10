@@ -1,7 +1,9 @@
 // Editorial Fintech | מסך פעולות אוטומטיות - הדגמת התראות פיננסיות
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, MessageSquare, CheckCircle2, FileText, Briefcase, TrendingUp, Mail, Sparkles, Loader2 } from "lucide-react";
 import type { ParsedReport } from "@/lib/parseReport";
+import type { AnalysisCategory } from "@/lib/demoData";
+import { CATEGORY_TO_STATUSES } from "@/lib/demoData";
 import { trpc } from "@/lib/trpc";
 import { UpgradeModal } from "@/components/UpgradeModal";
 import { useFeatureGate } from "@/hooks/useFeatureGate";
@@ -11,6 +13,8 @@ interface ActionsStageProps {
   parsed?: ParsedReport | null;
   /** LLM analysis JSON — reserved for future enrichment of action contents. */
   analysis?: any;
+  /** Guest-mode analysis category. "all" or undefined = no filter. */
+  category?: AnalysisCategory;
 }
 
 function buildActionsFromAnalysis(analysis: any) {
@@ -204,10 +208,28 @@ const ACTIONS = [
   },
 ];
 
-export function ActionsStage({ onComplete, parsed, analysis }: ActionsStageProps) {
-  // Prefer LLM analysis if available, fallback to parsed logic, fallback to canned mock
+export function ActionsStage({ onComplete, parsed, analysis, category }: ActionsStageProps) {
+  // Prefer LLM analysis if available, fallback to parsed logic, fallback to canned mock.
   const dynamicActions = analysis ? buildActionsFromAnalysis(analysis) : (parsed ? buildActionsFromParsed(parsed) : null);
-  const ACTIONS_TO_RENDER = dynamicActions ?? ACTIONS;
+  const allActions = dynamicActions ?? ACTIONS;
+  // Guest mode: surface only actions that match the picked analysis category.
+  // We match by the action `customer.status` (mapped through CATEGORY_TO_STATUSES).
+  // Canned ACTIONS don't carry a `customer.status` field, so filtering only
+  // applies to the dynamic actions built from parsed/analysis. For canned mode
+  // we just show the full list (no real customer data to bucket against).
+  const ACTIONS_TO_RENDER = useMemo(() => {
+    if (!category || category === "all") return allActions;
+    if (!dynamicActions) return allActions; // canned -> no filter
+    const allowed = CATEGORY_TO_STATUSES[category];
+    if (!allowed) return allActions;
+    const set = new Set<string>(allowed);
+    const filtered = (allActions as Array<{ customer?: { status?: string } }>).filter(
+      (a) => (a.customer?.status ? set.has(a.customer.status) : false),
+    );
+    // If filtering wipes out the list (category has no actions yet), fall
+    // back to the full list rather than showing an empty UI.
+    return filtered.length > 0 ? (filtered as typeof allActions) : allActions;
+  }, [allActions, category, dynamicActions]);
   
   const composeMutation = trpc.reports.compose.useMutation();
   const composerGate = useFeatureGate("ai.composer");

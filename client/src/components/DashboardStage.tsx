@@ -1,5 +1,5 @@
 // Editorial Fintech | דשבורד תוצאות (Slide-Mode, 3 sub-slides: 3א/3ב/3ג)
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   AlertTriangle,
   TrendingUp,
@@ -15,8 +15,15 @@ import {
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip, LabelList } from "recharts";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import { CUSTOMERS, STATS, INSURER_BREAKDOWN, AGE_GROUPS_NO_PENSION, formatCurrency } from "@/lib/demoData";
-import type { Customer } from "@/lib/demoData";
+import {
+  CUSTOMERS,
+  STATS,
+  INSURER_BREAKDOWN,
+  AGE_GROUPS_NO_PENSION,
+  formatCurrency,
+  filterCustomersByCategory,
+} from "@/lib/demoData";
+import type { Customer, AnalysisCategory } from "@/lib/demoData";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CategoryScenarioModal } from "./CategoryScenarioModal";
 import { AIComposerModal } from "./AIComposerModal";
@@ -28,6 +35,8 @@ import type { ParsedReport } from "@/lib/parseReport";
 interface DashboardStageProps {
   onAction: () => void;
   parsed?: ParsedReport | null;
+  /** Guest-mode analysis category. "all" or undefined = no filter. */
+  category?: AnalysisCategory;
   /** LLM analysis JSON returned by reports.analyze (Surense Skill v2). */
   analysis?: unknown;
   /**
@@ -40,10 +49,18 @@ interface DashboardStageProps {
 }
 
 /**
- * If LLM analysis is present, override numeric stats with its kpis.
- * Falls back to local parsed stats / canned STATS otherwise.
+ * If LLM analysis is present AND the user did NOT upload a real file, allow
+ * its KPIs to fill in canned demo numbers. When a real file is parsed, the
+ * authoritative source is `parsed.stats` and we never let the LLM override
+ * counts — the LLM may hallucinate large round numbers (487M, 1247) which
+ * is exactly what was happening before this fix.
  */
-function mergeStatsWithAnalysis(stats: typeof STATS, analysis: unknown): typeof STATS {
+function mergeStatsWithAnalysis(
+  stats: typeof STATS,
+  analysis: unknown,
+  hasParsedFile: boolean,
+): typeof STATS {
+  if (hasParsedFile) return stats;
   if (!analysis || typeof analysis !== "object") return stats;
   const k = (analysis as { kpis?: Record<string, number> }).kpis;
   if (!k) return stats;
@@ -97,7 +114,7 @@ function buildTriggerCards(stats: typeof STATS) {
     {
       id: "190",
       name: "תיקון 190 / עצמאי",
-      value: (stats as any).amendment190 ?? 54,
+      value: (stats as { amendment190?: number }).amendment190 ?? 0,
       sub: "P2 · פטור ממס רווחי הון / ללא הפקדה",
       icon: Briefcase,
       accent: "text-white",
@@ -118,8 +135,8 @@ function buildTriggerCards(stats: typeof STATS) {
     // P4 · Relationship
     {
       id: "vip",
-      name: "לקוחות VIP / זהב ֻ מגע אישי",
-      value: (stats as any).vipCustomers ?? 42,
+      name: "לקוחות VIP / זהב ׻ מגע אישי",
+      value: (stats as { vipCustomers?: number }).vipCustomers ?? 0,
       sub: "P4 · צבירה מעל 1M ₪",
       icon: Sparkles,
       accent: "text-gold",
@@ -129,11 +146,27 @@ function buildTriggerCards(stats: typeof STATS) {
   ];
 }
 
-export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: DashboardStageProps) {
+export function DashboardStage({
+  onAction,
+  parsed,
+  analysis,
+  category,
+  slide = 1,
+}: DashboardStageProps) {
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
-  // Use parsed data if a real file was uploaded, otherwise fall back to demo data
-  const customers: Customer[] = parsed?.customers ?? CUSTOMERS;
-  const stats = mergeStatsWithAnalysis(parsed?.stats ?? STATS, analysis);
+  // Use parsed data if a real file was uploaded, otherwise fall back to demo data.
+  // For guests, filter the customer list down to only the bucket they picked
+  // on the CategoryPickerStage so the dashboard tells one focused story.
+  const allCustomers: Customer[] = parsed?.customers ?? CUSTOMERS;
+  const customers: Customer[] = useMemo(
+    () => (category ? filterCustomersByCategory(allCustomers, category) : allCustomers),
+    [allCustomers, category],
+  );
+  const stats = mergeStatsWithAnalysis(
+    parsed?.stats ?? STATS,
+    analysis,
+    Boolean(parsed),
+  );
   const TRIGGER_CARDS = buildTriggerCards(stats);
   const insurerData = (parsed?.insurerBreakdown ?? INSURER_BREAKDOWN).map((d: { name: string; customers: number }) => ({ name: d.name, customers: d.customers }));
   const [composerCustomer, setComposerCustomer] = useState<Customer | null>(null);
@@ -249,7 +282,14 @@ export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: Dashbo
           <div className="glass-card relative overflow-hidden rounded-sm p-6 lg:p-8 w-full flex flex-col">
             <div className="label-tag text-gold mb-3">סך נכסים בניהול (AUM)</div>
             <div className="display-number text-6xl lg:text-7xl font-bold text-navy-deep">
-              <AnimatedNumber value={parsed ? Math.round(stats.totalAUM / 1_000_000) : 487} duration={1800} />
+              <AnimatedNumber
+                value={
+                  parsed
+                    ? Math.max(1, Math.round((stats.totalAUM ?? 0) / 1_000_000))
+                    : 487
+                }
+                duration={1800}
+              />
               <span className="text-3xl font-semibold text-gold mr-2">M ₪</span>
             </div>
             <div className="mt-auto pt-6 grid grid-cols-2 gap-6 border-t border-border/40">

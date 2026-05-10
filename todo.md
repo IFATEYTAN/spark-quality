@@ -789,3 +789,16 @@
 ## Round 87 — Hot bug
 - [x] BUG: /demo stuck at last analyzing step "הפקת דשבורד תובנות" — toast "AI מנתח את התיק..." never resolves
   - Fix: 25s watchdog + analyzeTimedOut flag in DemoExperience.tsx; falls back to local data so dashboard advances regardless of LLM latency
+
+
+## Round 88 — Demo redesign (Option B+C) — DONE
+- [x] Investigate & fix why Dashboard showed 487M / 1247 / 2891 even when `parsed` existed
+  - Root cause: `mergeStatsWithAnalysis` let LLM `kpis` clobber `parsed.stats`, and `buildTriggerCards` had `?? 54`/`?? 42` static fallbacks
+  - Fix: when `parsed` is present, `parsed.stats` is now authoritative; static fallbacks removed
+- [x] Hide file-upload card from non-admins on UploadStage; show only "השתמש בדוח לדוגמה"
+- [x] Add a CategoryPickerStage after Intro (guests only) with 7 buckets:
+      all / risk_ending / coverage_gaps / tikun_190 / liquid_fund / high_fees / vip
+- [x] Wire selected `category` prop through DemoExperience -> Dashboard / Actions / Summary
+      so each picked analysis filters customers + actions to a focused story
+- [x] vitest coverage for `filterCustomersByCategory` (server/categoryFilter.test.ts — 4/4 pass)
+- [x] TypeScript clean (`npx tsc --noEmit` returns 0 errors)
