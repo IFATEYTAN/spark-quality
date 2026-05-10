@@ -679,28 +679,28 @@
 
 
 ## Round 81 — מסכים נפרדים (טאבים) + פלטה אחידה + ActionFlow + DB + DemoExperience
-- [ ] להחליף את ה-accordion ב-PriorityActionGroups לטאבים אופקיים (P0/P1/P2/P3/P4) — כל טאב מסך עצמאי
-- [ ] להחליף את כל הצבעים הצבעוניים (אדום/תכלת/סגול/ירוק) בטונים מהפלטה הקיימת: זהב חזק/זהב בהיר/זהב עמום/לבן 30%/נייבי בהיר
-- [ ] לשמור על אינדיקציה אדינה לעדיפות באמצעות גוון/אטימות, לא צבע "סלט"
-- [ ] להוסיף ActionFlowDialog שייפתח בלחיצה על trigger CTA (במקום ניווט ל-/clients?flag=...)
-- [ ] להציג ב-Dialog תרשים זרימה: זיהוי → ייצור הודעה (AI Composer) → שליחה (Email/SMS/WhatsApp) → מעקב → המרה
-- [ ] להרחיב את getWorkspaceMetrics ב-server/db.ts להחזיר 16 trigger counts (placeholder=0 לטריגרים שעדיין אין להם logic)
-- [ ] לעדכן את ה-mapping ב-Dashboard.tsx להשתמש ב-counts החדשים מהשרת (במקום fallback מקומי)
-- [ ] להוסיף טסט vitest שמוודא שכל 16 הטריגרים מוחזרים מ-getWorkspaceMetrics
-- [ ] לעדכן את DemoExperience: להחליף את DashboardStage לתצוגה החדשה (5 טאבים) + לסנכרן STAGE_LABELS עם dashboard2/dashboard3 או להסיר אותם
-- [ ] בדיקה ויזואלית מלאה (Home, Dashboard, Demo) + שמירת checkpoint
+- [x] להחליף את ה-accordion ב-PriorityActionGroups לטאבים אופקיים (P0/P1/P2/P3/P4) — כל טאב מסך עצמאי
+- [x] להחליף את כל הצבעים הצבעוניים (אדום/תכלת/סגול/ירוק) בטונים מהפלטה הקיימת: זהב חזק/זהב בהיר/זהב עמום/לבן 30%/נייבי בהיר
+- [x] לשמור על אינדיקציה אדינה לעדיפות באמצעות גוון/אטימות, לא צבע "סלט"
+- [x] להוסיף ActionFlowDialog שייפתח בלחיצה על trigger CTA (במקום ניווט ל-/clients?flag=...)
+- [x] להציג ב-Dialog תרשים זרימה: זיהוי → ייצור הודעה (AI Composer) → שליחה (Email/SMS/WhatsApp) → מעקב → המרה
+- [x] להרחיב את getWorkspaceMetrics ב-server/db.ts להחזיר 16 trigger counts (placeholder=0 לטריגרים שעדיין אין להם logic)
+- [x] לעדכן את ה-mapping ב-Dashboard.tsx להשתמש ב-counts החדשים מהשרת (במקום fallback מקומי)
+- [x] להוסיף טסט vitest שמוודא שכל 16 הטריגרים מוחזרים מ-getWorkspaceMetrics
+- [x] לעדכן את DemoExperience: להחליף את DashboardStage לתצוגה החדשה (5 טאבים) + לסנכרן STAGE_LABELS עם dashboard2/dashboard3 או להסיר אותם
+- [x] בדיקה ויזואלית מלאה (Home, Dashboard, Demo) + שמירת checkpoint
 
 
 ## Round 82 — Dynamic 16-scenario action-flow dialog (2026-05-10)
-- [ ] Refactor `CategoryScenarioModal` into a dynamic dialog with 16 distinct trigger scenarios (one per priority trigger key) instead of 6 buckets
-- [ ] Each scenario gets its own Detect → AI → Send → Track → Convert flow text + matching ROI/expected outcome
-- [ ] Dialog accepts `analysis` (LLM output) and renders KPI/sample-client values when available
-- [ ] Dialog accepts the live trigger `count` and surfaces it in the header
-- [ ] `PriorityActionGroups` passes the trigger key (not a 6-bucket scenarioKey) and the count
-- [ ] `Dashboard.tsx` threads metrics into the dialog (live system data)
-- [ ] `DemoExperience` threads `analysis` into the dialog through `PriorityActionGroups`
-- [ ] Vitest covering the 16-scenario registry shape
-- [ ] Run full test suite, save checkpoint, push GitHub
+- [x] Refactor `CategoryScenarioModal` into a dynamic dialog with 16 distinct trigger scenarios (one per priority trigger key) instead of 6 buckets
+- [x] Each scenario gets its own Detect → AI → Send → Track → Convert flow text + matching ROI/expected outcome
+- [x] Dialog accepts `analysis` (LLM output) and renders KPI/sample-client values when available
+- [x] Dialog accepts the live trigger `count` and surfaces it in the header
+- [x] `PriorityActionGroups` passes the trigger key (not a 6-bucket scenarioKey) and the count
+- [x] `Dashboard.tsx` threads metrics into the dialog (live system data)
+- [x] `DemoExperience` threads `analysis` into the dialog through `PriorityActionGroups`
+- [x] Vitest covering the 16-scenario registry shape
+- [x] Run full test suite, save checkpoint, push GitHub
 
 
 ## Round 82 — Dynamic 16-scenario action-flow dialog (2026-05-10)
