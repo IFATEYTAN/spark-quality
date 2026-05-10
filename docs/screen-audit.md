@@ -48,11 +48,10 @@ The audit also catalogues the external integrations behind those screens, becaus
 |---|---|---|---|---|
 | **Manus OAuth** | User identity, session cookies | `VITE_APP_ID`, `OAUTH_SERVER_URL`, `VITE_OAUTH_PORTAL_URL`, `JWT_SECRET` | Every protected procedure via `protectedProcedure` | works |
 | **Anthropic Claude** (via `invokeLLM`) | WhatsApp 3-variant composer, morning briefing, AI Q&A, smart suggestions, /demo analysis | `ANTHROPIC_API_KEY` (server), built-in forge proxy | `reports.composeVariants`, `reports.briefing`, `reports.qa`, `reports.smartSuggestions`, `reports.analyzeDemo` | works |
-| **Make.com webhook** | HMAC-signed paid-checkout activation (replaces direct Stripe) | `MAKE_BILLING_SHARED_SECRET` | `billing.startCheckoutViaMake`, `POST /api/billing/activate` | works |
-| **iCount API** | Standing-order activation fallback + invoice PDF proxy | `ICOUNT_API_TOKEN`, `ICOUNT_API_USER`, `ICOUNT_COMPANY_ID` | `billing.requestCheckout`, `billing.invoiceUrl` | partial (checkout still routed via Make; invoice proxy live) |
+| **Make.com + iCount checkout pipeline** | End-to-end paid signup: Make scenario receives the HMAC-signed checkout intent, charges the customer through iCount’s standing-order rail, and writes the activation back via `POST /api/billing/activate`. iCount auto-issues the receipt/invoice as part of the same scenario, so the workspace flips to `active` and the receipt e-mail is sent without any manual step. | `MAKE_BILLING_SHARED_SECRET`, `ICOUNT_API_TOKEN`, `ICOUNT_API_USER`, `ICOUNT_COMPANY_ID` | `billing.startCheckoutViaMake`, `POST /api/billing/activate`, `billing.invoiceUrl` (PDF proxy for `/account/billing` downloads) | works |
 | **Resend** | Branded RTL transactional emails (invite, grace, suspension, contact) | `RESEND_API_KEY` | `workspaces.sendInvitationEmail`, `contact.submit`, billing grace/suspension jobs | works |
 | **S3 storage** | Hero, fairy mascot, future uploads | `BUILT_IN_FORGE_API_*` | `manus-upload-file --webdev`, `storagePut` | works |
-| **Stripe** | Card payments | (not provisioned — user ineligible for sandbox beta) | — | blocked (awaiting user's own keys) |
+| **Stripe** | Not used in production. Make.com + iCount is the live payment + invoicing pipeline; no Stripe code paths are active in this build. | — | — | not in scope |
 
 ---
 
@@ -64,11 +63,13 @@ Two subtle behaviours deserve a note rather than a fix. First, the `InteractiveT
 
 The export-lock path was the only state-coverage gap identified before this audit, and it was closed by Round 98. `Clients.tsx` now queries `exports.status`, `TableToolbar.tsx` receives `exportEnabled` and `exportLockReason`, and the HTML/Excel buttons fall back to a Hebrew toast when the subscription is not in `active` or `past_due`. The server enforces the same rule through `workspaceActiveProcedure`, so a hostile client cannot bypass the UI lock.
 
+The payment pipeline itself is fully live: the Pricing page calls `billing.startCheckoutViaMake`, which returns a Make-generated payment URL; the customer pays through iCount; the Make scenario calls `POST /api/billing/activate` with the HMAC signature; the server verifies, flips the workspace to `active`, and stores the iCount subscription identifier. iCount auto-issues the receipt as part of the same scenario, and `/account/billing` proxies those invoice PDFs through `billing.invoiceUrl`. Stripe is intentionally out of scope for this build.
+
 ---
 
 ## 5. Conclusion
 
-The matrix in §2 confirms that all fifteen production routes are wired end to end. Every read has a loading and an empty state; every mutation invalidates the queries it touches; every integration has a documented secret and a corresponding test or runtime guard. The remaining open item, **Stripe**, is explicitly blocked on the user supplying her own API keys. With Round 99 closed, SPARK Quality is in a launch-ready state for the single-tier ₪349/month plan, with workspace isolation proven by integration tests and export rights gated by subscription status.
+The matrix in §2 confirms that all fifteen production routes are wired end to end. Every read has a loading and an empty state; every mutation invalidates the queries it touches; every integration has a documented secret and a corresponding test or runtime guard. The payment + invoicing pipeline is live through Make.com + iCount, and Stripe is intentionally out of scope. With Round 99 closed, SPARK Quality is in a launch-ready state for the single-tier ₪349/month plan, with workspace isolation proven by integration tests and export rights gated by subscription status.
 
 ---
 

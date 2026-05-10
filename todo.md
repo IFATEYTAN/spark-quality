@@ -925,3 +925,6 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`.
 - [x] Walk every route (/, /demo, /pricing, /onboarding, /billing/*, /dashboard, /upload-report, /clients, /reports, /team, /account/billing, /admin)
 - [x] For each route document: data source (tRPC procedure), write path, refresh strategy, empty/loading/error states, navigation in/out
 - [x] Produce docs/screen-audit.md as a matrix
+
+## Round 100 — Doc correction (2026-05-11) — ✅ DONE
+- [x] Correct docs/screen-audit.md integration table: Make + iCount checkout is **live** (HMAC webhook + automatic invoicing). Removed the "iCount partial" framing and the Stripe-blocked row — Stripe is intentionally out of scope.
