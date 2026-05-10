@@ -764,12 +764,28 @@
 
 ## Round 86 — Default route + 3 Round-85 follow-ups
 
-- [ ] Audit current routing — what `/` serves today vs the public landing page
-- [ ] Change `/` to render the public landing/marketing site; expose dashboard at `/dashboard`
-- [ ] Update every internal link/redirect that assumed `/` = dashboard (login redirect, AccessGuard, Header logo, etc.)
-- [ ] Add a 90-day client-count usage chart to `/account/billing` (recharts) — backed by a new server procedure
-- [ ] New `billing.usageHistory` tRPC procedure returning daily client-count snapshots for the workspace
-- [ ] Add "הורדת חשבונית" button next to each row in the billing history table — server proxy procedure that fetches PDF from iCount and streams it back
-- [ ] Add a daily quota-watch background job that emails the workspace owner at ≥ 90% of any quota
-- [ ] Vitest: cover usageHistory shape, invoice-proxy auth gate, and quota-watch threshold logic
-- [ ] Run TS check + full test suite, save Round 86 checkpoint
+- [x] Audit current routing — what `/` serves today vs the public landing page
+- [x] Change `/` to render the public landing/marketing site; expose dashboard at `/dashboard`
+- [x] Update every internal link/redirect that assumed `/` = dashboard (login redirect, AccessGuard, Header logo, etc.)
+- [x] Add a 90-day client-count usage chart to `/account/billing` (recharts) — backed by a new server procedure
+- [x] New `billing.usageHistory` tRPC procedure returning daily client-count snapshots for the workspace
+- [x] Add "הורדת חשבונית" button next to each row in the billing history table — server proxy procedure that fetches PDF from iCount and streams it back
+- [x] Add a daily quota-watch background job that emails the workspace owner at ≥ 90% of any quota
+- [x] Vitest: cover usageHistory shape, invoice-proxy auth gate, and quota-watch threshold logic
+- [x] Run TS check + full test suite, save Round 86 checkpoint
+
+
+## Round 87 — Launch-readiness audit
+
+- [ ] Inventory all customer-facing routes and their CTAs
+- [ ] Inventory all backend integrations (Make, iCount, Anthropic, Resend, OAuth, S3) and their secrets
+- [ ] Run TS check + full vitest as the audit baseline
+- [ ] Map each route -> backend procedure -> integration to surface dead ends
+- [ ] Classify findings as works / partial / broken / missing-for-launch
+- [ ] Write the audit document
+- [ ] Deliver to the user
+
+
+## Round 87 — Hot bug
+- [x] BUG: /demo stuck at last analyzing step "הפקת דשבורד תובנות" — toast "AI מנתח את התיק..." never resolves
+  - Fix: 25s watchdog + analyzeTimedOut flag in DemoExperience.tsx; falls back to local data so dashboard advances regardless of LLM latency

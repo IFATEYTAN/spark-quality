@@ -91,8 +91,18 @@ export default function DemoExperience() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
   const [analysis, setAnalysis] = useState<unknown>(null);
+  // Timed-out flag: if the LLM doesn't respond within ANALYZE_TIMEOUT_MS we mark
+  // it as "timed out" so the AnalyzingStage gating effect can advance with the
+  // canned dataset rather than block forever.
+  const [analyzeTimedOut, setAnalyzeTimedOut] = useState(false);
   const analyzingRef = useRef(false);
   const analyzeMutation = trpc.reports.analyze.useMutation();
+
+  // Hard cap on how long the AnalyzingStage may wait for the LLM response.
+  // Anthropic occasionally takes 30-45s for large payloads; beyond that we'd
+  // rather show local results than leave the agent staring at a spinner during
+  // a live demo.
+  const ANALYZE_TIMEOUT_MS = 25_000;
 
   // When admin uploads a real file, kick off the LLM analyzer in background.
   // The result is stored on `analysis` and passed down to dashboard/actions/summary.
@@ -100,15 +110,38 @@ export default function DemoExperience() {
     if (!parsedReport || analyzingRef.current) return;
     analyzingRef.current = true;
     setAnalysis(null);
+    setAnalyzeTimedOut(false);
+    const startedAt = Date.now();
     const t = toast.loading("AI מנתח את התיק — מסתמלו על דעתכם…");
+
+    // Watchdog: after ANALYZE_TIMEOUT_MS, mark as timed out so the gating
+    // effect lets the user advance regardless of mutation state. We do NOT
+    // cancel the mutation — if Anthropic eventually replies we still surface
+    // the live analysis on the dashboard.
+    const watchdog = setTimeout(() => {
+      console.warn(
+        `[reports.analyze] watchdog fired after ${ANALYZE_TIMEOUT_MS}ms — falling back to local analysis`,
+      );
+      setAnalyzeTimedOut(true);
+      toast.warning(
+        "הניתוח של Claude מתעכב — ממשיכים עם נתוני הדוח המקומיים",
+        { id: t },
+      );
+    }, ANALYZE_TIMEOUT_MS);
+
     analyzeMutation
       .mutateAsync({ parsed: parsedReport })
       .then((res) => {
+        clearTimeout(watchdog);
+        const elapsed = Date.now() - startedAt;
+        console.info(`[reports.analyze] completed in ${elapsed}ms`);
         setAnalysis(res?.analysis ?? null);
         toast.success("הניתוח הושלם — מציגים תובנות אמיתיות", { id: t });
       })
       .catch((err) => {
+        clearTimeout(watchdog);
         console.warn("[reports.analyze] failed", err);
+        setAnalyzeTimedOut(true);
         toast.error("לא הצלחנו להריץ ניתוח AI — מציגים תוצאות מקומיות", { id: t });
       })
       .finally(() => {
@@ -230,13 +263,15 @@ export default function DemoExperience() {
             llmStatus={
               !parsedReport
                 ? "idle"
-                : analyzeMutation.isPending
-                  ? "running"
-                  : analyzeMutation.isError
-                    ? "error"
-                    : analysis
-                      ? "done"
-                      : "running"
+                : analyzeTimedOut
+                  ? "error"
+                  : analyzeMutation.isPending
+                    ? "running"
+                    : analyzeMutation.isError
+                      ? "error"
+                      : analysis
+                        ? "done"
+                        : "running"
             }
           />
         )}
