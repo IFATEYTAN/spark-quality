@@ -928,3 +928,10 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`.
 
 ## Round 100 — Doc correction (2026-05-11) — ✅ DONE
 - [x] Correct docs/screen-audit.md integration table: Make + iCount checkout is **live** (HMAC webhook + automatic invoicing). Removed the "iCount partial" framing and the Stripe-blocked row — Stripe is intentionally out of scope.
+
+## Round 101 — Pricing UI collapse to single plan (2026-05-11) — ✅ DONE
+- [x] Home.tsx pricing section refactored: replaced the 3-card grid (Base ₪150 / Pro ₪249 / Premium ₪389) with a single SPARK Quality card (₪349/mo, ₪297/mo annual = ₪3,567/yr) + an Enterprise contact card. Pricing.tsx was already single-tier in Round 97; this round closes the same gap on the public landing page that the user spotted.
+- [x] Plan schema already single-tier (shared/planFeatures.ts) — no change needed; existing slugs (basic/pro/premium) remain in the DB enum for legacy rows but the only tier the SaaS sells is SPARK Quality (server-side `billing.requestCheckout` accepts the slug + cycle).
+- [x] Onboarding plan picker mirrors the single tier (no multi-card picker; uses monthly/yearly toggle on the same SPARK Quality price).
+- [x] tsc clean for the touched files; the two pre-existing DemoExperience errors are unrelated to this round (tracked separately).
+- [x] Save checkpoint.

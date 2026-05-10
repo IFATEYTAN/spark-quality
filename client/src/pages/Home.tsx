@@ -378,131 +378,85 @@ export default function Home() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {/* Base */}
-            <div className="rounded-lg p-8 backdrop-blur-md bg-white/5 border border-white/10 flex flex-col">
-              <div className="text-[11px] tracking-[0.3em] uppercase text-white/60 mb-3">
-                Base Plan
-              </div>
-              <h3 className="font-display text-xl font-black text-white tracking-tight leading-snug min-h-[3.25rem]">
-                לסוכן שרוצה לפספס פחות
-              </h3>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="font-display text-5xl font-black text-white">150</span>
-                <span className="text-base text-white/60">₪ / חודש</span>
-              </div>
-              <p className="text-xs text-white/50 mt-1">או חיוב שנתי של 1,530 ₪ (חיסכון 15%)</p>
-
-              <div className="mt-6 flex flex-wrap gap-4 pb-5 border-b border-white/10">
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">300</span><span className="text-[11px] text-white/55">לקוחות</span></div>
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">3</span><span className="text-[11px] text-white/55">טריגרים</span></div>
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">חודשי</span><span className="text-[11px] text-white/55">דוח</span></div>
-              </div>
-
-              <div className="mt-5">
-                <div className="text-[10px] tracking-[0.2em] uppercase text-white/45 mb-3">טריגרים כלולים</div>
-                <ul className="space-y-2 text-[13px] text-white/85">
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-400/40">P1</span>ריסק זמני</li>
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-400/40">P2</span>פנסיה חסרה</li>
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-400/40">P3</span>דמי ניהול גבוהים</li>
-                </ul>
-              </div>
-
-              <ul className="mt-6 pt-5 border-t border-white/10 space-y-2 text-sm text-white/80 flex-1">
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />הפקת דוחות חודשיים</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />תמיכה במייל</li>
-                <li className="flex items-center gap-2 text-white/35"><span className="h-3.5 w-3.5 shrink-0 text-center">✕</span>AI Composer</li>
-                <li className="flex items-center gap-2 text-white/35"><span className="h-3.5 w-3.5 shrink-0 text-center">✕</span>ייפוי כוח (P0)</li>
-                <li className="flex items-center gap-2 text-white/35"><span className="h-3.5 w-3.5 shrink-0 text-center">✕</span>אוטומציות שליחה</li>
-              </ul>
-
-              <Link href="/pricing" className="mt-6 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60">
-                בחר Base
-              </Link>
-            </div>
-
-            {/* Pro — featured */}
-            <div className="relative rounded-lg p-8 backdrop-blur-md bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/40 shadow-[0_8px_32px_rgba(201,169,97,0.2)] flex flex-col">
+          {/* Single-tier SPARK Quality + Enterprise contact card */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-5xl mx-auto">
+            {/* SPARK Quality — single plan */}
+            <div className="relative rounded-lg p-10 backdrop-blur-md bg-gradient-to-br from-gold/12 to-gold/5 border border-gold/45 shadow-[0_8px_32px_rgba(201,169,97,0.22)] flex flex-col">
               <div className="absolute -top-3 right-1/2 translate-x-1/2 px-3 py-1 bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] text-[11px] font-bold tracking-widest uppercase rounded-full shadow-lg whitespace-nowrap">
-                ★ הכי פופולרי
+                ★ כל היכולות · ללא מגבלה
               </div>
-              <div className="text-[11px] tracking-[0.3em] uppercase text-gold mb-3">Pro Plan</div>
-              <h3 className="font-display text-xl font-black text-white tracking-tight leading-snug min-h-[3.25rem]">
-                לסוכנות שרוצה לצמוח בלי לעבוד יותר
+              <div className="text-[11px] tracking-[0.3em] uppercase text-gold mb-3">SPARK Quality</div>
+              <h3 className="font-display text-2xl font-black text-white tracking-tight leading-snug">
+                תוכנית אחת. כל הכלים. ללא מגבלה.
               </h3>
               <div className="mt-6 flex items-baseline gap-2">
-                <span className="font-display text-5xl font-black text-gold">249</span>
+                <span className="font-display text-6xl font-black text-gold">349</span>
                 <span className="text-base text-white/60">₪ / חודש</span>
               </div>
-              <p className="text-xs text-white/50 mt-1">או חיוב שנתי של 2,539 ₪ (חיסכון 15%)</p>
+              <p className="text-sm text-white/65 mt-2">
+                או <span className="text-gold font-bold">297 ₪ / חודש</span> בחיוב שנתי
+                <span className="text-white/50"> · 3,567 ₪ לשנה · חיסכון של 15%</span>
+              </p>
 
-              <div className="mt-6 flex flex-wrap gap-4 pb-5 border-b border-white/10">
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">1,000</span><span className="text-[11px] text-white/55">לקוחות</span></div>
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">10</span><span className="text-[11px] text-white/55">טריגרים</span></div>
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">שבועי</span><span className="text-[11px] text-white/55">דוח</span></div>
+              <div className="mt-7 flex flex-wrap gap-6 pb-6 border-b border-white/10">
+                <div className="flex flex-col">
+                  <span className="font-display text-2xl font-bold text-white">∞</span>
+                  <span className="text-[11px] text-white/55">לקוחות</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-display text-2xl font-bold text-white">16</span>
+                  <span className="text-[11px] text-white/55">טריגרים · P0–P4</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-display text-2xl font-bold text-white">יומי</span>
+                  <span className="text-[11px] text-white/55">תדירות דוחות</span>
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-display text-2xl font-bold text-white">∞</span>
+                  <span className="text-[11px] text-white/55">חברי צוות</span>
+                </div>
               </div>
 
-              <div className="mt-5">
-                <div className="text-[10px] tracking-[0.2em] uppercase text-white/45 mb-3">טריגרים · P0 עד P3</div>
-                <ul className="space-y-2 text-[13px] text-white/85">
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-400/40">P0</span>ייפוי כוח + ביצור AUM</li>
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-400/40">P1</span>ריסק זמני + כיסויים</li>
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-400/40">P2</span>פנסיה · ביטוח · סיעוד · AUM</li>
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-400/40">P3</span>דמ"נ · מסלול · עצמאים · ריכוז</li>
-                </ul>
-              </div>
-
-              <ul className="mt-6 pt-5 border-t border-white/10 space-y-2 text-sm text-white/85 flex-1">
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />AI Composer — הודעות מוכנות לשליחה</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />ייצוא נתונים מלא</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />תמיכה בוואטסאפ</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />סיכום תיק לפגישה (AI)</li>
-                <li className="flex items-center gap-2 text-white/35"><span className="h-3.5 w-3.5 shrink-0 text-center">✕</span>אוטומציות שליחה</li>
+              <ul className="mt-6 space-y-2.5 text-sm text-white/90 flex-1">
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />כל 16 הטריגרים החכמים (P0 עד P4)</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />AI Composer — וואטסאפ ב-3 וריאציות</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />רשימת משימות יומית מבוססת AI</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />Smart Q&amp;A על תיק הלקוחות</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />סיכום תיק לפגישה (AI Briefing)</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />ייצוא נתונים מלא (Excel · HTML)</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />ניהול צוות וסוכנים</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />חשבוניות אוטומטיות בדואל</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />תמיכה אישית בוואטסאפ</li>
               </ul>
 
-              <Link href="/pricing" className="mt-6 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3 text-sm font-bold text-[#06101F] transition-all hover:scale-105 shadow-lg shadow-gold/30">
-                בחר Pro
+              <Link href="/pricing" className="mt-7 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3.5 text-sm font-bold text-[#06101F] transition-all hover:scale-105 shadow-lg shadow-gold/30">
+                הצטרפו ל-SPARK Quality
               </Link>
             </div>
 
-            {/* Premium */}
-            <div className="rounded-lg p-8 backdrop-blur-md bg-white/5 border border-white/10 flex flex-col">
-              <div className="text-[11px] tracking-[0.3em] uppercase text-white/60 mb-3">Premium Plan</div>
-              <h3 className="font-display text-xl font-black text-white tracking-tight leading-snug min-h-[3.25rem]">
-                לסוכנויות גדולות שהמכירה קורית אוטומטית
+            {/* Enterprise — contact us */}
+            <div className="rounded-lg p-10 backdrop-blur-md bg-white/[0.04] border border-white/12 flex flex-col">
+              <div className="text-[11px] tracking-[0.3em] uppercase text-white/60 mb-3">Enterprise</div>
+              <h3 className="font-display text-2xl font-black text-white tracking-tight leading-snug">
+                לסוכנויות גדולות · פתרון מותאם.
               </h3>
-              <div className="mt-6 flex items-baseline gap-2">
-                <span className="font-display text-5xl font-black text-white">389</span>
-                <span className="text-base text-white/60">₪ / חודש</span>
-              </div>
-              <p className="text-xs text-white/50 mt-1">או חיוב שנתי של 3,967 ₪ (חיסכון 15%)</p>
+              <p className="mt-5 text-sm text-white/70 leading-relaxed">
+                למעלה מ-10 סוכנים, אינטגרציות פנימיות, הטמעה אישית, SLA ייעודי, וחיבור למערכת ה-CRM שלכם. נשמח לבנות יחד את החבילה.
+              </p>
 
-              <div className="mt-6 flex flex-wrap gap-4 pb-5 border-b border-white/10">
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">∞</span><span className="text-[11px] text-white/55">לקוחות</span></div>
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">16</span><span className="text-[11px] text-white/55">טריגרים</span></div>
-                <div className="flex flex-col"><span className="text-sm font-bold text-white">יומי</span><span className="text-[11px] text-white/55">דוח</span></div>
-              </div>
-
-              <div className="mt-5">
-                <div className="text-[10px] tracking-[0.2em] uppercase text-white/45 mb-3">כל 16 הטריגרים · P0 עד P4</div>
-                <ul className="space-y-2 text-[13px] text-white/85">
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-gold/10 text-gold border border-gold/40">P0–P3</span>כל מ-Pro</li>
-                  <li className="flex items-center gap-2"><span className="text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded bg-fuchsia-500/15 text-fuchsia-300 border border-fuchsia-400/40">P4</span>ימי הולדת + VIP + ללא מייל</li>
-                </ul>
-              </div>
-
-              <ul className="mt-6 pt-5 border-t border-white/10 space-y-2 text-sm text-white/85 flex-1">
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />אוטומציות WhatsApp / Email</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />רשימת משימות יומית (AI)</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />Smart Q&amp;A על הדוח</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />מנהל לקוח אישי</li>
-                <li className="flex items-center gap-2"><Check className="h-3.5 w-3.5 text-gold shrink-0" />תמיכת VIP</li>
+              <ul className="mt-7 space-y-2.5 text-sm text-white/85 flex-1">
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />כל מה שכלול ב-SPARK Quality</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />הטמעה והדרכה צוותית</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />אינטגרציה ל-CRM קיים</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />מנהל לקוח ייעודי + SLA</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />הסכם DPA מותאם</li>
+                <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />חשבונית עוסק מאוחד · חוזה שנתי</li>
               </ul>
-              <Link href="/pricing" className="mt-6 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60">
-                בחר Premium
+
+              <Link href="/pricing#enterprise" className="mt-7 w-full flex items-center justify-center gap-2 rounded-md border-2 border-white/30 bg-white/5 px-6 py-3.5 text-sm font-bold text-white transition-all hover:bg-white/10 hover:border-gold/60">
+                דברו איתנו
               </Link>
             </div>
-
           </div>
         </div>
       </section>
