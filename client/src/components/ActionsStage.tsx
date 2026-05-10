@@ -231,7 +231,7 @@ export function ActionsStage({ onComplete, parsed, analysis }: ActionsStageProps
     <div className="min-h-full w-full flex flex-col lg:overflow-hidden animate-fade-in bg-background">
       {/* Header (compact) */}
       <div className="shrink-0 border-b border-border/40 bg-card/60 backdrop-blur-sm">
-        <div className="container py-4">
+        <div className="container py-3 lg:py-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="mb-1.5 flex items-center gap-3">
@@ -255,9 +255,9 @@ export function ActionsStage({ onComplete, parsed, analysis }: ActionsStageProps
         </div>
       </div>
 
-      {/* 2x2 Grid - fills remaining viewport on desktop, stacks on mobile */}
-      <div className="flex-1 min-h-0 container py-4">
-        <div className="lg:h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* 2x2 Grid - fills remaining viewport on desktop, stacks on mobile, vertically centered */}
+      <div className="flex-1 min-h-0 container py-4 flex items-center">
+        <div className="w-full lg:h-full grid grid-cols-1 lg:grid-cols-2 gap-4">
           {ACTIONS_TO_RENDER.map((action) => {
             const isVisible = visibleActions.includes(action.id);
             const Icon = action.icon;

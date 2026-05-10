@@ -646,3 +646,10 @@
 - [x] להסיר את תמונת הפייה ממסך הדמו (להשאיר את אבקת הקסמים)
 - [x] להעלות את הטקסט התחתון (צוות SPARK AI / שמות / LIVE DEMO / skip hint)
 - [x] שמירת checkpoint
+
+
+## Round 78 — מירכוז אנכי לכל שלבי הדמו
+- [x] לעבור על כל קבצי השלבים תחת `client/src/components/` (Intro/Actions/Summary/Upload/Analyzing/Dashboard*)
+- [x] לאתר שלבים שבהם הכותרת מודבקת לראש המסך ויש מקום ריק רב למטה
+- [x] לעדכן את הקונטיינר הראשי שיהיה `min-h-full` עם `justify-center`
+- [x] שמירת checkpoint

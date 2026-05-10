@@ -47,14 +47,14 @@ export function SummaryStage({ onReset, parsed, analysis }: SummaryStageProps) {
   }, []);
 
   return (
-    <div className="relative min-h-full w-full animate-fade-in lg:overflow-hidden">
+    <div className="relative min-h-full w-full animate-fade-in lg:overflow-hidden flex items-center">
       {/* Subtle background */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-bl from-cream via-ivory to-white" />
       <div className="absolute -top-32 -left-32 -z-10 h-96 w-96 rounded-full bg-gold/10 blur-3xl" />
       <div className="absolute -bottom-32 -right-32 -z-10 h-96 w-96 rounded-full bg-navy/10 blur-3xl" />
 
-      <div className="relative lg:h-full w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-3 lg:py-4 flex flex-col">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-stretch flex-1 min-h-0">
+      <div className="relative w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-10 py-4 lg:py-6 flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-center">
           {/* RIGHT (RTL primary): content */}
           <div className="lg:col-span-7 min-h-0 lg:overflow-hidden">
             <div className="max-w-2xl">

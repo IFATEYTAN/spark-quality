@@ -24,7 +24,7 @@ export function IntroStage({ onContinue }: IntroStageProps) {
   }, []);
 
   return (
-    <div className="relative min-h-full w-full lg:overflow-hidden bg-navy-deep">
+    <div className="relative min-h-full w-full lg:overflow-hidden bg-navy-deep flex items-center justify-center">
       {/* Background gradient layers */}
       <div className="absolute inset-0">
         <div
@@ -76,7 +76,7 @@ export function IntroStage({ onContinue }: IntroStageProps) {
       </div>
 
       {/* Content - centered, max width for projector proportions */}
-      <div className="relative lg:h-full w-full flex items-center justify-center px-8 py-16">
+      <div className="relative w-full flex items-center justify-center px-8 py-8 lg:py-12">
         <div className="w-full max-w-[1200px]">
           {/* PHASE 1: HOOK - the question */}
           {phase === "hook" && (
