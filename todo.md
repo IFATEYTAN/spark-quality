@@ -809,3 +809,12 @@
 - [x] Root cause: `SAVINGS_SHEET_HINTS` in parseReport.ts was misspelled `"חיסון"` (no כ) and `"פינסים"` — every real Shorens upload silently failed, parsed came back null, dashboard fell back to STATS=487M
 - [x] Fix: corrected hints to `"חיסכון" / "פנסיה" / "גמל" / "השתלמות"`
 - [x] Regression vitest `server/parseReport.sheets.test.ts` (4/4) locks the spelling and the SKIP_HINTS list
+
+
+## Round 90 — Re-align parseShorensReport with the official surense-analyzer skill spec
+- [ ] Unzip surense-analyzer-skill-v2.0 and read SKILL.md + any column/sheet specs
+- [ ] Map every required sheet & column from the skill into a constants module
+- [ ] Rewrite parseShorensReport to follow the spec: sheet whitelist, column resolution, dedup, AUM, premiums, flags
+- [ ] Run the rewritten parser on the user's real xlsx via a Node script and confirm outputs
+- [ ] Add vitest fixtures for the new parser (real fields, dedup, status assignment)
+- [ ] Save checkpoint, ask user to Publish and reverify in /demo
