@@ -232,41 +232,43 @@ const GROUPS: GroupDef[] = [
   },
 ];
 
+// Palette-aligned tones: gold + white opacities only (no rainbow).
+// Priority is conveyed through gold intensity, ring strength, and opacity — not colored hues.
 const PRIORITY_COLORS: Record<Priority, { dot: string; pill: string; border: string; cta: string; num: string }> = {
   P0: {
-    dot: "bg-[#FF3B3B]",
-    pill: "bg-[#FF3B3B]/10 text-[#FF3B3B] border-[#FF3B3B]/30",
-    border: "border-[#FF3B3B]/30",
-    cta: "text-[#FF3B3B]",
-    num: "text-[#FF3B3B]",
+    dot: "bg-gold",
+    pill: "bg-gold/15 text-gold border-gold/45",
+    border: "border-gold/55",
+    cta: "text-gold",
+    num: "text-gold",
   },
   P1: {
-    dot: "bg-[#E8813A]",
-    pill: "bg-[#E8813A]/10 text-[#E8813A] border-[#E8813A]/28",
-    border: "border-[#E8813A]/28",
-    cta: "text-[#E8813A]",
+    dot: "bg-gold/85",
+    pill: "bg-gold/10 text-gold border-gold/35",
+    border: "border-gold/35",
+    cta: "text-gold",
     num: "text-white",
   },
   P2: {
-    dot: "bg-[#3D8EFF]",
-    pill: "bg-[#3D8EFF]/10 text-[#3D8EFF] border-[#3D8EFF]/28",
-    border: "border-[#3D8EFF]/28",
-    cta: "text-[#3D8EFF]",
+    dot: "bg-gold/65",
+    pill: "bg-white/[0.05] text-white/85 border-white/15",
+    border: "border-white/12",
+    cta: "text-white/85",
     num: "text-white",
   },
   P3: {
-    dot: "bg-[#9B77F5]",
-    pill: "bg-[#9B77F5]/10 text-[#9B77F5] border-[#9B77F5]/28",
-    border: "border-[#9B77F5]/28",
-    cta: "text-[#9B77F5]",
-    num: "text-white",
+    dot: "bg-gold/45",
+    pill: "bg-white/[0.04] text-white/75 border-white/12",
+    border: "border-white/10",
+    cta: "text-white/75",
+    num: "text-white/90",
   },
   P4: {
-    dot: "bg-[#2AC49A]",
-    pill: "bg-[#2AC49A]/10 text-[#2AC49A] border-[#2AC49A]/28",
-    border: "border-[#2AC49A]/28",
-    cta: "text-[#2AC49A]",
-    num: "text-white",
+    dot: "bg-white/35",
+    pill: "bg-white/[0.04] text-white/70 border-white/10",
+    border: "border-white/10",
+    cta: "text-white/70",
+    num: "text-white/85",
   },
 };
 
@@ -284,11 +286,8 @@ export function PriorityActionGroups({
   subtitle,
 }: PriorityActionGroupsProps) {
   const [activeScenario, setActiveScenario] = useState<ScenarioKey | null>(null);
-  const [openGroups, setOpenGroups] = useState<Record<Priority, boolean>>(() => {
-    const initial: Partial<Record<Priority, boolean>> = {};
-    for (const g of GROUPS) initial[g.priority] = g.defaultOpen;
-    return initial as Record<Priority, boolean>;
-  });
+  // Tabs: each priority is its own discrete "screen" — only the active one renders.
+  const [activeTab, setActiveTab] = useState<Priority>("P0");
 
   const totalActive = useMemo(() => {
     return Object.values(counts).reduce((s, n) => s + (n ?? 0), 0);
@@ -302,8 +301,9 @@ export function PriorityActionGroups({
     return map as Record<Priority, number>;
   }, [counts]);
 
-  const toggle = (p: Priority) =>
-    setOpenGroups((cur) => ({ ...cur, [p]: !cur[p] }));
+  const activeGroup = GROUPS.find((g) => g.priority === activeTab) ?? GROUPS[0];
+  const activeColors = PRIORITY_COLORS[activeTab];
+  const activeCount = groupTotals[activeTab] ?? 0;
 
   return (
     <section className="mb-10 animate-fade-up">
@@ -325,118 +325,136 @@ export function PriorityActionGroups({
         )}
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      {/* Horizontal priority tabs — each one is a discrete screen */}
+      <div
+        role="tablist"
+        aria-label="קבוצות עדיפות"
+        className="flex flex-wrap gap-1.5 mb-5 p-1 rounded-xl border border-white/10 bg-[#0B1830]/70"
+      >
         {GROUPS.map((g) => {
-          const colors = PRIORITY_COLORS[g.priority];
-          const open = openGroups[g.priority];
+          const isActive = g.priority === activeTab;
           const groupCount = groupTotals[g.priority] ?? 0;
+          const tabColors = PRIORITY_COLORS[g.priority];
           return (
-            <div
+            <button
               key={g.priority}
-              className={`rounded-xl overflow-hidden border bg-[#0E1C35]/80 ${colors.border}`}
+              role="tab"
+              aria-selected={isActive}
+              type="button"
+              onClick={() => setActiveTab(g.priority)}
+              className={`flex-1 min-w-[110px] flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg transition-all text-[12px] font-bold ${
+                isActive
+                  ? `bg-gradient-to-b from-white/[0.06] to-transparent border ${tabColors.border} text-white shadow-[0_2px_10px_rgba(212,175,55,0.08)]`
+                  : "text-white/55 hover:text-white hover:bg-white/[0.03] border border-transparent"
+              }`}
             >
-              {/* colored top stripe */}
-              <div className={`h-[1.5px] ${colors.dot} opacity-65`} />
-              {/* header */}
-              <button
-                type="button"
-                onClick={() => toggle(g.priority)}
-                className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors text-right"
-                aria-expanded={open}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <span
-                    className={`text-[10px] font-bold tracking-[0.1em] uppercase px-2.5 py-1 rounded-full border whitespace-nowrap ${colors.pill}`}
-                  >
-                    {g.pillLabel}
-                  </span>
-                  <span className="text-sm font-bold text-white truncate">
-                    {g.title}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2.5 shrink-0">
-                  <span className="text-[11px] text-white/45 mono-num">
-                    {groupCount > 0
-                      ? `${groupCount.toLocaleString("he-IL")} לקוחות`
-                      : "לחץ לפתיחה"}
-                  </span>
-                  <ChevronDown
-                    className={`h-3.5 w-3.5 text-white/45 transition-transform duration-200 ${
-                      open ? "rotate-180" : ""
-                    }`}
-                  />
-                </div>
-              </button>
-
-              {/* body */}
-              {open && (
-                <div className="px-4 pb-4 pt-2 grid sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {g.triggers.map((t) => {
-                    const count = counts[t.key] ?? 0;
-                    const isActive = count > 0;
-                    return (
-                      <button
-                        key={t.key}
-                        type="button"
-                        onClick={() => setActiveScenario(t.scenarioKey)}
-                        className={`text-right rounded-lg border bg-white/[0.03] hover:bg-white/[0.05] hover:-translate-y-px p-3.5 flex flex-col gap-2 transition-all ${
-                          isActive
-                            ? `${colors.border} hover:shadow-md`
-                            : "border-white/10"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <div
-                              className={`mono-num text-[28px] font-black leading-none ${
-                                isActive
-                                  ? g.priority === "P0"
-                                    ? "text-[#FF3B3B]"
-                                    : "text-white"
-                                  : "text-white/35"
-                              }`}
-                            >
-                              {count.toLocaleString("he-IL")}
-                            </div>
-                            <div className="text-[10px] text-white/45 mt-1">
-                              לקוחות
-                            </div>
-                          </div>
-                          <div
-                            className={`h-[30px] w-[30px] rounded-md border flex items-center justify-center text-[13px] shrink-0 ${colors.pill}`}
-                          >
-                            {t.emoji}
-                          </div>
-                        </div>
-                        <div
-                          className={`text-[13px] font-bold leading-snug ${
-                            isActive ? "text-white" : "text-white/55"
-                          }`}
-                        >
-                          {t.name}
-                        </div>
-                        <p
-                          className={`text-[11px] leading-relaxed ${
-                            isActive ? "text-white/55" : "text-white/35"
-                          }`}
-                        >
-                          {t.description}
-                        </p>
-                        <div
-                          className={`text-[11px] font-semibold ${
-                            isActive ? colors.cta : "text-white/35"
-                          }`}
-                        >
-                          {t.cta}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${tabColors.dot}`}
+                aria-hidden
+              />
+              <span className="tracking-[0.1em] text-[10px] uppercase">
+                {g.priority}
+              </span>
+              {groupCount > 0 && (
+                <span
+                  className={`mono-num text-[10px] px-1.5 py-0.5 rounded-md ${
+                    isActive
+                      ? "bg-gold/15 text-gold"
+                      : "bg-white/[0.04] text-white/55"
+                  }`}
+                >
+                  {groupCount.toLocaleString("he-IL")}
+                </span>
               )}
-            </div>
+            </button>
           );
         })}
+      </div>
+
+      {/* Active priority screen */}
+      <div
+        role="tabpanel"
+        aria-labelledby={`tab-${activeTab}`}
+        className={`rounded-xl overflow-hidden border bg-[#0E1C35]/80 ${activeColors.border}`}
+      >
+        <div className={`h-[2px] ${activeColors.dot} opacity-70`} />
+        <div className="px-5 py-4 flex items-center justify-between gap-3 border-b border-white/[0.06]">
+          <div className="flex items-center gap-3 min-w-0">
+            <span
+              className={`text-[10px] font-bold tracking-[0.1em] uppercase px-2.5 py-1 rounded-full border whitespace-nowrap ${activeColors.pill}`}
+            >
+              {activeGroup.pillLabel}
+            </span>
+            <span className="text-sm md:text-base font-bold text-white truncate">
+              {activeGroup.title}
+            </span>
+          </div>
+          <div className="text-[11px] text-white/55 mono-num shrink-0">
+            {activeCount > 0
+              ? `${activeCount.toLocaleString("he-IL")} לקוחות לטיפול`
+              : "אין התראות בקבוצה זו"}
+          </div>
+        </div>
+
+        <div className="px-5 pb-5 pt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {activeGroup.triggers.map((t) => {
+            const count = counts[t.key] ?? 0;
+            const isActive = count > 0;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setActiveScenario(t.scenarioKey)}
+                className={`text-right rounded-lg border bg-white/[0.03] hover:bg-white/[0.06] hover:-translate-y-px p-4 flex flex-col gap-2 transition-all ${
+                  isActive
+                    ? `${activeColors.border} hover:shadow-md`
+                    : "border-white/10"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div
+                      className={`mono-num text-[30px] font-black leading-none ${
+                        isActive ? activeColors.num : "text-white/30"
+                      }`}
+                    >
+                      {count.toLocaleString("he-IL")}
+                    </div>
+                    <div className="text-[10px] text-white/45 mt-1">
+                      לקוחות
+                    </div>
+                  </div>
+                  <div
+                    className={`h-[32px] w-[32px] rounded-md border flex items-center justify-center text-[14px] shrink-0 ${activeColors.pill}`}
+                  >
+                    {t.emoji}
+                  </div>
+                </div>
+                <div
+                  className={`text-[13px] font-bold leading-snug ${
+                    isActive ? "text-white" : "text-white/55"
+                  }`}
+                >
+                  {t.name}
+                </div>
+                <p
+                  className={`text-[11px] leading-relaxed ${
+                    isActive ? "text-white/60" : "text-white/35"
+                  }`}
+                >
+                  {t.description}
+                </p>
+                <div
+                  className={`text-[11px] font-semibold mt-auto pt-1 ${
+                    isActive ? activeColors.cta : "text-white/35"
+                  }`}
+                >
+                  {t.cta}
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <CategoryScenarioModal

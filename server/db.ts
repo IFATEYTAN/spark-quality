@@ -522,24 +522,48 @@ export async function reclassifyClientVipStatus(
 /**
  * Aggregate metrics for the dashboard, scoped by role.
  */
+/**
+ * Extended workspace metrics: returns the legacy 6-bucket fields PLUS the 16
+ * trigger counts (P0–P4) consumed by PriorityActionGroups. Most fine-grained
+ * triggers are heuristic placeholders (0) until the upstream classifier writes
+ * dedicated `flagStatus` values — they are surfaced here so the frontend type
+ * surface stays accurate and stable while the backfill rolls out.
+ */
 export async function getWorkspaceMetrics(opts: {
   workspaceId: number;
   userId: number;
   workspaceRole: "owner" | "admin" | "agent";
 }) {
   const db = await getDb();
-  if (!db) {
-    return {
-      totalClients: 0,
-      vipClients: 0,
-      liquidFunds: 0,
-      tikun190Candidates: 0,
-      highFees: 0,
-      riskEnding: 0,
-      coverageGaps: 0,
-      totalAum: 0,
-    };
-  }
+  const empty = {
+    // Legacy fields (kept for backwards compatibility)
+    totalClients: 0,
+    vipClients: 0,
+    liquidFunds: 0,
+    tikun190Candidates: 0,
+    highFees: 0,
+    riskEnding: 0,
+    coverageGaps: 0,
+    totalAum: 0,
+    // 16 priority trigger counts (P0–P4)
+    poaExpired: 0,
+    poaExpiring90d: 0,
+    riskTemporary: 0,
+    coverageEnding: 0,
+    savingsNoInsurance: 0,
+    noActivePension: 0,
+    age46NoLongTermCare: 0,
+    aumFrozen: 0,
+    trackMismatch: 0,
+    selfEmployedNoDeposit: 0,
+    concentrationRisk: 0,
+    birthdayMilestone: 0,
+    birthdayThisMonth: 0,
+    vipGoldPremium: 0,
+    noEmail: 0,
+  };
+  if (!db) return empty;
+
   const condition =
     opts.workspaceRole === "agent"
       ? and(
@@ -560,7 +584,149 @@ export async function getWorkspaceMetrics(opts: {
     (sum, r) => sum + Number(r.totalBalance ?? 0),
     0
   );
+
+  // ----- 16 priority triggers ---------------------------------------------
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const in90Days = new Date(today);
+  in90Days.setDate(in90Days.getDate() + 90);
+
+  // P4 · Soft signals derivable directly from the client row
+  const noEmail = rows.filter(r => !r.email || r.email.trim() === "").length;
+  const vipGoldPremium = vipClients;
+
+  let birthdayMilestone = 0;
+  let birthdayThisMonth = 0;
+  let age46NoLongTermCare = 0;
+
+  for (const r of rows) {
+    if (!r.birthDate) continue;
+    const dob = new Date(r.birthDate);
+    if (Number.isNaN(dob.getTime())) continue;
+    const age = now.getFullYear() - dob.getFullYear() -
+      (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
+    const milestoneAges = new Set([18, 30, 40, 50, 60, 67, 70, 80]);
+    // Milestone birthday upcoming this month or already this month
+    if (milestoneAges.has(age + 1) && dob.getMonth() === now.getMonth()) {
+      birthdayMilestone++;
+    }
+    if (dob.getMonth() === now.getMonth()) {
+      birthdayThisMonth++;
+    }
+    if (age >= 46 && age < 60) {
+      // Heuristic: age band where long-term care is most relevant; refined later
+      // when policies join is wired in.
+      age46NoLongTermCare++;
+    }
+  }
+
+  // Pull policies once for derivations that require coverage info.
+  const policyRows = await db
+    .select()
+    .from(policies)
+    .where(eq(policies.workspaceId, opts.workspaceId));
+
+  const policiesByClient = new Map<number, typeof policyRows>();
+  for (const p of policyRows) {
+    const arr = policiesByClient.get(p.clientId) ?? [];
+    arr.push(p);
+    policiesByClient.set(p.clientId, arr);
+  }
+
+  let riskTemporary = 0;
+  let coverageEnding = 0;
+  let savingsNoInsurance = 0;
+  let noActivePension = 0;
+  let aumFrozen = 0;
+  let trackMismatch = 0;
+  let selfEmployedNoDeposit = 0;
+  let concentrationRisk = 0;
+
+  for (const r of rows) {
+    const ps = policiesByClient.get(r.id) ?? [];
+    const active = ps.filter(p => p.status === "active");
+    const hasPension = active.some(
+      p => (p.productType ?? "").toLowerCase().includes("pension") ||
+        (p.productType ?? "").includes("פנס")
+    );
+    const hasInsurance = active.some(
+      p => (p.productType ?? "").toLowerCase().match(/risk|health|life|elementary/) ||
+        (p.productType ?? "").match(/ריסק|בריאות|חיים|סיעוד/)
+    );
+    const hasSavings = active.some(
+      p => (p.productType ?? "").toLowerCase().match(/saving|gemel|hishtalmut/) ||
+        (p.productType ?? "").match(/חיסכון|גמל|השתלמות/)
+    );
+
+    if (!hasPension) noActivePension++;
+    if (hasSavings && !hasInsurance) savingsNoInsurance++;
+
+    // Risk policies expiring within 90 days
+    const riskEndingSoon = active.some(p => {
+      if (!p.endDate) return false;
+      const t = (p.productType ?? "").toLowerCase();
+      const isRisk = t.includes("risk") || (p.productType ?? "").includes("ריסק");
+      if (!isRisk) return false;
+      const end = new Date(p.endDate);
+      return end >= today && end <= in90Days;
+    });
+    if (riskEndingSoon) riskTemporary++;
+
+    // Any active policy with end date in the next 90 days (coverage ending)
+    const anyEndingSoon = active.some(p => {
+      if (!p.endDate) return false;
+      const end = new Date(p.endDate);
+      return end >= today && end <= in90Days;
+    });
+    if (anyEndingSoon) coverageEnding++;
+
+    // AUM frozen: client has savings but no premium activity
+    const noPremium = active.every(
+      p => Number(p.monthlyPremium ?? 0) === 0 && Number(p.annualPremium ?? 0) === 0
+    );
+    if (active.length > 0 && noPremium && Number(r.totalBalance ?? 0) > 0) {
+      aumFrozen++;
+    }
+
+    // Track mismatch heuristic: VIP without diversification (1 product type)
+    const productTypes = new Set(active.map(p => p.productType ?? ""));
+    if (r.isVip && productTypes.size === 1 && Number(r.totalBalance ?? 0) > 100_000) {
+      trackMismatch++;
+    }
+
+    // Concentration risk: >70% of AUM in a single policy
+    const totalBal = active.reduce((s, p) => s + Number(p.balance ?? 0), 0);
+    if (totalBal > 0) {
+      const maxBal = Math.max(...active.map(p => Number(p.balance ?? 0)));
+      if (maxBal / totalBal > 0.7 && totalBal > 50_000) concentrationRisk++;
+    }
+
+    // Self-employed without deposit: pension exists but no monthly premium
+    if (hasPension) {
+      const pensionPolicies = active.filter(
+        p => (p.productType ?? "").toLowerCase().includes("pension") ||
+          (p.productType ?? "").includes("פנס")
+      );
+      const allPensionsZero = pensionPolicies.every(
+        p => Number(p.monthlyPremium ?? 0) === 0
+      );
+      if (allPensionsZero) selfEmployedNoDeposit++;
+    }
+  }
+
+  // P0 · Power of Attorney expiry — not yet modelled in schema.
+  // Heuristic placeholder: derive from notes containing "ייפוי כוח".
+  let poaExpired = 0;
+  let poaExpiring90d = 0;
+  for (const r of rows) {
+    if (!r.notes) continue;
+    const n = r.notes.toLowerCase();
+    if (n.includes("ייפוי כוח פג") || n.includes("poa expired")) poaExpired++;
+    else if (n.includes("ייפוי כוח") || n.includes("poa")) poaExpiring90d++;
+  }
+
   return {
+    // Legacy fields
     totalClients,
     vipClients,
     liquidFunds,
@@ -569,6 +735,22 @@ export async function getWorkspaceMetrics(opts: {
     riskEnding,
     coverageGaps,
     totalAum,
+    // 16 priority trigger counts
+    poaExpired,
+    poaExpiring90d,
+    riskTemporary,
+    coverageEnding,
+    savingsNoInsurance,
+    noActivePension,
+    age46NoLongTermCare,
+    aumFrozen,
+    trackMismatch,
+    selfEmployedNoDeposit,
+    concentrationRisk,
+    birthdayMilestone,
+    birthdayThisMonth,
+    vipGoldPremium,
+    noEmail,
   };
 }
 

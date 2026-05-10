@@ -667,12 +667,50 @@
 
 
 ## Round 80 — תיקון "אתר" + שיפור Dashboard לפי spec חדש (P0–P4 groups)
-- [ ] לאתר ולתקן את כפתור "אתר" ב-TopZoneNav (routing לא עובד)
-- [ ] לעדכן Dashboard.tsx: KPI strip של 5 כרטיסים (ייפוי כוח/לקוחות/AUM/VIP/דוחות), הראשון במצב alert אם יש פגי תוקף
-- [ ] להוסיף urgent banner אדום פעיל אם יש לקוחות עם ייפוי כוח שפג
-- [ ] להחליף את ה-trigger cards הקיים ב-5 קבוצות עדיפות (P0–P4) collapsible accordion לפי הספק
-- [ ] לוודא שכל קבוצת priority פותחת/נסגרת עצמאית, P0+P1 פתוחות כברירת מחדל
-- [ ] להוסיף 3 כרטיסי ניווט תחתונים (תיק לקוחות / העלאת דוח / ניהול צוות) בתחתית הדשבורד
-- [ ] לוודא שהמסכים נשארים מסכים נפרדים (לא scroll ארוך אחד) — הקבוצות בתוך accordion
-- [ ] לשמר את העיצוב הקיים: dark navy + gold + glass cards + Heebo + Cinzel
-- [ ] בדיקה ויזואלית + שמירת checkpoint
+- [x] לאתר ולתקן את כפתור "אתר" ב-TopZoneNav (routing לא עובד) — הוסף ?view=site escape hatch בלוגיקת ה-redirect
+- [x] לעדכן Dashboard.tsx: KPI strip (ממומש ל-4 כרטיסים: לקוחות/דוחות/VIP/AUM — ייפוי כוח מוצג כקבוצה בלבדית בתוך PriorityActionGroups)
+- [x] להוסיף urgent banner אדום פעיל אם יש לקוחות עם ייפוי כוח שפג (מיושם ב-PriorityActionGroups: מוצג כשיש P0 counts)
+- [x] להחליף את ה-trigger cards הקיים ב-5 קבוצות עדיפות (P0–P4) collapsible accordion לפי הספק
+- [x] לוודא שכל קבוצת priority פותחת/נסגרת עצמאית, P0+P1 פתוחות כברירת מחדל
+- [x] להוסיף 3 כרטיסי ניווט תחתונים (תיק לקוחות / העלאת דוח / ניהול צוות) בתחתית הדשבורד — היו כבר מלכתחילה
+- [x] לוודא שהמסכים נשארים מסכים נפרדים (לא scroll ארוך אחד) — הקבוצות בתוך accordion
+- [x] לשמר את העיצוב הקיים: dark navy + gold + glass cards + Heebo + Cinzel
+- [x] בדיקה ויזואלית + שמירת checkpoint
+
+
+## Round 81 — מסכים נפרדים (טאבים) + פלטה אחידה + ActionFlow + DB + DemoExperience
+- [ ] להחליף את ה-accordion ב-PriorityActionGroups לטאבים אופקיים (P0/P1/P2/P3/P4) — כל טאב מסך עצמאי
+- [ ] להחליף את כל הצבעים הצבעוניים (אדום/תכלת/סגול/ירוק) בטונים מהפלטה הקיימת: זהב חזק/זהב בהיר/זהב עמום/לבן 30%/נייבי בהיר
+- [ ] לשמור על אינדיקציה אדינה לעדיפות באמצעות גוון/אטימות, לא צבע "סלט"
+- [ ] להוסיף ActionFlowDialog שייפתח בלחיצה על trigger CTA (במקום ניווט ל-/clients?flag=...)
+- [ ] להציג ב-Dialog תרשים זרימה: זיהוי → ייצור הודעה (AI Composer) → שליחה (Email/SMS/WhatsApp) → מעקב → המרה
+- [ ] להרחיב את getWorkspaceMetrics ב-server/db.ts להחזיר 16 trigger counts (placeholder=0 לטריגרים שעדיין אין להם logic)
+- [ ] לעדכן את ה-mapping ב-Dashboard.tsx להשתמש ב-counts החדשים מהשרת (במקום fallback מקומי)
+- [ ] להוסיף טסט vitest שמוודא שכל 16 הטריגרים מוחזרים מ-getWorkspaceMetrics
+- [ ] לעדכן את DemoExperience: להחליף את DashboardStage לתצוגה החדשה (5 טאבים) + לסנכרן STAGE_LABELS עם dashboard2/dashboard3 או להסיר אותם
+- [ ] בדיקה ויזואלית מלאה (Home, Dashboard, Demo) + שמירת checkpoint
+
+
+## Round 82 — Dynamic 16-scenario action-flow dialog (2026-05-10)
+- [ ] Refactor `CategoryScenarioModal` into a dynamic dialog with 16 distinct trigger scenarios (one per priority trigger key) instead of 6 buckets
+- [ ] Each scenario gets its own Detect → AI → Send → Track → Convert flow text + matching ROI/expected outcome
+- [ ] Dialog accepts `analysis` (LLM output) and renders KPI/sample-client values when available
+- [ ] Dialog accepts the live trigger `count` and surfaces it in the header
+- [ ] `PriorityActionGroups` passes the trigger key (not a 6-bucket scenarioKey) and the count
+- [ ] `Dashboard.tsx` threads metrics into the dialog (live system data)
+- [ ] `DemoExperience` threads `analysis` into the dialog through `PriorityActionGroups`
+- [ ] Vitest covering the 16-scenario registry shape
+- [ ] Run full test suite, save checkpoint, push GitHub
+
+
+## Round 82 — Dynamic 16-scenario action-flow dialog (2026-05-10)
+
+- [ ] Build a 16-scenario registry (one entry per priority trigger key) with distinct Detect / AI / Send / Track / Convert text and metrics
+- [ ] Refactor `CategoryScenarioModal` to a `triggerKey`-driven dialog (no longer 6 buckets)
+- [ ] Dialog accepts `analysis` (LLM output) and renders sample-client / KPI values when present
+- [ ] Dialog accepts the live trigger `count` and surfaces it in the header
+- [ ] `PriorityActionGroups` passes the actual trigger key (not a 6-way bucket) and its count
+- [ ] `Dashboard.tsx` threads workspace metrics into the dialog
+- [ ] `DemoExperience` threads `analysis` into the dialog through `PriorityActionGroups`
+- [ ] Vitest covering the 16-scenario registry shape (one scenario per trigger, required fields present)
+- [ ] Run full test suite, save checkpoint, push to GitHub

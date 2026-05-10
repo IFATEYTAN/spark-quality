@@ -58,15 +58,74 @@ function mergeStatsWithAnalysis(stats: typeof STATS, analysis: unknown): typeof 
 }
 
 function buildTriggerCards(stats: typeof STATS) {
+  // 6 representative cards aligned with the new P0–P4 priority model.
+  // Each card carries its priority bucket label so the demo story matches the
+  // live dashboard's 16-trigger / 5-tab structure. Palette: gold + white only.
   return [
-    // 💸 קטגוריות פיננסיות (3)
-    { id: "vip", name: "לקוחות VIP", value: (stats as any).vipCustomers ?? 42, sub: "צבירה מעל 1M ₪", icon: Sparkles, accent: "text-gold", bg: "bg-gold/15", border: "border-gold/50" },
-    { id: "lowYield", name: "תשואות נמוכות", value: stats.lowYield, sub: "דמי ניהול גבוהים מהממוצע", icon: TrendingUp, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
-    { id: "190", name: "תיקון 190", value: (stats as any).amendment190 ?? 54, sub: "פטור ממס רווחי הון", icon: Briefcase, accent: "text-gold", bg: "bg-gold/10", border: "border-gold/30" },
-    // 🚨 קטגוריות סיכון / שימור (3)
-    { id: "risk", name: "ריסק זמני", value: stats.riskFlags, sub: "דורש פעולה מיידית", icon: AlertTriangle, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
-    { id: "discount", name: "תום הנחה", value: stats.endingDiscount, sub: "סיכון נטישה", icon: Calendar, accent: "text-navy-deep", bg: "bg-navy/5", border: "border-navy/20" },
-    { id: "coverageGaps", name: "חוסרים בכיסויים", value: (stats as any).coverageGaps ?? stats.noPension, sub: "הזדמנות להשלמת תיק", icon: AlertOctagon, accent: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
+    // P1 · Critical safety net
+    {
+      id: "risk",
+      name: "ריסק זמני ֻ דורש טיפול מיידי",
+      value: stats.riskFlags,
+      sub: "P1 · כיסוי מסתיים / סיכון נטישה",
+      icon: AlertTriangle,
+      accent: "text-gold",
+      bg: "bg-gold/15",
+      border: "border-gold/45",
+    },
+    {
+      id: "coverageGaps",
+      name: "חוסרים בכיסויים ֻ חסכון ללא ביטוח",
+      value: (stats as any).coverageGaps ?? stats.noPension,
+      sub: "P1 · הזדמנות להשלמת תיק",
+      icon: AlertOctagon,
+      accent: "text-gold",
+      bg: "bg-gold/10",
+      border: "border-gold/35",
+    },
+    // P1/P2 · Discount expiry / strategic placement
+    {
+      id: "discount",
+      name: "תום הנחה ֻ התראת התייקרות",
+      value: stats.endingDiscount,
+      sub: "P1 · סיכון נטישה בטווח קצר",
+      icon: Calendar,
+      accent: "text-gold",
+      bg: "bg-gold/10",
+      border: "border-gold/35",
+    },
+    {
+      id: "190",
+      name: "תיקון 190 / עצמאי",
+      value: (stats as any).amendment190 ?? 54,
+      sub: "P2 · פטור ממס רווחי הון / ללא הפקדה",
+      icon: Briefcase,
+      accent: "text-white",
+      bg: "bg-white/[0.05]",
+      border: "border-white/15",
+    },
+    // P3 · Optimisation
+    {
+      id: "lowYield",
+      name: "תשואות נמוכות ֻ דמי ניהול גבוהים",
+      value: stats.lowYield,
+      sub: "P3 · סטיית מסלול ההשקעה",
+      icon: TrendingUp,
+      accent: "text-white",
+      bg: "bg-white/[0.04]",
+      border: "border-white/12",
+    },
+    // P4 · Relationship
+    {
+      id: "vip",
+      name: "לקוחות VIP / זהב ֻ מגע אישי",
+      value: (stats as any).vipCustomers ?? 42,
+      sub: "P4 · צבירה מעל 1M ₪",
+      icon: Sparkles,
+      accent: "text-gold",
+      bg: "bg-gold/10",
+      border: "border-gold/30",
+    },
   ];
 }
 
@@ -118,7 +177,7 @@ export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: Dashbo
               )}
               {slide === 2 && (
                 <>
-                  6 קטגוריות, <span className="text-muted-foreground">1,071 דגלים.</span>
+                  5 קבוצות עדיפות, <span className="text-muted-foreground">16 טריגרים קנוניים.</span>
                 </>
               )}
               {slide === 3 && (
@@ -264,7 +323,7 @@ export function DashboardStage({ onAction, parsed, analysis, slide = 1 }: Dashbo
       {/* Trigger cards - 6 in a row */}
       <div className="flex-shrink-0">
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="font-display text-lg lg:text-xl font-bold text-navy-deep">דגלים שזוהו · 6 קטגוריות</h2>
+          <h2 className="font-display text-lg lg:text-xl font-bold text-navy-deep">טריגרים שזוהו · המודל החדש P0–P4</h2>
           <div className="gold-divider flex-1 mx-4" />
           <span className="label-tag text-[10px] text-muted-foreground">סה״כ {(TRIGGER_CARDS.reduce((s, c) => s + (c.value ?? 0), 0)).toLocaleString("he-IL")} התראות</span>
         </div>

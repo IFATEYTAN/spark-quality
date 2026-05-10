@@ -168,28 +168,28 @@ export default function Dashboard() {
           </GlassCard>
         </div>
 
-        {/* Priority Action Groups — 16 triggers in 5 priority buckets (P0-P4) */}
+        {/* Priority Action Groups — 16 triggers in 5 priority buckets (P0–P4) */}
         {totalClients > 0 && (
           <PriorityActionGroups
             counts={{
-              poaExpired: 0,
-              poaExpiring90d: 0,
-              riskTemporary: metricsQuery.data?.riskEnding ?? 0,
-              coverageEnding: metricsQuery.data?.coverageGaps ?? 0,
-              savingsNoInsurance: metricsQuery.data?.coverageGaps ?? 0,
-              noActivePension: 0,
-              age46NoLongTermCare: 0,
-              aumFrozen: metricsQuery.data?.liquidFunds ?? 0,
+              poaExpired: metricsQuery.data?.poaExpired ?? 0,
+              poaExpiring90d: metricsQuery.data?.poaExpiring90d ?? 0,
+              riskTemporary: metricsQuery.data?.riskTemporary ?? 0,
+              coverageEnding: metricsQuery.data?.coverageEnding ?? 0,
+              savingsNoInsurance: metricsQuery.data?.savingsNoInsurance ?? 0,
+              noActivePension: metricsQuery.data?.noActivePension ?? 0,
+              age46NoLongTermCare: metricsQuery.data?.age46NoLongTermCare ?? 0,
+              aumFrozen: metricsQuery.data?.aumFrozen ?? 0,
               highFees: metricsQuery.data?.highFees ?? 0,
-              trackMismatch: 0,
-              selfEmployedNoDeposit: metricsQuery.data?.tikun190Candidates ?? 0,
-              concentrationRisk: 0,
-              birthdayMilestone: 0,
-              birthdayThisMonth: 0,
-              vipGoldPremium: metricsQuery.data?.vipClients ?? 0,
-              noEmail: 0,
+              trackMismatch: metricsQuery.data?.trackMismatch ?? 0,
+              selfEmployedNoDeposit: metricsQuery.data?.selfEmployedNoDeposit ?? 0,
+              concentrationRisk: metricsQuery.data?.concentrationRisk ?? 0,
+              birthdayMilestone: metricsQuery.data?.birthdayMilestone ?? 0,
+              birthdayThisMonth: metricsQuery.data?.birthdayThisMonth ?? 0,
+              vipGoldPremium: metricsQuery.data?.vipGoldPremium ?? 0,
+              noEmail: metricsQuery.data?.noEmail ?? 0,
             }}
-            subtitle="כל לקוח, כל הזדמנות, כל סיכון — מסודרים לפי דחיפות. לחצו על קבוצה לפתיחה ועל טריגר כדי להפעיל את האוטומציה."
+            subtitle="כל לקוח, כל הזדמנות, כל סיכון — מסודרים לפי דחיפות. טאב זו = מסך התראות ברמת עדיפות."
           />
         )}
 
