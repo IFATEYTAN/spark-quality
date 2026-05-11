@@ -952,3 +952,10 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`.
 - [x] Hide the Demo nav entry when `accessQuery.data.status ∈ {active, grace}` for logged-in users; visitors and unpaid logged-in users still see the דמו link.
 - [x] `/demo` route guard — `DemoExperience.tsx` now returns `<Redirect to="/dashboard" />` when a paying user lands on it directly. Admins (workspace owner/admin or super-admin) are exempt so live training keeps working.
 - [x] tsc clean (exit 0) + 25/25 vitest suites green (billing 7/7, planFeatures 6/6, workspaceIsolation 7/7, quotaWatch 5/5).
+
+## Round 104 — Anonymous visitors land on OAuth at end of /demo (2026-05-11) — ✅ DONE
+Bug reported by יפה: גלישה אנונימית (חלון נסתר) ב-`/demo` — המסך מתקדם עד שלב 4 (Actions) ואז הדף קופץ ל-`https://manus.im/app-auth?...` בלי לחיצה.
+- [x] זיהיתי את ה-trigger האמיתי: לא SummaryStage ולא onClick. ה-`useFeatureGate("ai.composer")` ב-ActionsStage מריץ את `trpc.billing.myAccessStatus.useQuery(undefined, {...})` **בלי enabled**, והנהל של ה-procedure הזה הוא `protectedProcedure` — לכן לגולש אנונימי הוא זורק UNAUTHED_ERR_MSG. ה-interceptor הגלובלי ב-`client/src/main.tsx` תופס את השגיאה ומבצע `window.location.href = getLoginUrl()` — זה ה-redirect המסתורי.
+- [x] Fix: `useFeatureGate` מקבל עכשיו `enabled: isAuthenticated` (מ-`useAuth`). גולש אנונימי → ה-query לא נשלחת → אין שגיאה → אין redirect. `currentPlan` נפול ל-"basic" (ה-default הקיים) — ה-Composer בדמו ממשיך להציג לו את קישור ה-UpgradeModal כמו קודם.
+- [x] tsc clean (exit 0) + 25/25 vitest ירוקים (billing 7/7 · planFeatures 6/6 · workspaceIsolation 7/7 · quotaWatch 5/5).
+- [x] Verify on incognito + save checkpoint.

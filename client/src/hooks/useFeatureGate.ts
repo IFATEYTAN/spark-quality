@@ -11,6 +11,7 @@
 // ----------------------------------------------------------------------------
 import { useState, useMemo, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import {
   FEATURE_MIN_PLAN,
   PLAN_LABEL,
@@ -59,7 +60,14 @@ const FEATURE_LABELS: Partial<Record<FeatureKey, string>> = {
 };
 
 export function useFeatureGate(feature: FeatureKey): FeatureGateResult {
+  // CRITICAL: billing.myAccessStatus is a protectedProcedure. If it runs for
+  // an anonymous visitor (e.g., during the public /demo flow that mounts
+  // ActionsStage → useFeatureGate), the server throws UNAUTHED_ERR_MSG, and
+  // the global error interceptor in main.tsx forwards the page to /app-auth.
+  // Gate the query on isAuthenticated so anonymous visitors stay on /demo.
+  const { isAuthenticated } = useAuth();
   const { data } = trpc.billing.myAccessStatus.useQuery(undefined, {
+    enabled: isAuthenticated,
     refetchOnWindowFocus: false,
     staleTime: 60_000,
   });
