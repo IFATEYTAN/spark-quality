@@ -961,6 +961,12 @@ export async function listAllUsersWithWorkspace() {
       workspaceId: users.workspaceId,
       workspaceRole: users.workspaceRole,
       workspaceName: workspaces.name,
+      // Round 112: surface the workspace's payment status so super-admin can
+      // see at-a-glance who actually paid vs who only opened an account but
+      // never completed checkout (subscriptionStatus === 'pending_payment').
+      workspaceSubscriptionStatus: workspaces.subscriptionStatus,
+      workspacePlan: workspaces.plan,
+      workspaceSuspendedAt: workspaces.suspendedAt,
       lastSignedIn: users.lastSignedIn,
       createdAt: users.createdAt,
     })

@@ -983,8 +983,17 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Add small Hebrew explanatory text under the הרשמה button on Home.tsx (Google/Microsoft/Apple, no password) — added (a) 9px hint under header signup CTA + title tooltip, (b) full sentence under pricing card CTA. tsc=0.
 
 ## Round 109 - Hide email/magic-link option on OAuth signup screen (2026-05-11)
-- [ ] Investigate whether Manus OAuth portal supports a URL param to hide the email field and force SSO-only
-- [ ] Investigate whether the OAuth portal honors type=signUp to flip title to 'Sign up to ...'
+- [x] Investigate whether Manus OAuth portal supports a URL param to hide the email field and force SSO-only — **BLOCKED at platform level.** Inspected the live portal HTML + JS chunks (https://manus.im/app-auth). The chunk-level rendering hard-codes the email/magic-link input next to the SSO providers and exposes no URL flag for hiding it. To remove the email field we'd need to file a request with Manus support (https://help.manus.im) asking for a `providersOnly=1` or equivalent param.
+- [x] Investigate whether the OAuth portal honors type=signUp to flip title to 'Sign up to ...' — **BLOCKED at platform level.** The title is hard-coded as `i18n.t("Sign in to {appName}")` in chunk `portaljs_23055-*.js` regardless of `type=signUp`. There is no `"Sign up to {appName}"` translation key in the portal bundle. Same mitigation: open a ticket at help.manus.im.
+- [x] Workaround in our code (Round 108): Hebrew SSO hint under both signup CTAs explains the flow upfront, so users are not surprised by the English OAuth screen.
 
 ## Round 110 - /pricing CTA does not lead to signup (2026-05-11)
 - [x] Fix /pricing 'הצטרפו ל-SPARK Quality' CTA: anonymous → getSignupUrl() (was navigate('/onboarding') which hit the protected guard and silently dropped the click); authenticated-no-workspace → /onboarding?cycle=...; authenticated-with-workspace → startCheckoutViaMake. tsc=0.
+
+## Round 111 - New signup got owner+SUPER without paying (2026-05-11)
+- [ ] Diagnose why anathemell@gmail.com landed as 'owner' + SUPER tag right after OAuth signup with no payment
+
+## Round 112 - Add payment-status column in /admin (2026-05-11)
+- [x] Expose ws.subscriptionStatus + ws.suspendedAt + ws.plan through listAllUsersWithWorkspace (server/db.ts)
+- [x] Add 'סטטוס תשלום' column with colored badges in AdminPanel.UsersTab (green/amber/red/neutral)
+- [x] Vitest covering the badge mapping (9 tests, all pass) — shared/paymentStatus.ts + server/paymentStatus.test.ts

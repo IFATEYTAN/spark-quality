@@ -24,6 +24,10 @@ import {
 import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import {
+  getPaymentStatusDescriptor,
+  type PaymentStatusTone,
+} from "@shared/paymentStatus";
+import {
   AlertCircle,
   Building2,
   Inbox,
@@ -47,6 +51,30 @@ const ILS = new Intl.NumberFormat("he-IL", {
   currency: "ILS",
   maximumFractionDigits: 0,
 });
+
+// Round 112: badge tone -> Tailwind classes used on /admin payment-status column
+const PAYMENT_TONE_CLASSES: Record<PaymentStatusTone, string> = {
+  green: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  amber: "bg-amber-500/20 text-amber-200 border-amber-500/30",
+  red: "bg-red-500/20 text-red-300 border-red-500/30",
+  neutral: "bg-white/5 text-white/50 border-white/10",
+};
+
+function PaymentStatusBadge(props: {
+  subscriptionStatus: string | null;
+  workspaceSuspendedAt: Date | string | null;
+  hasWorkspace: boolean;
+}) {
+  const d = getPaymentStatusDescriptor(props);
+  return (
+    <Badge
+      className={`${PAYMENT_TONE_CLASSES[d.tone]} text-[11px] whitespace-nowrap`}
+      title={d.tooltip}
+    >
+      {d.label}
+    </Badge>
+  );
+}
 
 const STATUS_HE: Record<string, string> = {
   new: "חדש",
@@ -400,6 +428,7 @@ function UsersTab({ currentUserId }: { currentUserId: number }) {
                 <th className="px-4 py-3 font-normal">מייל</th>
                 <th className="px-4 py-3 font-normal">סוכנות</th>
                 <th className="px-4 py-3 font-normal">תפקיד</th>
+                <th className="px-4 py-3 font-normal">סטטוס תשלום</th>
                 <th className="px-4 py-3 font-normal">סטטוס</th>
                 <th className="px-4 py-3 font-normal">חיבור אחרון</th>
                 <th className="px-4 py-3 font-normal">פעולות</th>
@@ -408,7 +437,7 @@ function UsersTab({ currentUserId }: { currentUserId: number }) {
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-white/40">לא נמצאו משתמשים.</td>
+                  <td colSpan={8} className="text-center py-12 text-white/40">לא נמצאו משתמשים.</td>
                 </tr>
               )}
               {filtered.map(u => (
@@ -443,6 +472,13 @@ function UsersTab({ currentUserId }: { currentUserId: number }) {
                         <SelectItem value="agent">סוכן</SelectItem>
                       </SelectContent>
                     </Select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <PaymentStatusBadge
+                      subscriptionStatus={u.workspaceSubscriptionStatus ?? null}
+                      workspaceSuspendedAt={u.workspaceSuspendedAt ?? null}
+                      hasWorkspace={u.workspaceId != null}
+                    />
                   </td>
                   <td className="px-4 py-3">
                     {u.suspendedAt ? (

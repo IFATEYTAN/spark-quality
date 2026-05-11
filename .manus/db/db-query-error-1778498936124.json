@@ -1,0 +1,8 @@
+{
+  "query": "SELECT u.id AS user_id, u.email, u.name, u.is_super_admin, u.workspace_role,\n       u.workspace_id, u.license_number, u.license_verified_at, u.created_at,\n       w.id AS ws_id, w.name AS ws_name, w.plan, w.subscription_status,\n       w.tax_id, w.contact_phone, w.created_at AS ws_created_at, w.subscription_ends_at\nFROM users u\nLEFT JOIN workspaces w ON w.id = u.workspace_id\nWHERE u.email = 'anathemell@gmail.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT u.id AS user_id, u.email, u.name, u.is_super_admin, u.workspace_role,\n       u.workspace_id, u.license_number, u.license_verified_at, u.created_at,\n       w.id AS ws_id, w.name AS ws_name, w.plan, w.subscription_status,\n       w.tax_id, w.contact_phone, w.created_at AS ws_created_at, w.subscription_ends_at\nFROM users u\nLEFT JOIN workspaces w ON w.id = u.workspace_id\nWHERE u.email = 'anathemell@gmail.com';",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'u.workspace_id' in 'on clause'"
+  ]
+}
