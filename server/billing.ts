@@ -748,39 +748,11 @@ export const billingRouter = router({
         console.warn("[billing] payment_attempts insert failed", persistErr);
       }
 
-      // Best-effort customer confirmation: tell them a payment link is on the
-      // way. The actual link is generated and sent by the Make scenario.
-      if (ctx.user.email) {
-        const customerEmail = renderBrandedEmail({
-          subject: `מעבירים אותכם לתשלום — ${planLabel} ${periodLabel}`,
-          eyebrow: "אישור קליטת בקשה",
-          headline: "תודה! מכינים לכם לינק תשלום מאובטח",
-          greeting: ctx.user.name ? `שלום ${ctx.user.name},` : "שלום רב,",
-          body: [
-            "קיבלנו את הבקשה לתשלום והתהליך החל. בדקות הקרובות יגיע אליכם מייל נפרד עם לינק לעמוד התשלום המאובטח.",
-            {
-              type: "highlight",
-              label: "פרטי הבקשה",
-              value: `${planLabel} · ${periodLabel} · ₪${amount.toLocaleString("he-IL")}`,
-              note: "החיוב מתבצע בהוראת קבע (ללא תשלומים).",
-              tone: "success",
-            },
-            "ברגע שהתשלום יושלם — הגישה למערכת תיפתח אוטומטית, והחשבונית תעלה במייל מ-iCount.",
-          ],
-          cta: { label: "מעבר למסך המתנה", url: returnUrl },
-          footerNote:
-            "אם לא ביצעתם בקשה זו, נא להתעלם או ליצור קשר במייל anat@spark-ai.co.il.",
-        });
-        const result = await sendEmail({
-          to: ctx.user.email,
-          subject: customerEmail.subject,
-          html: customerEmail.html,
-          text: customerEmail.text,
-        });
-        if (!result.ok) {
-          console.warn("[billing] Make confirm email failed", result.error);
-        }
-      }
+      // Round 119: Removed the redundant "מעבירים אותכם לתשלום" email.
+      // Since the user is now redirected to the iCount payment page directly
+      // in a new tab (Round 118), this email is confusing and unnecessary.
+      // The user will still receive the actual payment link email from Make/iCount
+      // and the invoice email upon successful payment.
 
       return {
         ok: true as const,

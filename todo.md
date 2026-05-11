@@ -1055,4 +1055,10 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Pricing.tsx: הסרת noopener,noreferrer מ-window.open של החלון הריק (כך שאפשר להזריק לתוכו את ה-payUrl)
 - [x] Onboarding.tsx: אותו תיקון
 - [x] לבדוק ש-startCheckoutViaMake.onSuccess עדיין קורא ל-w.location.replace (ולא יוצר חלון נוסף)
+- [x] checkpoint b4d02321
+
+## Round 119 - ביטול מייל "מעבירים אותכם לתשלום" (אישור: מאשרת) (2026-05-11)
+- [x] לאתר את הקריאה ששולחת את המייל "חודשי SPARK Quality — מעבירים אותכם לתשלום" בעת לחיצה על הסדרת תשלום
+- [x] להסיר/לכבות את שליחת המייל הזה (להשאיר את שאר המיילים: לינק לתשלום מ-iCount, חשבונית וכו')
+- [x] לבדוק ש-vitest לא נשבר
 - [ ] checkpoint
