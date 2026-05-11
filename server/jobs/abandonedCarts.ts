@@ -6,7 +6,7 @@
  * Runs every minute (cron `0 * * * * *`). For every payment_attempts row
  * whose status is `pending`, was created more than ABANDONED_AFTER_MS ago,
  * and was not yet notified — we:
- *   1. Send a branded RTL email to the workspace owner (anat@spark-ai.co.il)
+ *   1. Send a branded RTL email to the workspace owner (anathemell@gmail.com)
  *      with the customer details so she can manually follow up.
  *   2. Mark the attempt as `abandoned` and stamp `abandonedNotifiedAt` so we
  *      never email about the same attempt twice.
@@ -25,7 +25,7 @@ import { sendEmail } from "../email";
 import { renderBrandedEmail } from "../emailTemplates";
 
 const ABANDONED_AFTER_MS = 15 * 60 * 1000; // 15 minutes
-const OWNER_EMAIL = "anat@spark-ai.co.il";
+const OWNER_EMAIL = "anathemell@gmail.com";
 
 const PLAN_LABELS: Record<string, string> = {
   basic: "Base",

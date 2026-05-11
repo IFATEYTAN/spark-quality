@@ -173,7 +173,7 @@ describe("abandonedCartsHandler", () => {
     // Owner email must contain the customer name and the requestId so we can
     // hand-correlate it back to the iCount log.
     const firstCall = vi.mocked(sendEmail).mock.calls[0][0];
-    expect(firstCall.to).toBe("anat@spark-ai.co.il");
+    expect(firstCall.to).toBe("anathemell@gmail.com");
     expect(firstCall.subject).toContain("נטישת עגלה");
     expect(firstCall.html ?? "").toContain("req_1");
   });

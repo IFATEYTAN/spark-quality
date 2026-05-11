@@ -205,7 +205,7 @@ export function registerMakeRoutes(app: Express): void {
                 url: `${ENV.publicAppUrl}/dashboard`,
               },
               footerNote:
-                "אם לא ביצעתם רכישה זו, צרו איתנו קשר מיידית במייל anat@spark-ai.co.il.",
+                "אם לא ביצעתם רכישה זו, צרו איתנו קשר מיידית במייל anathemell@gmail.com.",
             });
             return sendEmail({ to: m.email!, subject, html, text });
           }),

@@ -141,7 +141,7 @@ ${workspaceId}|${requestId}|${status}|${invoiceId}|${subscriptionId}
 **מה שקורה אם אף callback לא מגיע:**
 
 יש watchdog שרץ כל דקה ב-`POST /api/scheduled/abandonedCarts`. הוא מחפש שורות `pending` שעבר עליהן יותר מ-15 דקות, ולכל אחת:
-- שולח מייל RTL מותג ל-**anat@spark-ai.co.il** עם פרטי הלקוח (שם, מייל, טלפון, ח.פ, סכום, תוכנית, requestId).
+- שולח מייל RTL מותג ל-**anathemell@gmail.com** עם פרטי הלקוח (שם, מייל, טלפון, ח.פ, סכום, תוכנית, requestId).
 - מסמן את השורה כ-`abandoned` כדי לא לשלוח שוב.
 - אם יש טלפון — מצרף כפתור "פתיחת וואטסאפ" ישיר ללקוח.
 

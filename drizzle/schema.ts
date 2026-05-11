@@ -430,7 +430,7 @@ export type InsertAuditLog = typeof auditLog.$inferInsert;
 // כל קריאה ל-billing.startCheckoutViaMake יוצרת רשומה כאן עם status=pending.
 // כשה-callback מ-Make מגיע ל-/api/billing/activate אנחנו מעדכנים ל-succeeded.
 // Watchdog שרץ כל דקה מאתר רשומות pending מעל 15 דקות, מסמן abandoned
-// ושולח מייל RTL לבעלת המערכת (anat@spark-ai.co.il) לטיפול ידני.
+// ושולח מייל RTL לבעלת המערכת (anathemell@gmail.com) לטיפול ידני.
 export const paymentAttempts = mysqlTable(
   "payment_attempts",
   {

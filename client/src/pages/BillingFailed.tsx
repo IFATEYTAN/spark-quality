@@ -22,8 +22,8 @@ export default function BillingFailed() {
         <GlassCard className="p-6 mb-8 text-right">
           <p className="text-white/80 text-sm leading-relaxed">
             אפשר לנסות שוב עם כרטיס אחר, או לפנות אלינו במייל
-            <a href="mailto:anat@spark-ai.co.il" className="text-gold mx-1 underline-offset-4 hover:underline">
-              anat@spark-ai.co.il
+            <a href="mailto:anathemell@gmail.com" className="text-gold mx-1 underline-offset-4 hover:underline">
+              anathemell@gmail.com
             </a>
             לקבלת לינק תשלום ידני.
           </p>

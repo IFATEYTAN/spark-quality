@@ -74,7 +74,7 @@ const PALETTE = {
 };
 
 const LOGO_URL = "https://spark-ai.co.il/logo-mark-gold.png";
-const SUPPORT_EMAIL = "anat@spark-ai.co.il";
+const SUPPORT_EMAIL = "anathemell@gmail.com";
 const COMPANY_FULL_NAME = "SPARK AI · ספארק איי.אי. בע״מ";
 const SITE_URL = "https://spark-ai.co.il";
 

@@ -135,7 +135,7 @@ function BlockedScreen({ access }: { access: AccessData }) {
             הסדרת תשלום והחזרת הגישה
           </Link>
           <a
-            href="mailto:anat@spark-ai.co.il"
+            href="mailto:anathemell@gmail.com"
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/5 px-6 py-3 text-sm font-medium text-white transition hover:bg-white/10"
           >
             <Mail className="h-4 w-4" />

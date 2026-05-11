@@ -204,7 +204,7 @@ export async function sendSuspensionEmail(opts: {
         items: [
           "להיכנס לאזור האישי במערכת ולעדכן את אמצעי התשלום.",
           "להשלים את החיוב — הגישה תיפתח אוטומטית תוך מספר דקות.",
-          "אם נדרש סיוע — אנחנו זמינים בכל שעה במייל anat@spark-ai.co.il.",
+          "אם נדרש סיוע — אנחנו זמינים בכל שעה במייל anathemell@gmail.com.",
         ],
       },
     ],
@@ -257,7 +257,7 @@ export async function sendPastDueReminderEmail(opts: {
       ? { label: "השלמת תשלום", url: opts.paymentLink }
       : { label: "כניסה לאזור האישי", url: "https://spark-ai.co.il/login" },
     footerNote:
-      "אם לדעתכם מדובר בטעות, נא ליצור איתנו קשר במייל anat@spark-ai.co.il.",
+      "אם לדעתכם מדובר בטעות, נא ליצור איתנו קשר במייל anathemell@gmail.com.",
   });
 
   const result = await sendEmail({ to: opts.to, subject, html, text });
@@ -487,7 +487,7 @@ export const billingRouter = router({
           ],
           cta: { label: "כניסה לאזור האישי", url: "https://spark-ai.co.il/login" },
           footerNote:
-            "אם לא ביצעתם בקשה זו, אנא התעלמו מההודעה או צרו איתנו קשר במייל anat@spark-ai.co.il.",
+            "אם לא ביצעתם בקשה זו, אנא התעלמו מההודעה או צרו איתנו קשר במייל anathemell@gmail.com.",
         });
         const confirm = await sendEmail({
           to: ctx.user.email,
@@ -941,7 +941,7 @@ export const billingRouter = router({
       }
 
       try {
-        const ownerEmail = "anat@sparkai.co.il";
+        const ownerEmail = "anathemell@gmail.com";
         const { subject, html, text } = renderBrandedEmail({
           subject: title,
           eyebrow: "SPARK Quality · Enterprise",
