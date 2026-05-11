@@ -114,32 +114,6 @@ export function SummaryStage({ onReset, parsed, analysis, category: _category }:
                 ))}
               </div>
 
-              {/* Next steps */}
-              <div className="mt-2 animate-fade-up" style={{ animationDelay: "0.4s" }}>
-                <h3 className="font-display text-base font-bold text-navy-deep mb-2 tracking-tight">
-                  השלבים הבאים שלכם
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {[
-                    { num: "01", text: "פיילוט עם 5-10 סוכנים נבחרים" },
-                    { num: "02", text: "התמקדות ב-2 תהליכים: ניתוח דוחות + סיכומי פגישות" },
-                    { num: "03", text: "מדידת ROI לאחר 30 יום והרחבה לכלל הסוכנות" },
-                  ].map((step, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-col items-start gap-1 rounded-md border border-gold/40 bg-white/95 p-2 shadow-sm transition-all hover:border-gold hover:shadow-md"
-                    >
-                      <span className="font-display text-base font-black text-gold mono-num leading-none">
-                        {step.num}
-                      </span>
-                      <span className="text-xs text-navy-deep leading-snug font-semibold">
-                        {step.text}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
               {/* CTA — PRIMARY: signup. Meeting CTA lives only on the QR card below. */}
               <div
                 className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fade-up"
