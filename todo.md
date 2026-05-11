@@ -959,3 +959,10 @@ Bug reported by יפה: גלישה אנונימית (חלון נסתר) ב-`/dem
 - [x] Fix: `useFeatureGate` מקבל עכשיו `enabled: isAuthenticated` (מ-`useAuth`). גולש אנונימי → ה-query לא נשלחת → אין שגיאה → אין redirect. `currentPlan` נפול ל-"basic" (ה-default הקיים) — ה-Composer בדמו ממשיך להציג לו את קישור ה-UpgradeModal כמו קודם.
 - [x] tsc clean (exit 0) + 25/25 vitest ירוקים (billing 7/7 · planFeatures 6/6 · workspaceIsolation 7/7 · quotaWatch 5/5).
 - [x] Verify on incognito + save checkpoint.
+
+## Round 105 — Prospect→signup funnel fix (2026-05-11)
+Bug reported by יפה: end-of-demo CTA + landing page lack a clear "הרשמה" path.
+- [ ] SummaryStage: primary CTA = "הרשמה למערכת" (sends to OAuth signup with returnTo=/onboarding). Move "קבעו פגישת אפיון" off SummaryStage; expose it only via the QR / Contact channel.
+- [ ] CinematicShell Header: add prominent "הרשמה" button next to "לאזור האישי" (visible to anonymous + logged-out users; hidden when isAuthenticated).
+- [ ] Landing page (Home.tsx): ensure the Pricing section is visible from the first scroll (anchor link in nav: "מחירים").
+- [ ] tsc + targeted vitest + save checkpoint.

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, getSignupUrl } from "@/const";
 import { PRICING_COPY, SPARK_QUALITY_PRICING } from "@shared/copy";
 
 export default function Home() {
@@ -55,6 +55,7 @@ export default function Home() {
   );
 
   const loginHref = getLoginUrl();
+  const signupHref = getSignupUrl();
   // Open ContactModal automatically when ?contact=1 is present (used by demo QR code)
   const [contactOpen, setContactOpen] = useState(false);
   useEffect(() => {
@@ -176,12 +177,29 @@ export default function Home() {
           <div className="flex-1 flex items-center justify-center">
             <TopZoneNav />
           </div>
-          <a
-            href={isAuthenticated && user ? "/dashboard" : loginHref}
-            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow flex-shrink-0"
-          >
-            {isAuthenticated && user ? "לאזור האישי" : "כניסה למערכת"}
-          </a>
+          {isAuthenticated && user ? (
+            <a
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow flex-shrink-0"
+            >
+              לאזור האישי
+            </a>
+          ) : (
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <a
+                href={loginHref}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-transparent px-3 py-1.5 text-xs font-semibold text-white/85 hover:text-white hover:border-white/40 transition-colors"
+              >
+                כניסה
+              </a>
+              <a
+                href={signupHref}
+                className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow"
+              >
+                הרשמה
+              </a>
+            </div>
+          )}
         </div>
       </header>
 

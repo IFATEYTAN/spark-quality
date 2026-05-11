@@ -1,9 +1,9 @@
 // Editorial Fintech | מסך סיכום סופי — פריסה גלילה במלואו, ללא חיתוך פוטר/טקסטים
-import { useMemo, useState } from "react";
-import { ArrowLeft, RotateCcw, Calendar, X, QrCode } from "lucide-react";
+import { useMemo } from "react";
+import { ArrowLeft, RotateCcw, Sparkles, X, QrCode } from "lucide-react";
 import { Link } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
-import { ContactModal } from "./ContactModal";
+import { getSignupUrl } from "@/const";
 import type { ParsedReport } from "@/lib/parseReport";
 
 interface SummaryStageProps {
@@ -39,7 +39,6 @@ export function SummaryStage({ onReset, parsed, analysis, category: _category }:
       : 2.84;
   const potentialM = potentialMNum.toFixed(2);
   const customersCount = (llmKpis?.total_clients as number | undefined) ?? (parsed ? parsed.customerCount : 1247);
-  const [contactOpen, setContactOpen] = useState(false);
   // Build a QR target URL pointing to the public landing with auto-opened contact form.
   // This works both when the demo is hosted on the deployed domain and on the dev preview,
   // because we read window.location.origin at render-time on the client.
@@ -141,34 +140,39 @@ export function SummaryStage({ onReset, parsed, analysis, category: _category }:
                 </div>
               </div>
 
-              {/* CTA */}
+              {/* CTA — PRIMARY: signup. Meeting CTA lives only on the QR card below. */}
               <div
                 className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fade-up"
                 style={{ animationDelay: "0.5s" }}
               >
+                <a
+                  href={getSignupUrl()}
+                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-gold/90 hover:shadow-2xl hover:shadow-gold/20"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  הרשמה למערכת
+                  <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                </a>
+                <Link
+                  href="/pricing"
+                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md border border-gold/40 bg-white px-5 py-2.5 text-sm font-bold text-gold transition-all hover:bg-gold/5 hover:border-gold"
+                >
+                  לתמחור המלא
+                </Link>
                 <button
                   type="button"
                   onClick={onReset}
                   className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-navy-deep px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-navy hover:shadow-2xl hover:shadow-navy/20"
                 >
                   <RotateCcw className="h-4 w-4 transition-transform group-hover:-rotate-180 duration-500" />
-                  הפעל את הדמו מההתחלה
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setContactOpen(true)}
-                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-gold/90 hover:shadow-2xl hover:shadow-gold/20"
-                >
-                  <Calendar className="h-4 w-4" />
-                  קבעו פגישת אפיון
-                  <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                  הפעל מההתחלה
                 </button>
                 <Link
                   href="/"
                   className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md border border-navy-deep/20 bg-white px-5 py-2.5 text-sm font-bold text-navy-deep transition-all hover:bg-navy-deep/5 hover:border-navy-deep/40"
                 >
                   <X className="h-4 w-4" />
-                  יציאה מהדמו
+                  יציאה
                 </Link>
               </div>
 
@@ -195,10 +199,10 @@ export function SummaryStage({ onReset, parsed, analysis, category: _category }:
                     </span>
                   </div>
                   <h4 className="font-display text-sm font-black text-navy-deep mb-0.5">
-                    רוצים שנחזור אליכם?
+                    מעדיפים פגישת אפיון?
                   </h4>
                   <p className="text-[10px] text-navy-deep/75 leading-snug">
-                    סרקו את הקוד — יפעת או ענת יחזרו אליכם תוך יום עסקים.
+                    סרקו את הקוד — יפעת או ענת יחזרו אליכם תוך יום עסקים לתיאום.
                   </p>
                 </div>
               </div>
@@ -337,7 +341,6 @@ export function SummaryStage({ onReset, parsed, analysis, category: _category }:
         </div>
       </div>
 
-      <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
     </div>
   );
 }
