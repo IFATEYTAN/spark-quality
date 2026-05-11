@@ -944,4 +944,11 @@ Reference: user-supplied `niuch360_triggers_dashboard_v2(1).html`.
 - [x] Save checkpoint — 9a7736cf.
 - [x] Author docs/system-spec.md — comprehensive end-to-end spec (12 sections, entity inventory, architecture, AI usage, status, remaining work).
 - [x] Author docs/mvp-rollout.md — 6-week rollout plan, 3-tier KPIs, support model, risks, exit criteria.
-- [ ] Deliver both docs + final checkpoint to the user
+- [x] Deliver both docs + final checkpoint to the user — checkpoint 5175b2aa.
+
+## Round 103 — Hide /demo for paying users (2026-05-11) — ✅ DONE
+- [x] Located the Demo link — it lives in `TopZoneNav` inside `CinematicShell.tsx` (the 3-zone nav: אתר / דמו / מערכת). The mobile-menu "דמו הדרכה" link is already gated behind `user?.role === "admin"`, so paying agents never saw it.
+- [x] Subscription status is read via the existing `trpc.billing.myAccessStatus` query (60s refetch, `refetchOnWindowFocus`).
+- [x] Hide the Demo nav entry when `accessQuery.data.status ∈ {active, grace}` for logged-in users; visitors and unpaid logged-in users still see the דמו link.
+- [x] `/demo` route guard — `DemoExperience.tsx` now returns `<Redirect to="/dashboard" />` when a paying user lands on it directly. Admins (workspace owner/admin or super-admin) are exempt so live training keeps working.
+- [x] tsc clean (exit 0) + 25/25 vitest suites green (billing 7/7, planFeatures 6/6, workspaceIsolation 7/7, quotaWatch 5/5).

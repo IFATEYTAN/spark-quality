@@ -1,7 +1,7 @@
 // Editorial Fintech | אורקסטרציה ראשית של הדמו
 // תכונות: ניווט מקלדת (חצים), מסך מלא, כפתורי ניווט קבועים, Splash דרמטי
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Redirect } from "wouter";
 import { ChevronRight, ChevronLeft, Maximize2, Minimize2 } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
@@ -97,6 +97,19 @@ export default function DemoExperience() {
   const STAGE_LABELS_DYNAMIC: Record<Stage, string> = isAdmin
     ? STAGE_LABELS_ADMIN
     : STAGE_LABELS_GUEST;
+
+  // Paying users (active or grace subscription) shouldn't see the demo — send them straight to the live product.
+  // Admins keep access to /demo for live training, regardless of subscription status.
+  const accessQuery = trpc.billing.myAccessStatus.useQuery(undefined, {
+    enabled: !!user && !isAdmin,
+    refetchOnWindowFocus: false,
+    staleTime: 60_000,
+  });
+  const shouldRedirectToProduct =
+    !!user &&
+    !isAdmin &&
+    !!accessQuery.data &&
+    (accessQuery.data.status === "active" || accessQuery.data.status === "grace");
   const [stage, setStage] = useState<Stage>("splash");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
@@ -252,6 +265,11 @@ export default function DemoExperience() {
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
+
+  // Paying users get bounced to /dashboard before any demo UI renders.
+  if (shouldRedirectToProduct) {
+    return <Redirect to="/dashboard" />;
+  }
 
   // Special: Splash is overlay, render BEFORE main shell
   if (stage === "splash") {

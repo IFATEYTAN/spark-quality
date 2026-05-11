@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 import { getLoginUrl } from "@/const";
 import { AccessGuard } from "./AccessGuard";
 
@@ -266,6 +267,17 @@ export function TopZoneNav() {
   const [location] = useLocation();
   const { isAuthenticated } = useAuth();
 
+  // Hide the Demo zone for paying users (active/grace); keep it for visitors and unpaid logged-in users.
+  const accessQuery = trpc.billing.myAccessStatus.useQuery(undefined, {
+    enabled: isAuthenticated,
+    refetchInterval: 60_000,
+    refetchOnWindowFocus: true,
+  });
+  const hideDemoForPayingUser =
+    isAuthenticated &&
+    !!accessQuery.data &&
+    (accessQuery.data.status === "active" || accessQuery.data.status === "grace");
+
   // Determine current zone
   const isProductZone =
     location.startsWith("/dashboard") ||
@@ -284,7 +296,9 @@ export function TopZoneNav() {
 
   const zones = [
     { href: siteHref, label: "אתר", icon: Globe, active: isSiteZone },
-    { href: "/demo", label: "דמו", icon: Film, active: isDemoZone },
+    ...(hideDemoForPayingUser
+      ? []
+      : [{ href: "/demo", label: "דמו", icon: Film, active: isDemoZone }]),
     { href: productHref, label: "מערכת", icon: Briefcase, active: isProductZone },
   ];
 
