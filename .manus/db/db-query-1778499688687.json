@@ -1,0 +1,43 @@
+{
+  "query": "SELECT w.id, w.name, w.taxId, w.taxIdType, w.subscriptionStatus, w.createdAt,\n       (SELECT COUNT(*) FROM users u WHERE u.workspaceId = w.id) AS user_count,\n       (SELECT COUNT(*) FROM clients c WHERE c.workspaceId = w.id) AS client_count,\n       (SELECT COUNT(*) FROM reports r WHERE r.workspaceId = w.id) AS report_count\nFROM workspaces w\nWHERE w.taxId = '037216298'\nORDER BY w.createdAt;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT w.id, w.name, w.taxId, w.taxIdType, w.subscriptionStatus, w.createdAt,\n       (SELECT COUNT(*) FROM users u WHERE u.workspaceId = w.id) AS user_count,\n       (SELECT COUNT(*) FROM clients c WHERE c.workspaceId = w.id) AS client_count,\n       (SELECT COUNT(*) FROM reports r WHERE r.workspaceId = w.id) AS report_count\nFROM workspaces w\nWHERE w.taxId = '037216298'\nORDER BY w.createdAt;",
+  "rows": [
+    {
+      "id": "60002",
+      "name": "בדיקה",
+      "taxId": "037216298",
+      "taxIdType": "company",
+      "subscriptionStatus": "active",
+      "createdAt": "2026-05-07 18:51:57",
+      "user_count": "1",
+      "client_count": "0",
+      "report_count": "0"
+    },
+    {
+      "id": "330001",
+      "name": "Anat Grinberg",
+      "taxId": "037216298",
+      "taxIdType": "company",
+      "subscriptionStatus": "pending_payment",
+      "createdAt": "2026-05-11 11:18:33",
+      "user_count": "1",
+      "client_count": "14",
+      "report_count": "1"
+    },
+    {
+      "id": "330002",
+      "name": "שם הסוכנות",
+      "taxId": "037216298",
+      "taxIdType": "company",
+      "subscriptionStatus": "pending_payment",
+      "createdAt": "2026-05-11 11:41:01",
+      "user_count": "1",
+      "client_count": "0",
+      "report_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\ttaxId\ttaxIdType\tsubscriptionStatus\tcreatedAt\tuser_count\tclient_count\treport_count\n60002\tבדיקה\t037216298\tcompany\tactive\t2026-05-07 18:51:57\t1\t0\t0\n330001\tAnat Grinberg\t037216298\tcompany\tpending_payment\t2026-05-11 11:18:33\t1\t14\t1\n330002\tשם הסוכנות\t037216298\tcompany\tpending_payment\t2026-05-11 11:41:01\t1\t0\t0\n",
+  "stderr": "",
+  "execution_time_ms": 1800
+}

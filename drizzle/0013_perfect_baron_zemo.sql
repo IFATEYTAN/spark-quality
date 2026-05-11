@@ -1,0 +1,1 @@
+ALTER TABLE `workspaces` ADD CONSTRAINT `uq_workspaces_taxid` UNIQUE(`taxId`);

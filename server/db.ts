@@ -195,6 +195,19 @@ export async function getWorkspaceById(id: number) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+/**
+ * Look up an existing workspace by its tax ID (ח.פ / ת.ז, digits only).
+ * Used by workspaces.create to give a friendly Hebrew CONFLICT error instead
+ * of relying on the bare MySQL ER_DUP_ENTRY error (Round 113). Pass the
+ * already-stripped digit string — the caller does the normalization.
+ */
+export async function getWorkspaceByTaxId(taxId: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(workspaces).where(eq(workspaces.taxId, taxId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function getWorkspaceMembers(workspaceId: number) {
   const db = await getDb();
   if (!db) return [];

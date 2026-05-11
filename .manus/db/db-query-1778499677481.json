@@ -1,0 +1,16 @@
+{
+  "query": "SELECT taxId, COUNT(*) AS cnt, GROUP_CONCAT(id) AS ws_ids, GROUP_CONCAT(name) AS names\nFROM workspaces\nWHERE taxId IS NOT NULL AND taxId <> ''\nGROUP BY taxId\nHAVING cnt > 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT taxId, COUNT(*) AS cnt, GROUP_CONCAT(id) AS ws_ids, GROUP_CONCAT(name) AS names\nFROM workspaces\nWHERE taxId IS NOT NULL AND taxId <> ''\nGROUP BY taxId\nHAVING cnt > 1;",
+  "rows": [
+    {
+      "taxId": "037216298",
+      "cnt": "3",
+      "ws_ids": "60002,330001,330002",
+      "names": "בדיקה,Anat Grinberg,שם הסוכנות"
+    }
+  ],
+  "messages": [],
+  "stdout": "taxId\tcnt\tws_ids\tnames\n037216298\t3\t60002,330001,330002\tבדיקה,Anat Grinberg,שם הסוכנות\n",
+  "stderr": "",
+  "execution_time_ms": 1786
+}

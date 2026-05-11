@@ -991,9 +991,19 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Fix /pricing 'הצטרפו ל-SPARK Quality' CTA: anonymous → getSignupUrl() (was navigate('/onboarding') which hit the protected guard and silently dropped the click); authenticated-no-workspace → /onboarding?cycle=...; authenticated-with-workspace → startCheckoutViaMake. tsc=0.
 
 ## Round 111 - New signup got owner+SUPER without paying (2026-05-11)
-- [ ] Diagnose why anathemell@gmail.com landed as 'owner' + SUPER tag right after OAuth signup with no payment
+- [x] Diagnose why anathemell@gmail.com landed as 'owner' + SUPER tag right after OAuth signup with no payment — found: (1) SUPER tag = hard-coded SPARK_SUPERADMIN_EMAILS allow-list in server/db.ts (intentional, for SPARK staff). (2) workspaceRole=owner with plan=basic = expected — workspace.create runs in onboarding BEFORE payment; ctx.user.workspaceId becomes set + workspaceRole=owner immediately; subscriptionStatus stays 'pending_payment' until iCount/Make callback. Access to workspace-scoped tRPC remains blocked by workspaceActiveProcedure. The /admin UI was the only misleading surface — fixed in Round 112 with the new payment-status column.
 
 ## Round 112 - Add payment-status column in /admin (2026-05-11)
 - [x] Expose ws.subscriptionStatus + ws.suspendedAt + ws.plan through listAllUsersWithWorkspace (server/db.ts)
 - [x] Add 'סטטוס תשלום' column with colored badges in AdminPanel.UsersTab (green/amber/red/neutral)
 - [x] Vitest covering the badge mapping (9 tests, all pass) — shared/paymentStatus.ts + server/paymentStatus.test.ts
+
+## Round 113 - Enforce unique workspace taxId (2026-05-11)
+- [x] Add unique index on workspaces.taxId in drizzle/schema.ts + push migration — uq_workspaces_taxid (migration 0013_perfect_baron_zemo.sql, applied)
+- [x] Pre-insert check in workspaces.create with Hebrew CONFLICT message — added getWorkspaceByTaxId helper in server/db.ts + guard in routers.ts
+- [x] Vitest covering duplicate-taxId rejection — server/workspaces.duplicateTaxId.test.ts (4 tests, all pass)
+
+## Round 113b - Cleanup duplicate workspaces before unique index (2026-05-11)
+- [x] Inventory dependents — found: 14 clients (330001), 1 report (330001), 5 payment_attempts (60002), 1 audit_log (60002), 3 users (one per workspace)
+- [x] Cascade-delete all dependents + DELETE the 3 workspaces — 0 rows now have taxId 037216298
+- [x] Detach affected users (workspaceId=NULL, workspaceRole='agent' since column is NOT NULL) — 3 users detached, not deleted

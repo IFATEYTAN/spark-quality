@@ -267,10 +267,25 @@ export const appRouter = router({
           });
         }
 
+        // Round 113 — global uniqueness on workspace taxId. The DB has a UNIQUE
+        // index too (uq_workspaces_taxid), but we surface a Hebrew CONFLICT
+        // before hitting MySQL so the UI can show a clean message.
+        const normalizedTaxId = input.taxId.replace(/\D+/g, "");
+        const existingByTaxId = await db.getWorkspaceByTaxId(normalizedTaxId);
+        if (existingByTaxId) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message:
+              input.taxIdType === "company"
+                ? `מספר ח.פ ${normalizedTaxId} כבר רשום במערכת על שם סוכנות קיימת. אם זו הסוכנות שלך, יש להתחבר לחשבון הקיים.`
+                : `מספר ת״ז ${normalizedTaxId} כבר רשום במערכת על שם סוכנות קיימת. אם זו הסוכנות שלך, יש להתחבר לחשבון הקיים.`,
+          });
+        }
+
         const workspaceId = await db.createWorkspace({
           name: input.name,
           plan: input.plan ?? "basic",
-          taxId: input.taxId.replace(/\D+/g, ""),
+          taxId: normalizedTaxId,
           taxIdType: input.taxIdType,
           contactPhone: phoneNorm,
         });

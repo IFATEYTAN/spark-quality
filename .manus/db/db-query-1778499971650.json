@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE users SET workspaceId = NULL, workspaceRole = 'agent' WHERE workspaceId IN (60002,330001,330002);\nDELETE FROM workspaces WHERE id IN (60002,330001,330002);\nSELECT id, name, taxId FROM workspaces WHERE taxId = '037216298';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute UPDATE users SET workspaceId = NULL, workspaceRole = 'agent' WHERE workspaceId IN (60002,330001,330002);\nDELETE FROM workspaces WHERE id IN (60002,330001,330002);\nSELECT id, name, taxId FROM workspaces WHERE taxId = '037216298';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2445
+}

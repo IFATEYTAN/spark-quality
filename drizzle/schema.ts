@@ -88,8 +88,11 @@ export const workspaces = mysqlTable("workspaces", {
   quotaWarningSentAt: timestamp("quotaWarningSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-});
-
+}, (table) => ({
+  // Round 113 — enforce one workspace per tax ID (ח.פ / ת.ז). שלוש סוכנויות
+  // שנרשמו על אותה ה-037216298 נמחקו לפני המיגרציה. NULL נשמר מותר על-ידי MySQL גם עם UNIQUE.
+  uniqueTaxId: unique("uq_workspaces_taxid").on(table.taxId),
+}));
 export type Workspace = typeof workspaces.$inferSelect;
 export type InsertWorkspace = typeof workspaces.$inferInsert;
 
