@@ -1,0 +1,25 @@
+{
+  "query": "SELECT u.id, u.email, u.workspaceId, u.workspaceRole, u.isSuperAdmin, w.id AS ws_id, w.name, w.plan, w.billingPeriod, w.subscriptionStatus, w.subscriptionEndsAt, w.suspendedAt, w.createdByUserId FROM users u LEFT JOIN workspaces w ON w.id = u.workspaceId WHERE u.email = 'support@leandolini.com';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT u.id, u.email, u.workspaceId, u.workspaceRole, u.isSuperAdmin, w.id AS ws_id, w.name, w.plan, w.billingPeriod, w.subscriptionStatus, w.subscriptionEndsAt, w.suspendedAt, w.createdByUserId FROM users u LEFT JOIN workspaces w ON w.id = u.workspaceId WHERE u.email = 'support@leandolini.com';",
+  "rows": [
+    {
+      "id": "6000321",
+      "email": "support@leandolini.com",
+      "workspaceId": "360001",
+      "workspaceRole": "agent",
+      "isSuperAdmin": "0",
+      "ws_id": "360001",
+      "name": "סוכנות תמיכה",
+      "plan": "basic",
+      "billingPeriod": "yearly",
+      "subscriptionStatus": "pending_payment",
+      "subscriptionEndsAt": "NULL",
+      "suspendedAt": "NULL",
+      "createdByUserId": "6000321"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tworkspaceId\tworkspaceRole\tisSuperAdmin\tws_id\tname\tplan\tbillingPeriod\tsubscriptionStatus\tsubscriptionEndsAt\tsuspendedAt\tcreatedByUserId\n6000321\tsupport@leandolini.com\t360001\tagent\t0\t360001\tסוכנות תמיכה\tbasic\tyearly\tpending_payment\tNULL\tNULL\t6000321\n",
+  "stderr": "",
+  "execution_time_ms": 1893
+}

@@ -1009,13 +1009,13 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Detach affected users (workspaceId=NULL, workspaceRole='agent' since column is NOT NULL) — 3 users detached, not deleted
 
 ## Round 114 - Owner role is granted only after payment is active (2026-05-11)
-- [ ] Map every code path that assigns workspaceRole='owner' (upsertUser / workspaces.create / invitations.accept / admin endpoints / payment-success handlers)
-- [ ] Change workspaces.create: leave creator as 'agent' (NOT 'owner'). Track creatorUserId so the promotion can happen later.
-- [ ] Add workspaces.createdByUserId column (drizzle migration) + populate it on creation
-- [ ] In payment-success handler (whoever flips subscriptionStatus to 'active'): promote createdByUserId to 'owner' atomically
-- [ ] Retroactive cleanup: every workspace whose subscriptionStatus != 'active' → all members become 'agent'
-- [ ] Vitest: workspaces.create leaves user as agent; payment-active promotes them to owner
-- [ ] Verify /admin payment-status column now shows correct combination (e.g. agent + ממתין לתשלום, owner + שולם)
+- [x] Map every code path that assigns workspaceRole='owner' — only workspaces.create did; payment handlers in billing.ts/iCountRoutes.ts/makeRoutes.ts only flipped subscriptionStatus
+- [x] Change workspaces.create: creator linked as 'agent' (server/routers.ts) and createdByUserId is forwarded to createWorkspace
+- [x] Added workspaces.createdByUserId column (drizzle migration 0014); populated on every new insert
+- [x] promoteCreatorToOwnerIfActive() helper added to server/db.ts and called from billing.ts setStandingOrder + adminMarkActive, iCountRoutes.ts, and makeRoutes.ts /api/billing/activate — promotes only if subscriptionStatus='active' AND user is currently 'agent'
+- [x] Retroactive SQL: workspace 1 (יפעת) flipped to active+1y so ifat@spark-ai.co.il stays owner; sparkaidigital orphan owner downgraded to agent; no other non-active owners remained
+- [x] Vitest: 3 new tests in server/promoteOwnerOnActive.test.ts + duplicateTaxId test updated to expect 'agent'. All 7 pass
+- [x] Verified via SQL: post-migration owner list = [ifat@spark-ai.co.il (active)]; superadmin sparkaidigital correctly shown as agent without workspace
 
 ## Round 114 - Owner role only after payment (2026-05-11)
 - [x] workspaces.create assigns role='agent' to creator (was 'owner')
@@ -1024,3 +1024,9 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Wired into all 4 payment-success paths: billing.ts setStandingOrder, billing.ts adminMarkActive, iCountRoutes.ts callback, makeRoutes.ts /api/billing/activate
 - [x] Retroactive SQL: workspace 1 (יפעת) flipped to active+1y so ifat@spark-ai.co.il stays owner; sparkaidigital orphan owner downgraded to agent; all other non-active owners downgraded
 - [x] Vitest: 3 new tests in server/promoteOwnerOnActive.test.ts + updated 'agent' assertion in workspaces.duplicateTaxId.test.ts. All 7 pass
+
+## Round 115 - /pricing labels pending workspace as "התוכנית שלכם פעילה" (2026-05-11)
+- [x] Confirmed via SQL: workspace 360001 (LeAndolini, support@leandolini.com) is plan=basic + subscriptionStatus=pending_payment. /billing reads it correctly; /pricing did not.
+- [x] Root-caused: Pricing.tsx isCurrent() looked at currentPlan only, never at accessStatus. Workspace with plan='basic' + pending_payment was wrongly marked as 'פעיל'.
+- [x] Extracted the whole CTA decision to shared/pricingCta.ts (pure function decidePricingCta). Pricing.tsx now delegates to it. The 'הסדרת תשלום' CTA navigates to /billing instead of opening a new checkout.
+- [x] Vitest server/pricingCta.test.ts — 6 tests pass, covering: anonymous, no-workspace, pending_payment (the support@leandolini bug), active, grace, cancelled.

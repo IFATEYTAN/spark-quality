@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
+import { decidePricingCta, type AccessStatus } from "@shared/pricingCta";
 import { EnterpriseContactDialog } from "@/components/EnterpriseContactDialog";
 import { getLoginUrl, getSignupUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
@@ -137,6 +138,13 @@ export default function Pricing() {
     return null;
   }, [accessQuery.data]);
 
+  // Round 115 — "התוכנית שלכם פעילה" הוצגה רק כ֠שהמנוי למעשה פעיל או במצב grace.
+  // לפני לכן, workspace עם plan='basic' אבל subscriptionStatus='pending_payment'
+  // היה מסומן בטעות כ-"פעיל" תוך סתירה למסך /billing.
+  const accessStatus = (accessQuery.data as { status?: string } | undefined)?.status;
+  const hasActiveSubscription =
+    accessStatus === "active" || accessStatus === "grace";
+
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
 
   const handleSelect = (slug: PaidPlan) => {
@@ -154,6 +162,12 @@ export default function Pricing() {
       navigate(`/onboarding?cycle=${isAnnual ? "yearly" : "monthly"}`);
       return;
     }
+    // Round 115 — למשתמש מחובר עם workspace שעדיין לא שילם תשלום, נשלח אותו
+    // ישירות ל-/billing להשלמת התשלום של המנוי הקיים — לא יוצרים מנוי חדש.
+    if (!hasActiveSubscription) {
+      navigate("/billing");
+      return;
+    }
     // Pre-open the new tab synchronously so it's tied to this user-gesture
     // and won't be popup-blocked. We'll redirect it once the mutation
     // returns the iCount URL (or close it if there is none).
@@ -165,15 +179,17 @@ export default function Pricing() {
     });
   };
 
-  // Single-tier CTA label — either "התוכנית שלכם פעילה" (no-op) or "הצטרפו ל-SPARK Quality".
-  const ctaLabel = (plan: PlanCard): string => {
-    if (isCurrent(plan)) return "התוכנית שלכם פעילה";
-    if (!isAuthenticated || !userWorkspaceId) return `הצטרפו ל-${plan.name}`;
-    return `שדרוג ל-${plan.name}`;
-  };
-
-  const isCurrent = (plan: PlanCard): boolean =>
-    !!isAuthenticated && !!userWorkspaceId && !!currentPlan;
+  // Round 115 — כל לוגיקת ה-CTA מרוכזת ב-decidePricingCta() כדי להיות ניתנת לבדיקה ב-vitest.
+  const cta = (plan: PlanCard) =>
+    decidePricingCta({
+      isAuthenticated: !!isAuthenticated,
+      workspaceId: userWorkspaceId,
+      accessStatus: (accessStatus as AccessStatus | null | undefined) ?? null,
+      currentPlan,
+      planName: plan.name,
+    });
+  const ctaLabel = (plan: PlanCard): string => cta(plan).label;
+  const isCurrent = (plan: PlanCard): boolean => cta(plan).action === "noop";
 
   // Returning users landing on /pricing should be able to enter the app
   // without going through onboarding again. Authenticated -> /dashboard;
