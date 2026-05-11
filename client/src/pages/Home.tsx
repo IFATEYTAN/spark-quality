@@ -177,29 +177,37 @@ export default function Home() {
           <div className="flex-1 flex items-center justify-center">
             <TopZoneNav />
           </div>
-          {isAuthenticated && user ? (
+          <div className="flex items-center gap-2 flex-shrink-0">
             <a
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow flex-shrink-0"
+              href="#pricing"
+              className="hidden md:inline-flex items-center gap-1 px-2 py-1.5 text-xs font-semibold text-white/70 hover:text-gold transition-colors"
             >
-              לאזור האישי
+              מחירים
             </a>
-          ) : (
-            <div className="flex items-center gap-2 flex-shrink-0">
+            {isAuthenticated && user ? (
               <a
-                href={loginHref}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-transparent px-3 py-1.5 text-xs font-semibold text-white/85 hover:text-white hover:border-white/40 transition-colors"
-              >
-                כניסה
-              </a>
-              <a
-                href={signupHref}
+                href="/dashboard"
                 className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow"
               >
-                הרשמה
+                לאזור האישי
               </a>
-            </div>
-          )}
+            ) : (
+              <>
+                <a
+                  href={loginHref}
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-transparent px-3 py-1.5 text-xs font-semibold text-white/85 hover:text-white hover:border-white/40 transition-colors"
+                >
+                  כניסה
+                </a>
+                <a
+                  href={signupHref}
+                  className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow"
+                >
+                  הרשמה
+                </a>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

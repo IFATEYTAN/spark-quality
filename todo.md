@@ -960,9 +960,9 @@ Bug reported by יפה: גלישה אנונימית (חלון נסתר) ב-`/dem
 - [x] tsc clean (exit 0) + 25/25 vitest ירוקים (billing 7/7 · planFeatures 6/6 · workspaceIsolation 7/7 · quotaWatch 5/5).
 - [x] Verify on incognito + save checkpoint.
 
-## Round 105 — Prospect→signup funnel fix (2026-05-11)
+## Round 105 — Prospect→signup funnel fix (2026-05-11) — ✅ DONE
 Bug reported by יפה: end-of-demo CTA + landing page lack a clear "הרשמה" path.
-- [ ] SummaryStage: primary CTA = "הרשמה למערכת" (sends to OAuth signup with returnTo=/onboarding). Move "קבעו פגישת אפיון" off SummaryStage; expose it only via the QR / Contact channel.
-- [ ] CinematicShell Header: add prominent "הרשמה" button next to "לאזור האישי" (visible to anonymous + logged-out users; hidden when isAuthenticated).
-- [ ] Landing page (Home.tsx): ensure the Pricing section is visible from the first scroll (anchor link in nav: "מחירים").
-- [ ] tsc + targeted vitest + save checkpoint.
+- [x] SummaryStage: primary CTA = "הרשמה למערכת" (sends to OAuth signup via getSignupUrl()). "קבעו פגישת אפיון" הוסר — מופיע רק דרך ה-QR / ContactModal.
+- [x] Home.tsx Header: split anonymous CTA — "כניסה" (outline) + "הרשמה" (gold). Authenticated users still see "לאזור האישי".
+- [x] Landing page: added "מחירים" anchor in header (#pricing) so visitors reach the Pricing section in one click; the section itself was already there since Round 101.
+- [x] tsc clean (exit 0) + 25/25 vitest green + checkpoint 91733272 saved (header anchor added in a follow-up edit, will be in next checkpoint).
