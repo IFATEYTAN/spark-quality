@@ -28,7 +28,7 @@ export type PricingCtaDecision = {
   /** UI must disable the button when this is true */
   disabled: boolean;
   /** What happens when the user clicks: where the funnel sends them */
-  action: "signup" | "onboarding" | "billing" | "checkout" | "noop";
+  action: "signup" | "onboarding" | "checkout" | "noop";
 };
 
 export function decidePricingCta(input: PricingCtaInput): PricingCtaDecision {
@@ -50,12 +50,15 @@ export function decidePricingCta(input: PricingCtaInput): PricingCtaDecision {
   }
 
   // Authenticated user with a workspace but subscription not active —
-  // they should finish paying for the EXISTING subscription, not start a new one.
+  // they should be sent straight to the iCount checkout flow to finish
+  // paying for the EXISTING subscription. Round 117: no detour through a
+  // static /account/billing screen; the CTA fires billing.startCheckoutViaMake
+  // directly and opens the iCount payUrl in a new tab.
   if (input.isAuthenticated && input.workspaceId && !hasActiveSubscription) {
     return {
       label: "הסדרת תשלום",
       disabled: false,
-      action: "billing",
+      action: "checkout",
     };
   }
 

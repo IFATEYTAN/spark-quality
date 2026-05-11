@@ -162,12 +162,10 @@ export default function Pricing() {
       navigate(`/onboarding?cycle=${isAnnual ? "yearly" : "monthly"}`);
       return;
     }
-    // Round 115 — למשתמש מחובר עם workspace שעדיין לא שילם תשלום, נשלח אותו
-    // ישירות ל-/account/billing להשלמת התשלום של המנוי הקיים — לא יוצרים מנוי חדש.
-    if (!hasActiveSubscription) {
-      navigate("/account/billing");
-      return;
-    }
+    // Round 117 — למשתמש מחובר עם workspace שעדיין לא שילם תשלום (pending_payment),
+    // נפעיל את תהליך ה-checkout ישירות מפה. אין יותר מסך /account/billing סטטי.
+    // הקריאה ל-startCheckoutViaMake תטפל בזה.
+    //
     // Pre-open the new tab synchronously so it's tied to this user-gesture
     // and won't be popup-blocked. We'll redirect it once the mutation
     // returns the iCount URL (or close it if there is none).

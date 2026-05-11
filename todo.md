@@ -1042,3 +1042,11 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Pricing.tsx: handleSelect now navigates to /account/billing.
 - [x] App.tsx: added defensive alias /billing -> AccountBilling so older links wont 404.
 - [x] tsc=0; pricingCta vitest 6/6 passing.
+
+## Round 117 - הסדרת תשלום → checkout ישיר (אישור מאושרת × 2) (2026-05-11)
+- [x] AccountBilling.tsx: נמחק לחלוטין. ה-routes הוסרו מ-App.tsx.
+- [x] Pricing.tsx handleSelect (pending_payment): קריאה ל-billing.startCheckoutViaMake ופתיחת payUrl ישירות (Option 1, ללא עקיפה דרך /account/billing)
+- [x] לא לגעת ב-/billing/waiting, /billing/success, /billing/failed (אישור משתמשת)
+- [x] להריץ vitest ולוודא 0 שבירות (pricingCta 6/6 עוברים, שאר השגיאות קיימות מראש)
+- [x] PlanBadge: הופנה ל-/pricing במקום /account/billing
+- [ ] checkpoint

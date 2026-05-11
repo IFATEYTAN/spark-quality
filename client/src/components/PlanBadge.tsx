@@ -27,7 +27,7 @@ interface PlanBadgeProps {
 const isPlanKey = (raw: unknown): raw is PlanKey =>
   raw === "basic" || raw === "pro" || raw === "premium" || raw === "enterprise";
 
-export function PlanBadge({ iconOnly = false, href = "/account/billing" }: PlanBadgeProps) {
+export function PlanBadge({ iconOnly = false, href = "/pricing" }: PlanBadgeProps) {
   const [, navigate] = useLocation();
 
   // Both queries are cheap and already cached elsewhere — staleTime keeps the

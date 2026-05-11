@@ -40,7 +40,8 @@ describe("decidePricingCta — Round 115 (status-aware CTA on /pricing)", () => 
       planName: "SPARK Quality",
     });
     expect(result.label).toBe("הסדרת תשלום");
-    expect(result.action).toBe("billing");
+    // Round 117 — action moved from "billing" (static screen) to "checkout" (direct iCount).
+    expect(result.action).toBe("checkout");
     expect(result.disabled).toBe(false);
   });
 
@@ -70,7 +71,7 @@ describe("decidePricingCta — Round 115 (status-aware CTA on /pricing)", () => 
     expect(result.disabled).toBe(true);
   });
 
-  it("cancelled subscription routes back to /billing, not checkout", () => {
+  it("cancelled subscription is sent to checkout to renew (Round 117)", () => {
     const result = decidePricingCta({
       isAuthenticated: true,
       workspaceId: 1,
@@ -78,7 +79,7 @@ describe("decidePricingCta — Round 115 (status-aware CTA on /pricing)", () => 
       currentPlan: "basic",
       planName: "SPARK Quality",
     });
-    expect(result.action).toBe("billing");
+    expect(result.action).toBe("checkout");
     expect(result.label).toBe("הסדרת תשלום");
   });
 });
