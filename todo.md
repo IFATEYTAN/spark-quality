@@ -1049,4 +1049,10 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] לא לגעת ב-/billing/waiting, /billing/success, /billing/failed (אישור משתמשת)
 - [x] להריץ vitest ולוודא 0 שבירות (pricingCta 6/6 עוברים, שאר השגיאות קיימות מראש)
 - [x] PlanBadge: הופנה ל-/pricing במקום /account/billing
+- [x] checkpoint cc317698
+
+## Round 118 - תיקון חסימת פופ-אפ בפתיחת iCount (אישור: מאשרת) (2026-05-11)
+- [x] Pricing.tsx: הסרת noopener,noreferrer מ-window.open של החלון הריק (כך שאפשר להזריק לתוכו את ה-payUrl)
+- [x] Onboarding.tsx: אותו תיקון
+- [x] לבדוק ש-startCheckoutViaMake.onSuccess עדיין קורא ל-w.location.replace (ולא יוצר חלון נוסף)
 - [ ] checkpoint

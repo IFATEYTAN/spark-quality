@@ -128,7 +128,9 @@ export default function Onboarding() {
 
   const upgradeTo = (plan: PaidPlan) => {
     // Pre-open the new tab synchronously to bypass popup blockers.
-    checkoutWindowRef.current = window.open("about:blank", "_blank", "noopener,noreferrer");
+    // Round 118: Removed "noopener,noreferrer" so the browser allows us to
+    // inject the payUrl into this tab via w.location.replace() later.
+    checkoutWindowRef.current = window.open("about:blank", "_blank");
     startCheckoutViaMake.mutate({
       plan,
       period: billingPeriod,

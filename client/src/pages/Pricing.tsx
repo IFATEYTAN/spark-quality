@@ -169,7 +169,9 @@ export default function Pricing() {
     // Pre-open the new tab synchronously so it's tied to this user-gesture
     // and won't be popup-blocked. We'll redirect it once the mutation
     // returns the iCount URL (or close it if there is none).
-    checkoutWindowRef.current = window.open("about:blank", "_blank", "noopener,noreferrer");
+    // Round 118: Removed "noopener,noreferrer" so the browser allows us to
+    // inject the payUrl into this tab via w.location.replace() later.
+    checkoutWindowRef.current = window.open("about:blank", "_blank");
     startCheckoutViaMake.mutate({
       plan: slug,
       period: isAnnual ? "yearly" : "monthly",
