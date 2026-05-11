@@ -497,12 +497,16 @@ export default function Home() {
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-gold shrink-0" />תמיכה אישית בוואטסאפ</li>
               </ul>
 
-              <Link
-                href={`/pricing?cycle=${pricingCycle}`}
+              {/* Round 107 — join CTA must enter the onboarding flow.
+                  Anonymous → OAuth signup → callback redirects to /onboarding.
+                  Authenticated → straight to /onboarding (the wizard handles
+                  plan selection + payment). */}
+              <a
+                href={isAuthenticated ? `/onboarding?cycle=${pricingCycle}` : signupHref}
                 className="mt-7 w-full flex items-center justify-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-6 py-3.5 text-sm font-bold text-[#06101F] transition-all hover:scale-105 shadow-lg shadow-gold/30"
               >
                 {PRICING_COPY.primaryCta}
-              </Link>
+              </a>
             </div>
 
             {/* Enterprise — contact us */}

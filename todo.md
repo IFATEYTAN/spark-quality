@@ -966,3 +966,15 @@ Bug reported by יפה: end-of-demo CTA + landing page lack a clear "הרשמה"
 - [x] Home.tsx Header: split anonymous CTA — "כניסה" (outline) + "הרשמה" (gold). Authenticated users still see "לאזור האישי".
 - [x] Landing page: added "מחירים" anchor in header (#pricing) so visitors reach the Pricing section in one click; the section itself was already there since Round 101.
 - [x] tsc clean (exit 0) + 25/25 vitest green + checkpoint 91733272 saved (header anchor added in a follow-up edit, will be in next checkpoint).
+
+## Round 106 — Signup CTA must route new users to /onboarding (2026-05-11) — ✅ DONE
+Bug reported by יפה: clicking "הרשמה" sends visitors to the OAuth Sign-in screen (only SSO, no email+password registration option). The fix keeps OAuth as the SSO layer and redirects post-callback to /onboarding for users without a workspace.
+- [x] Server `/api/oauth/callback` now checks `db.getUserByOpenId(openId)` after upsert; if `workspaceId` is missing → redirect 302 to `/onboarding`. Users with a workspace go to `/dashboard` (the canonical entry point). Lookup failures fall back safely to `/onboarding`.
+- [x] No client-side change needed for `getSignupUrl()` — server-side workspace check handles both first-time signups and returning logins consistently.
+- [x] tsc clean (exit 0) — watcher cache is stale, single-shot tsc returns exit 0.
+
+## Round 107 — Pricing-section join CTA must go to onboarding (2026-05-11) — ✅ DONE
+Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside the Home.tsx pricing section routed to /pricing (which then required a separate flow). Now it goes straight into the signup → onboarding flow.
+- [x] Home.tsx pricing card primary CTA now uses `signupHref` (anonymous) or `/onboarding?cycle=...` (authenticated). The pricingCycle (monthly/yearly) is preserved into onboarding.
+- [x] Pricing.tsx CTAs already routed correctly via `handleSelect` (anonymous → /onboarding, authenticated-no-workspace → /onboarding, authenticated-with-workspace → checkout). No change needed there.
+- [x] tsc clean (exit 0).

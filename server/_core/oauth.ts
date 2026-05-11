@@ -44,7 +44,25 @@ export function registerOAuthRoutes(app: Express) {
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
 
-      res.redirect(302, "/");
+      // Round 106 — Post-callback routing:
+      //   1. Users without a workspace (brand-new signups) → /onboarding so the
+      //      onboarding wizard becomes the de-facto registration form.
+      //   2. Users with a workspace → /dashboard, the canonical entry point.
+      // The previous "/" redirect dumped paying users on the marketing landing
+      // and made signup links feel broken (the OAuth screen has no email+pwd
+      // option, so the onboarding wizard is the only place to actually sign up).
+      let postLoginPath = "/dashboard";
+      try {
+        const dbUser = await db.getUserByOpenId(userInfo.openId);
+        if (!dbUser?.workspaceId) {
+          postLoginPath = "/onboarding";
+        }
+      } catch (lookupError) {
+        console.error("[OAuth] Post-callback workspace lookup failed", lookupError);
+        // Fall back to /onboarding so the user always sees a usable screen.
+        postLoginPath = "/onboarding";
+      }
+      res.redirect(302, postLoginPath);
     } catch (error) {
       console.error("[OAuth] Callback failed", error);
       res.status(500).json({ error: "OAuth callback failed" });
