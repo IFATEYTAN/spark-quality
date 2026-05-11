@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { EnterpriseContactDialog } from "@/components/EnterpriseContactDialog";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, getSignupUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { Check, Crown, Loader2, LogIn, MessageCircle, X } from "lucide-react";
 import React, { useMemo, useRef, useState } from "react";
@@ -140,14 +140,18 @@ export default function Pricing() {
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
 
   const handleSelect = (slug: PaidPlan) => {
-    // Anyone without an active workspace must complete the full onboarding
-    // (license verification + payment). No trial path exists anywhere.
+    // Round 110: /onboarding is a protected route (mountOnboarding gates on
+    // isAuthenticated). Sending an anonymous visitor there caused the page to
+    // bounce through the protected guard and silently drop the click. The
+    // correct funnel for anonymous visitors is OAuth signup → callback
+    // redirects to /onboarding once the session cookie exists.
+    void slug;
     if (!isAuthenticated) {
-      navigate("/onboarding");
+      window.location.href = getSignupUrl();
       return;
     }
     if (!userWorkspaceId) {
-      navigate("/onboarding");
+      navigate(`/onboarding?cycle=${isAnnual ? "yearly" : "monthly"}`);
       return;
     }
     // Pre-open the new tab synchronously so it's tied to this user-gesture

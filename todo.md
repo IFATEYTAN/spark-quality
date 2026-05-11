@@ -981,3 +981,10 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 
 ## Round 108 - SSO hint under הרשמה button (2026-05-11)
 - [x] Add small Hebrew explanatory text under the הרשמה button on Home.tsx (Google/Microsoft/Apple, no password) — added (a) 9px hint under header signup CTA + title tooltip, (b) full sentence under pricing card CTA. tsc=0.
+
+## Round 109 - Hide email/magic-link option on OAuth signup screen (2026-05-11)
+- [ ] Investigate whether Manus OAuth portal supports a URL param to hide the email field and force SSO-only
+- [ ] Investigate whether the OAuth portal honors type=signUp to flip title to 'Sign up to ...'
+
+## Round 110 - /pricing CTA does not lead to signup (2026-05-11)
+- [x] Fix /pricing 'הצטרפו ל-SPARK Quality' CTA: anonymous → getSignupUrl() (was navigate('/onboarding') which hit the protected guard and silently dropped the click); authenticated-no-workspace → /onboarding?cycle=...; authenticated-with-workspace → startCheckoutViaMake. tsc=0.
