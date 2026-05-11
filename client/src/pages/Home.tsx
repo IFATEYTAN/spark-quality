@@ -199,12 +199,20 @@ export default function Home() {
                 >
                   כניסה
                 </a>
-                <a
-                  href={signupHref}
-                  className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow"
-                >
-                  הרשמה
-                </a>
+                {/* Round 108 — wrap the signup CTA so we can render a tiny SSO hint
+                    underneath it without breaking the flex layout of the row. */}
+                <div className="flex flex-col items-stretch">
+                  <a
+                    href={signupHref}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow"
+                    title="ההרשמה מתבצעת בלחיצה אחת דרך Google / Microsoft / Apple — ללא הקלדת סיסמה"
+                  >
+                    הרשמה
+                  </a>
+                  <span className="hidden lg:block mt-1 text-[9px] leading-tight text-white/55 text-center whitespace-nowrap">
+                    בלחיצה דרך Google · Microsoft · Apple
+                  </span>
+                </div>
               </>
             )}
           </div>
@@ -507,6 +515,18 @@ export default function Home() {
               >
                 {PRICING_COPY.primaryCta}
               </a>
+              {/* Round 108 — clarify what happens after clicking. The OAuth screen
+                  shows "Sign in to Spark Quality" in English which surprised pilot
+                  users; this line tells them upfront that registration is SSO-only,
+                  no password to remember. */}
+              {!isAuthenticated && (
+                <p className="mt-3 text-[11px] leading-relaxed text-white/60 text-center">
+                  ההרשמה מתבצעת בלחיצה אחת דרך
+                  {" "}<span className="font-semibold text-white/80">Google</span>,{" "}
+                  <span className="font-semibold text-white/80">Microsoft</span> או{" "}
+                  <span className="font-semibold text-white/80">Apple</span> — ללא הקלדת סיסמה.
+                </p>
+              )}
             </div>
 
             {/* Enterprise — contact us */}

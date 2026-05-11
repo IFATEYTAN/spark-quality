@@ -978,3 +978,6 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Home.tsx pricing card primary CTA now uses `signupHref` (anonymous) or `/onboarding?cycle=...` (authenticated). The pricingCycle (monthly/yearly) is preserved into onboarding.
 - [x] Pricing.tsx CTAs already routed correctly via `handleSelect` (anonymous → /onboarding, authenticated-no-workspace → /onboarding, authenticated-with-workspace → checkout). No change needed there.
 - [x] tsc clean (exit 0).
+
+## Round 108 - SSO hint under הרשמה button (2026-05-11)
+- [x] Add small Hebrew explanatory text under the הרשמה button on Home.tsx (Google/Microsoft/Apple, no password) — added (a) 9px hint under header signup CTA + title tooltip, (b) full sentence under pricing card CTA. tsc=0.
