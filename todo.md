@@ -1030,3 +1030,15 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Root-caused: Pricing.tsx isCurrent() looked at currentPlan only, never at accessStatus. Workspace with plan='basic' + pending_payment was wrongly marked as 'פעיל'.
 - [x] Extracted the whole CTA decision to shared/pricingCta.ts (pure function decidePricingCta). Pricing.tsx now delegates to it. The 'הסדרת תשלום' CTA navigates to /billing instead of opening a new checkout.
 - [x] Vitest server/pricingCta.test.ts — 6 tests pass, covering: anonymous, no-workspace, pending_payment (the support@leandolini bug), active, grace, cancelled.
+
+## Round 116 - "הסדרת תשלום" leads to 404 (2026-05-11)
+- [x] Located the real activation route: /account/billing (AccountBilling.tsx). /billing was never wired into App.tsx, so Pricing.tsx navigate("/billing") produced a 404.
+- [x] Pricing.tsx: handleSelect now navigates to /account/billing.
+- [x] App.tsx: added defensive alias /billing -> AccountBilling so older links wont 404.
+- [x] tsc=0; pricingCta vitest 6/6 passing.
+
+## Round 116 - "הסדרת תשלום" leads to 404 (2026-05-11)
+- [x] Located the real activation route: /account/billing (AccountBilling.tsx). /billing was never wired into App.tsx, so Pricing.tsx navigate("/billing") produced a 404.
+- [x] Pricing.tsx: handleSelect now navigates to /account/billing.
+- [x] App.tsx: added defensive alias /billing -> AccountBilling so older links wont 404.
+- [x] tsc=0; pricingCta vitest 6/6 passing.

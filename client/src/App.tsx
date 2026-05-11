@@ -36,6 +36,8 @@ function Router() {
       <Route path={"/billing/success"} component={BillingSuccess} />
       <Route path={"/billing/failed"} component={BillingFailed} />
       <Route path={"/account/billing"} component={AccountBilling} />
+      {/* Round 116 — alias so older links / CTAs that point to /billing still work */}
+      <Route path={"/billing"} component={AccountBilling} />
       <Route path={"/legal/terms"}>{() => <Legal kind="terms" />}</Route>
       <Route path={"/legal/privacy"}>{() => <Legal kind="privacy" />}</Route>
       <Route path={"/legal/accessibility"}>{() => <Legal kind="accessibility" />}</Route>

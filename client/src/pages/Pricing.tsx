@@ -163,9 +163,9 @@ export default function Pricing() {
       return;
     }
     // Round 115 — למשתמש מחובר עם workspace שעדיין לא שילם תשלום, נשלח אותו
-    // ישירות ל-/billing להשלמת התשלום של המנוי הקיים — לא יוצרים מנוי חדש.
+    // ישירות ל-/account/billing להשלמת התשלום של המנוי הקיים — לא יוצרים מנוי חדש.
     if (!hasActiveSubscription) {
-      navigate("/billing");
+      navigate("/account/billing");
       return;
     }
     // Pre-open the new tab synchronously so it's tied to this user-gesture
