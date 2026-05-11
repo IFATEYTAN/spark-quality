@@ -214,6 +214,45 @@ export async function getWorkspaceMembers(workspaceId: number) {
   return db.select().from(users).where(eq(users.workspaceId, workspaceId));
 }
 
+/**
+ * Round 114 — מקדמת ה-creator לתפקיד "owner" רק אם ה-workspace מסומן כ-active.
+ *
+ * מדיניות המוצר: כל יוזר נפתח לתפקיד "agent". רק כאשר ה-subscriptionStatus
+ * של ה-workspace הופך ל-"active" לראשונה (מתוך makeRoutes / iCountRoutes / billing.activate),
+ * ה-creator המקורי מתוג workspaces.createdByUserId מקודם אוטומטית ל-"owner".
+ *
+ * מוגן ל-no-op אם אין createdByUserId (רשומה קיימת מלפ֠י Round 114), אם האתר
+ * אינו עדיין פעיל, ואם ה-creator כבר עזב את ה-workspace.
+ */
+export async function promoteCreatorToOwnerIfActive(workspaceId: number) {
+  const db = await getDb();
+  if (!db) return { promoted: false as const, reason: "no_db" as const };
+  const ws = await getWorkspaceById(workspaceId);
+  if (!ws) return { promoted: false as const, reason: "no_workspace" as const };
+  if (ws.subscriptionStatus !== "active") {
+    return { promoted: false as const, reason: "not_active" as const };
+  }
+  if (!ws.createdByUserId) {
+    return { promoted: false as const, reason: "no_creator" as const };
+  }
+  const [creator] = await db
+    .select()
+    .from(users)
+    .where(eq(users.id, ws.createdByUserId))
+    .limit(1);
+  if (!creator || creator.workspaceId !== workspaceId) {
+    return { promoted: false as const, reason: "creator_left_workspace" as const };
+  }
+  if (creator.workspaceRole === "owner") {
+    return { promoted: false as const, reason: "already_owner" as const };
+  }
+  await db
+    .update(users)
+    .set({ workspaceRole: "owner" })
+    .where(eq(users.id, creator.id));
+  return { promoted: true as const, userId: creator.id };
+}
+
 // ============================================================
 // CLIENTS (Multi-tenant + role-based filtering)
 // ============================================================

@@ -1,0 +1,26 @@
+{
+  "query": "UPDATE workspaces SET subscriptionStatus='active', subscriptionEndsAt=DATE_ADD(NOW(), INTERVAL 1 YEAR), pastDueSince=NULL, suspensionEmailSentAt=NULL, lastPaymentAt=COALESCE(lastPaymentAt, NOW()) WHERE id=1; UPDATE users u LEFT JOIN workspaces w ON w.id=u.workspaceId SET u.workspaceRole='agent' WHERE u.workspaceRole='owner' AND (w.subscriptionStatus IS NULL OR w.subscriptionStatus!='active'); SELECT u.id, u.email, u.workspaceId, u.workspaceRole, w.name, w.subscriptionStatus FROM users u LEFT JOIN workspaces w ON w.id=u.workspaceId WHERE u.workspaceRole='owner' OR u.isSuperAdmin=1 ORDER BY u.id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute UPDATE workspaces SET subscriptionStatus='active', subscriptionEndsAt=DATE_ADD(NOW(), INTERVAL 1 YEAR), pastDueSince=NULL, suspensionEmailSentAt=NULL, lastPaymentAt=COALESCE(lastPaymentAt, NOW()) WHERE id=1; UPDATE users u LEFT JOIN workspaces w ON w.id=u.workspaceId SET u.workspaceRole='agent' WHERE u.workspaceRole='owner' AND (w.subscriptionStatus IS NULL OR w.subscriptionStatus!='active'); SELECT u.id, u.email, u.workspaceId, u.workspaceRole, w.name, w.subscriptionStatus FROM users u LEFT JOIN workspaces w ON w.id=u.workspaceId WHERE u.workspaceRole='owner' OR u.isSuperAdmin=1 ORDER BY u.id;",
+  "rows": [
+    {
+      "id": "1",
+      "email": "ifat@spark-ai.co.il",
+      "workspaceId": "1",
+      "workspaceRole": "owner",
+      "name": "יפעת",
+      "subscriptionStatus": "active"
+    },
+    {
+      "id": "6000057",
+      "email": "anathemell@gmail.com",
+      "workspaceId": "NULL",
+      "workspaceRole": "agent",
+      "name": "NULL",
+      "subscriptionStatus": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\temail\tworkspaceId\tworkspaceRole\tname\tsubscriptionStatus\n1\tifat@spark-ai.co.il\t1\towner\tיפעת\tactive\n6000057\tanathemell@gmail.com\tNULL\tagent\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 2416
+}

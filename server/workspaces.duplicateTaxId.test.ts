@@ -112,7 +112,9 @@ describe("workspaces.create — duplicate taxId is rejected (Round 113)", () => 
 
     expect(result).toEqual({ workspaceId: 777 });
     expect(createSpy).toHaveBeenCalledTimes(1);
-    expect(linkSpy).toHaveBeenCalledWith(1, 777, "owner");
+    // Round 114 — ה-creator מתחיל כ-"agent". תפקיד "owner" מוקצה
+    // רק אחרי ש-subscriptionStatus הופך ל-"active" דרך promoteCreatorToOwnerIfActive().
+    expect(linkSpy).toHaveBeenCalledWith(1, 777, "agent");
   });
 
   it("rejects an invalid Israeli check-digit BEFORE the duplicate lookup runs", async () => {

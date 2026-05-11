@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { eq } from "drizzle-orm";
 import { workspaces, users } from "../../drizzle/schema";
 import { iCountSdk } from "../iCount";
-import { getDb } from "../db";
+import { getDb, promoteCreatorToOwnerIfActive } from "../db";
 import { sendEmail } from "../email";
 import { renderBrandedEmail } from "../emailTemplates";
 import { ENV } from "./env";
@@ -95,6 +95,9 @@ export function registerICountRoutes(app: Express): void {
           suspensionEmailSentAt: null,
         })
         .where(eq(workspaces.id, parsed.workspaceId));
+
+      // Round 114 — מקדמים את ה-creator לתפקיד "owner" מיד לאחר הפעלת המנוי.
+      await promoteCreatorToOwnerIfActive(parsed.workspaceId);
 
       // Send branded RTL receipt email to all members.
       const [ws] = await db

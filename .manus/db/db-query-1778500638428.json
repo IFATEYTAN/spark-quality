@@ -1,0 +1,26 @@
+{
+  "query": "SELECT u.id AS user_id, u.email, u.workspaceId, u.workspaceRole, w.name AS ws_name, w.subscriptionStatus FROM users u LEFT JOIN workspaces w ON w.id = u.workspaceId WHERE u.workspaceRole = 'owner' AND (w.subscriptionStatus IS NULL OR w.subscriptionStatus != 'active');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT u.id AS user_id, u.email, u.workspaceId, u.workspaceRole, w.name AS ws_name, w.subscriptionStatus FROM users u LEFT JOIN workspaces w ON w.id = u.workspaceId WHERE u.workspaceRole = 'owner' AND (w.subscriptionStatus IS NULL OR w.subscriptionStatus != 'active');",
+  "rows": [
+    {
+      "user_id": "1",
+      "email": "ifat@spark-ai.co.il",
+      "workspaceId": "1",
+      "workspaceRole": "owner",
+      "ws_name": "יפעת",
+      "subscriptionStatus": "pending_payment"
+    },
+    {
+      "user_id": "1140010",
+      "email": "sparkaidigital@gmail.com",
+      "workspaceId": "NULL",
+      "workspaceRole": "owner",
+      "ws_name": "NULL",
+      "subscriptionStatus": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "user_id\temail\tworkspaceId\tworkspaceRole\tws_name\tsubscriptionStatus\n1\tifat@spark-ai.co.il\t1\towner\tיפעת\tpending_payment\n1140010\tsparkaidigital@gmail.com\tNULL\towner\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 1774
+}

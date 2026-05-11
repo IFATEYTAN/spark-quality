@@ -288,8 +288,13 @@ export const appRouter = router({
           taxId: normalizedTaxId,
           taxIdType: input.taxIdType,
           contactPhone: phoneNorm,
+          createdByUserId: ctx.user.id,
         });
-        await db.updateUserWorkspace(ctx.user.id, workspaceId, "owner");
+        // Round 114 — מדיניות המוצר:
+        //   * כל יוזר חדש נפתח לתפקיד "סוכן" (agent), לעולם לא "בעלים" (owner).
+        //   * תפקיד "בעלים" מוקצה רק לאחר ש-subscriptionStatus הופך ל-"active"
+        //     (זה קורה אוטומטית ב-promoteCreatorToOwnerIfActive() ב-server/db.ts).
+        await db.updateUserWorkspace(ctx.user.id, workspaceId, "agent");
         return { workspaceId };
       }),
 

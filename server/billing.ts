@@ -11,6 +11,7 @@ import {
   getPaymentAttemptByRequestId,
   markPaymentAttemptFailed,
   markPaymentAttemptSucceeded,
+  promoteCreatorToOwnerIfActive,
 } from "./db";
 import { workspaces, users } from "../drizzle/schema";
 import { iCountSdk } from "./iCount";
@@ -624,6 +625,8 @@ export const billingRouter = router({
           suspensionEmailSentAt: null,
         })
         .where(eq(workspaces.id, input.workspaceId));
+      // Round 114 — תשלום אושר → מקדמים אוטומטית את ה-creator לתפקיד "owner".
+      await promoteCreatorToOwnerIfActive(input.workspaceId);
       return { ok: true as const };
     }),
   /**
@@ -924,6 +927,8 @@ export const billingRouter = router({
           lastPaymentAt: new Date(),
         })
         .where(eq(workspaces.id, input.workspaceId));
+      // Round 114 — מקדמים אוטומטית את ה-creator ל-"owner" אם הוא עדיין אגן.
+      await promoteCreatorToOwnerIfActive(input.workspaceId);
       return { ok: true as const };
     }),
 

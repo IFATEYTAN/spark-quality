@@ -86,6 +86,12 @@ export const workspaces = mysqlTable("workspaces", {
   /** Last iCount document (chashbonit) ID issued for this workspace. */
   iCountLastInvoiceId: varchar("iCountLastInvoiceId", { length: 64 }),
   quotaWarningSentAt: timestamp("quotaWarningSentAt"),
+  /**
+   * Round 114 — מזהה את היוזר שיצר את ה-workspace (זה שעתיד לקבל תפקיד "owner"
+   * מיד עם אישור התשלום ראשון). מוגדר כ-רכה ל֠-undefined ל-rows קיימים. לא FK ל-users.id
+   * כי אם מסירים את המשתמש מ-DB תפקיד "owner" לא אמור לה֠תפגן.
+   */
+  createdByUserId: int("createdByUserId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => ({

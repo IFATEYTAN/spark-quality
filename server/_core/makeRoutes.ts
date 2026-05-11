@@ -5,6 +5,7 @@ import {
   getDb,
   markPaymentAttemptFailed,
   markPaymentAttemptSucceeded,
+  promoteCreatorToOwnerIfActive,
 } from "../db";
 import { sendEmail } from "../email";
 import { renderBrandedEmail } from "../emailTemplates";
@@ -156,6 +157,9 @@ export function registerMakeRoutes(app: Express): void {
           suspensionEmailSentAt: null,
         })
         .where(eq(workspaces.id, ws.id));
+
+      // Round 114 — ה֣֠תשלום מאומת → מקדמים אוטומטית את ה-creator לתפקיד "owner".
+      await promoteCreatorToOwnerIfActive(ws.id);
 
       // Notify every workspace member with a branded RTL activation email.
       const members = await db

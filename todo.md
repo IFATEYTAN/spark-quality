@@ -1007,3 +1007,20 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] Inventory dependents — found: 14 clients (330001), 1 report (330001), 5 payment_attempts (60002), 1 audit_log (60002), 3 users (one per workspace)
 - [x] Cascade-delete all dependents + DELETE the 3 workspaces — 0 rows now have taxId 037216298
 - [x] Detach affected users (workspaceId=NULL, workspaceRole='agent' since column is NOT NULL) — 3 users detached, not deleted
+
+## Round 114 - Owner role is granted only after payment is active (2026-05-11)
+- [ ] Map every code path that assigns workspaceRole='owner' (upsertUser / workspaces.create / invitations.accept / admin endpoints / payment-success handlers)
+- [ ] Change workspaces.create: leave creator as 'agent' (NOT 'owner'). Track creatorUserId so the promotion can happen later.
+- [ ] Add workspaces.createdByUserId column (drizzle migration) + populate it on creation
+- [ ] In payment-success handler (whoever flips subscriptionStatus to 'active'): promote createdByUserId to 'owner' atomically
+- [ ] Retroactive cleanup: every workspace whose subscriptionStatus != 'active' → all members become 'agent'
+- [ ] Vitest: workspaces.create leaves user as agent; payment-active promotes them to owner
+- [ ] Verify /admin payment-status column now shows correct combination (e.g. agent + ממתין לתשלום, owner + שולם)
+
+## Round 114 - Owner role only after payment (2026-05-11)
+- [x] workspaces.create assigns role='agent' to creator (was 'owner')
+- [x] Added workspaces.createdByUserId column (drizzle migration 0014)
+- [x] promoteCreatorToOwnerIfActive() helper in server/db.ts — promotes creator only when subscriptionStatus='active' AND user is still 'agent'
+- [x] Wired into all 4 payment-success paths: billing.ts setStandingOrder, billing.ts adminMarkActive, iCountRoutes.ts callback, makeRoutes.ts /api/billing/activate
+- [x] Retroactive SQL: workspace 1 (יפעת) flipped to active+1y so ifat@spark-ai.co.il stays owner; sparkaidigital orphan owner downgraded to agent; all other non-active owners downgraded
+- [x] Vitest: 3 new tests in server/promoteOwnerOnActive.test.ts + updated 'agent' assertion in workspaces.duplicateTaxId.test.ts. All 7 pass
