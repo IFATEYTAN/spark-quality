@@ -60,9 +60,9 @@ export const PRICING_COPY: PricingCopyVariant = PRICING_COPY_DEFAULT;
  * canonical figures.
  */
 export const SPARK_QUALITY_PRICING = {
-  monthlyIls: 349,
+  monthlyIls: 199,
   /** Effective monthly price when billed yearly (≈ 15% off the monthly tier). */
-  yearlyMonthlyIls: 297,
-  yearlyTotalIls: 3567,
+  yearlyMonthlyIls: 169,
+  yearlyTotalIls: 2028,
   yearlyDiscountPct: 15,
 } as const;

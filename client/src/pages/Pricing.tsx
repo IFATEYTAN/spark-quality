@@ -31,8 +31,8 @@ const PLAN: PlanCard = {
   slug: "basic",
   name: "SPARK Quality",
   description: "כל מה שסוכן צריך — ללא הגבלהת לקוחות, כל 16 הטריגרים, AI מלא",
-  monthlyPrice: 349,
-  annualPrice: 297, // 349 × 0.85 ≈ 297 (15% off; billed yearly = 3,564₪)
+  monthlyPrice: 199,
+  annualPrice: 169, // 199 × 0.85 ≈ 169 (15% off; billed yearly = 2,028₪)
   flagsQuota: "כל 16 הטריגרים · P0–P4",
   clientLimit: "לקוחות ללא הגבלה",
   features: [

@@ -51,12 +51,12 @@ type MemberRow = { email: string | null; name: string | null };
 // To change pricing, edit ONLY this constant; the client reads `billing.plans`.
 // Discount is calculated dynamically so we don't drift between client and
 // server.
-// Single-tier mode (Round 97): SPARK Quality is one plan at ₪349/month with
-// 15% off when paid yearly (₪297/mo · ₪3,564/yr). All plan keys map to the
-// same price so legacy invoices and the iCount pipeline keep working without
-// migration.
+// Single-tier mode (Round 125): SPARK Quality is one plan at ₪199/month with
+// 15% off when paid yearly (₪169/mo effective · ₪2,028/yr). All plan keys map
+// to the same price so legacy invoices and the iCount pipeline keep working
+// without migration.
 const YEARLY_DISCOUNT = 0.15;
-const SPARK_QUALITY_MONTHLY = 349;
+const SPARK_QUALITY_MONTHLY = 199;
 
 const MONTHLY_PRICE = {
   basic: SPARK_QUALITY_MONTHLY,

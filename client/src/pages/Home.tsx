@@ -34,7 +34,7 @@ export default function Home() {
   void setLocation; // intentionally unused; kept to avoid wider refactor
 
   // Landing-page pricing toggle — mirrors the same control on /pricing so
-  // visitors can flip between monthly (₪349) and annual-billed (₪297/mo)
+  // visitors can flip between monthly (₪199) and annual-billed (₪169/mo)
   // before clicking "הצטרפו ל-SPARK Quality".
   const [pricingCycle, setPricingCycle] = useState<"monthly" | "yearly">("yearly");
   const isYearly = pricingCycle === "yearly";

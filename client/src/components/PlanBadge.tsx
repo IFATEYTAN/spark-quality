@@ -2,8 +2,9 @@
 // ----------------------------------------------------------------------------
 // Tiny status pill that renders next to the user profile in the sidebar
 // footer. Shows the active plan label and the live "X / Y לקוחות" usage.
-// Clicking it routes to /account/billing for the unified billing settings
-// page. Falls back to a quiet "טוען…" pill while data is in flight, and
+// Clicking it routes to /pricing for the unified billing settings page (the
+// legacy /account/billing route was removed in Round 117). Falls back to a
+// quiet "טוען…" pill while data is in flight, and
 // hides itself entirely if both queries fail (so the layout never breaks).
 // ----------------------------------------------------------------------------
 
