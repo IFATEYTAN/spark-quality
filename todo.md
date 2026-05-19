@@ -1103,5 +1103,14 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] ניתוב cancelled/expired: תוקן כבר ב-Round 117 — decidePricingCta מחזיר checkout, ו-handleSelect קורא startCheckoutViaMake ישירות
 - [x] webdev_check_status — lsp/typescript: No errors
 - [x] צילום מסך תמחיר חדש ל-PDF (02_pricing_v2_clean.png)
-- [ ] רנדור מחדש של PDF המדריך עם המחירים החדשים
-- [ ] שמירת checkpoint + פרסום
+- [x] רנדור מחדש של PDF המדריך עם המחירים החדשים (13 עמודים)
+- [x] העברת צילומים גדולים מהפרויקט ל-webdev-static-assets (מנע deployment timeout)
+- [x] שמירת checkpoint (version 72b381de) — מוכן ל-Publish
+
+
+## Round 126 — תיקון תצוגה מקדימה ב-WhatsApp (Open Graph) (2026-05-19)
+- [x] זיהוי הבעיה: ה-cache של WhatsApp שמר את התיאור הישן ("ממשק דמו אינטראקטיבי")
+- [x] הוספת meta description + Open Graph tags + Twitter Card ל-client/index.html
+- [x] יצירת תמונת cover (1200×630) ב-AI עם הזהות החזותית של המוצר
+- [x] עדכון og:image ל-CDN URL הקבוע
+- [ ] שמירת checkpoint + הנחיית הלקוחה לפרסם וכיצד לעקוף את ה-cache של WhatsApp (?v=2)
