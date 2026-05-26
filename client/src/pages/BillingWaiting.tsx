@@ -1,9 +1,13 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { CinematicShell } from "@/components/CinematicShell";
 import { GlassCard, GoldEyebrow } from "@/components/CinematicShell";
-import { ShieldCheck, Loader2, CreditCard, ExternalLink } from "lucide-react";
+import { ShieldCheck, Loader2, CreditCard, ExternalLink, AlertCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
+
+/** How long we wait for the Make/iCount webhook before assuming it failed. */
+const WAIT_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes — covers slow Make scenarios
 
 /**
  * Shown after the user is bounced to iCount in a new tab. We poll the access
@@ -15,6 +19,18 @@ export default function BillingWaiting() {
   const accessQuery = trpc.billing.myAccessStatus.useQuery(undefined, {
     refetchInterval: 3000,
   });
+
+  const startedAtRef = useRef<number>(Date.now());
+  const [timedOut, setTimedOut] = useState(false);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (Date.now() - startedAtRef.current >= WAIT_TIMEOUT_MS) {
+        setTimedOut(true);
+      }
+    }, 5_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   const payUrl = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -32,9 +48,21 @@ export default function BillingWaiting() {
 
   useEffect(() => {
     if (accessQuery.data?.status === "active") {
-      navigate("/billing/success?confirmed=1");
+      // סעיף 1 מ-Round 127 — חזרה ישירה לדשבורד עם toast,
+      // בלי עצירה במסך ה-Success הביניים.
+      toast.success("הגישה ל-SPARK Quality פעילה ברוכה הבאה!", {
+        duration: 5000,
+        description: "הוראת הקבע אושרה — חשבונית מס תישלח למייל הסוכנות.",
+      });
+      navigate("/dashboard");
     }
   }, [accessQuery.data?.status, navigate]);
+
+  useEffect(() => {
+    if (timedOut && accessQuery.data?.status !== "active") {
+      navigate("/billing/failed?reason=timeout");
+    }
+  }, [timedOut, accessQuery.data?.status, navigate]);
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={88} showSidebar={false}>
@@ -58,7 +86,7 @@ export default function BillingWaiting() {
             <div>
               <div className="text-white font-semibold">ממתינים לאישור הסליקה…</div>
               <div className="text-white/60 text-sm">
-                המסך יתעדכן אוטומטית ברגע שהוראת הקבע תאושר ב-iCount.
+                ברגע שהוראת הקבע תאושר — תועברי אוטומטית לדשבורד בלי להמתין.
               </div>
             </div>
           </div>
@@ -100,6 +128,13 @@ export default function BillingWaiting() {
               </a>
             </div>
           )}
+
+          <div className="rounded-lg border border-white/10 bg-white/[0.03] p-4 flex items-start gap-3">
+            <AlertCircle className="h-4 w-4 text-white/50 mt-0.5 shrink-0" />
+            <div className="text-white/60 text-xs leading-relaxed">
+              אם אחרי 10 דקות לא תגיע אישור — נעביר אותך למסך התמיכה עם הסבר ואפשרויות לנסות שוב.
+            </div>
+          </div>
 
           <div className="text-center pt-2">
             <button

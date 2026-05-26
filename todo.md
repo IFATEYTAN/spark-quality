@@ -1074,11 +1074,12 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] להסיר את הכותרת ואת 3 הקופסאות; להשאיר את כפתורי ההנעה לפעולה
 - [x] checkpoint a673c1d3
 
-## Round 122 - תיקון מחיר חודשי 349 → 249 ש"ח (אישור: כן) (2026-05-11)
-- [ ] לאתר את כל מופעי 349 (קוד + טמפלייטים)
-- [ ] להחליף ל-249 בכל מקום שבו זה מתייחס למחיר חודשי של תוכנית Quality
-- [ ] לעדכן גם את החיוב השנתי המקדים אם הוא נגזר ממנו (3,564 → ?)
-- [ ] checkpoint
+## Round 122 - תיקון מחיר חודשי 349 → 249 ש"ח — **OBSOLETE** (2026-05-26)
+**הוחלף:** המחיר עודכן בממשק לטווח אחר לחלוטין: חודשי 199 ש"ח, שנתי 169 ש"ח לחודש (2,028 ש"ח מקדים, 16% חיסכון). המעבר ל-249 לא רלוונטי יותר. אומת ויזואלית מצילומי המסך של המשתמשת.
+- [x] לאתר את כל מופעי 349 (קוד + טמפלייטים) — לא רלוונטי
+- [x] להחליף ל-249 בכל מקום — לא רלוונטי (התמחור הסופי 199/169)
+- [x] לעדכן גם את החיוב השנתי המקדים — בוצע (2,028 ש"ח)
+- [x] checkpoint — כבר פורסם
 
 
 ## Round 123 - מדריך גנרי לכלל סוכני הביטוח (משתמשי Shorens) (אישור: מאושרת) (2026-05-11)
@@ -1127,18 +1128,19 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [ ] שמירת checkpoint + הנחיה לפרסום
 
 
-## Round 128 — דחוף: לקוח חייב להופיע בכל הקטגוריות הרלוונטיות (2026-05-19)
-- [ ] הוספת טבלת clientFlags ל-drizzle/schema.ts (workspaceId FK, clientId FK, triggerKey, createdAt + unique index)
-- [ ] pnpm db:push להחלת ה-migration
-- [ ] db.ts: פונקציות עזר insertClientFlags, deleteClientFlags, listClientFlags
-- [ ] עדכון parseReport / upload pipeline לכתוב את כל הדגלים המתאימים לכל לקוח (לא רק אחד)
-- [ ] עדכון listClientsForTrigger לקרוא מ-clientFlags במקום flagStatus
-- [ ] עדכון handledCounts ושאר ספירות אם קוראות ל-flagStatus
-- [ ] backfill: סקריפט שמריץ מחדש את חישוב הדגלים על הלקוחות הקיימים, או כפתור "חישוב מחדש" ב-dashboard
-- [ ] vitest: לקוח עם 3 דגלים מופיע ברשימה של כל אחד מהשלושה
-- [ ] vitest: counts תואם ל-list length per trigger
-- [ ] בדיקה end-to-end עם דוח אמיתי ב-dev — VIP, no_pension, high_fees, no_email
-- [ ] שמירת checkpoint + הודעה למשתמשת עם הוראות פרסום
+## Round 128 — דחוף: לקוח חייב להופיע בכל הקטגוריות הרלוונטיות (2026-05-26) — **DONE & PUBLISHED**
+- [x] הוספת טבלת clientFlags ל-drizzle/schema.ts (workspaceId FK, clientId FK, triggerKey, createdAt + unique index)
+- [x] pnpm db:push להחלת ה-migration
+- [x] db.ts: computeWorkspaceFlags + listClientsForTriggerV2 + countClientFlags
+- [x] עדכון parseReport / upload pipeline לכתוב את כל הדגלים המתאימים לכל לקוח (לא רק אחד)
+- [x] עדכון listClientsForTrigger לקרוא מ-clientFlags במקום flagStatus
+- [x] עדכון handledCounts ושאר ספירות (זהה למקור ה-truth)
+- [x] backfill: 1,815 דגלים נכתבו על 10 workspaces (workspace 1 / יפעת: 1,790)
+- [x] vitest: לקוח עם 3 דגלים מופיע ברשימה של כל אחד מהשלושה
+- [x] vitest: counts תואם ל-list length per trigger
+- [x] vitest: בידוד מוחלט בין סוכנויות + role-gating לסוכן רגיל
+- [x] בדיקה end-to-end ב-DB ב-workspace 1: 30 VIP, 1,460 ללא פנסיה, 252 ללא מייל, 48 דמי ניהול גבוהים
+- [x] שמירת checkpoint 3bf3cb91 + פרסום על ידי המשתמשת
 
 
 ## Round 128 - תיקון באג קריטי: לקוח חייב להופיע בכל הקטגוריות הרלוונטיות (2026-05-26)

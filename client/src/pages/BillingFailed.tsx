@@ -1,23 +1,39 @@
 import { useLocation } from "wouter";
-import { AlertTriangle } from "lucide-react";
+import { useMemo } from "react";
+import { AlertTriangle, Clock } from "lucide-react";
 import { CinematicShell } from "@/components/CinematicShell";
 import { GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 
 export default function BillingFailed() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  const reason = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const params = new URLSearchParams(window.location.search);
+    return params.get("reason");
+  }, [location]);
+  const isTimeout = reason === "timeout";
   return (
     <CinematicShell heroAsset="hero" overlayStrength={90} showSidebar={false}>
       <div className="container max-w-2xl py-24 text-center">
         <div className="flex justify-center mb-4">
-          <GoldEyebrow>הסליקה לא הושלמה</GoldEyebrow>
+          <GoldEyebrow>{isTimeout ? "המתנו הרבה זמן" : "הסליקה לא הושלמה"}</GoldEyebrow>
         </div>
-        <AlertTriangle className="h-20 w-20 text-amber-300 mx-auto mb-6" />
+        {isTimeout ? (
+          <Clock className="h-20 w-20 text-amber-300 mx-auto mb-6" />
+        ) : (
+          <AlertTriangle className="h-20 w-20 text-amber-300 mx-auto mb-6" />
+        )}
         <h1 className="font-display text-4xl md:text-5xl font-bold text-white mb-4">
-          לא הצלחנו <span className="text-gold">לפתוח את הוראת הקבע</span>
+          {isTimeout ? (
+            <>לא קיבלנו <span className="text-gold">אישור לתשלום בזמן</span></>
+          ) : (
+            <>לא הצלחנו <span className="text-gold">לפתוח את הוראת הקבע</span></>
+          )}
         </h1>
         <p className="text-white/70 text-lg leading-relaxed mb-8">
-          הסליקה ב-iCount לא הושלמה. ייתכן שהכרטיס נדחה ע"י הבנק, או שסגרתם את
-          חלון הסליקה לפני האישור הסופי.
+          {isTimeout
+            ? "חיכינו 10 דקות לאישור התשלום מ-iCount ולא קיבלנו מענה. זה לאו אומר שהתשלום נכשל — תיתכן שהוא בדרכו ומיד יירשם. מומלץ לרענן את הדף בעוד כמה דקות, או לפנות אלינו."
+            : "הסליקה ב-iCount לא הושלמה. ייתכן שהכרטיס נדחה ע\"י הבנק, או שסגרתם את חלון הסליקה לפני האישור הסופי."}
         </p>
         <GlassCard className="p-6 mb-8 text-right">
           <p className="text-white/80 text-sm leading-relaxed">

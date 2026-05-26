@@ -7,7 +7,9 @@ import { GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 export default function BillingSuccess() {
   const [, navigate] = useLocation();
   useEffect(() => {
-    const t = setTimeout(() => navigate("/dashboard"), 6000);
+    // מהר מאוד לדשבורד — המסך הזה משמש רק fallback למי שהגיע ישירות (מ-iCount).
+    // הזרימה הרגילה מ-BillingWaiting מנווטת ישירות ל-/dashboard בלי לעצור כאן.
+    const t = setTimeout(() => navigate("/dashboard"), 1500);
     return () => clearTimeout(t);
   }, [navigate]);
   return (
