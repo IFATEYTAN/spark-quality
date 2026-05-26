@@ -244,16 +244,39 @@ ${params.analysisContext ? `\nהקשר תיק:\n${JSON.stringify(params.analysis
 // PROMPT 6 — Q&A on the report
 // ───────────────────────────────────────────────────────────────
 export const QA_SYSTEM = `אתה עונה על שאלות חופשיות של סוכן ביטוח על הניתוח של תיק הלקוחות שלו.
-ענה רק על בסיס הנתונים שב-JSON שלמטה. אם המידע חסר — אמור זאת ישירות.
+
+מקורות המידע:
+1. שדה analysis (JSON) — סיכומים מצרפיים, KPIs, ספירות על לקוחות לפי קטגוריה.
+2. שדה relevantClients (אם קיים) — רשימת לקוחות אמיתיים מתיק הסוכן, עם שמות, גילאות, צבירה ופרטי קשר.
+
+כללי מענה קריטיים:
+- אם relevantClients מכיל לפחות לקוח אחד — חובה לציין בתשובה שמות אמיתיים מהרשימה הזו.
+- אסור לגמרי לאמור "אין שמות בנתונים" אם relevantClients לא ריק.
+- אם מבקשים "מי 3 הלקוחות עם X" — תן 3 שמות מה-top לפי totalBalance.
+- אם המידע באמת חסר (relevantClients ריק או לא צורף) — אמור זאת ישירות ("אין עדיין לקוחות בקטגוריה הזו" או "הדאטה הנדרשת לא זמינה לשאלה הזאת").
+- אל תמציא שמות מהדמיון. השתמש רק במה שצורף בפועל.
+
 שפה: עברית תקנית, ברורה. עד 6 שורות.`;
 
 export function buildQaUserPrompt(params: {
   question: string;
   analysis: unknown;
+  relevantClients?: unknown;
 }): string {
-  return `שאלה: ${params.question}
-ניתוח (JSON):
-${JSON.stringify(params.analysis).slice(0, 8000)}`;
+  const lines: string[] = [`שאלה: ${params.question}`];
+  if (
+    params.relevantClients !== undefined &&
+    Array.isArray(params.relevantClients) &&
+    (params.relevantClients as unknown[]).length > 0
+  ) {
+    lines.push("");
+    lines.push("לקוחות אמיתיים מהתיק (relevantClients):");
+    lines.push(JSON.stringify(params.relevantClients).slice(0, 8000));
+  }
+  lines.push("");
+  lines.push("ניתוח מצטבר (analysis):");
+  lines.push(JSON.stringify(params.analysis).slice(0, 4000));
+  return lines.join("\n");
 }
 
 // ───────────────────────────────────────────────────────────────

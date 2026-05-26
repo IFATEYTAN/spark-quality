@@ -28,6 +28,7 @@ import {
   VARIANTS_3_SYSTEM,
   buildVariants3UserPrompt,
 } from "./prompts";
+import { buildRelevantClientsContext } from "./aiContextEnricher";
 
 function escapeHtml(value: string): string {
   return value
@@ -758,19 +759,38 @@ export const appRouter = router({
       }),
 
     /**
-     * Q&A — free-form question on the analysis JSON
+     * Q&A — free-form question on the analysis JSON.
+     * Round 129: when the question mentions a known trigger (VIP, ללא פנסיה, כספים נזילים, דמי ניהול...),
+     * we pull real client rows from clientFlags (workspace + role isolated) and attach
+     * them so the LLM can answer with actual names instead of "אין שמות".
      */
     qa: workspaceProcedure
       .input(z.object({ question: z.string(), analysis: z.any() }))
       .mutation(async ({ ctx, input }) => {
         await requireFeature(ctx, "ai.smartQA");
+        const relevantClients = await buildRelevantClientsContext({
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          question: input.question,
+        });
         const completion = await invokeLLM({
           messages: [
             { role: "system", content: QA_SYSTEM },
-            { role: "user", content: buildQaUserPrompt(input) },
+            {
+              role: "user",
+              content: buildQaUserPrompt({
+                question: input.question,
+                analysis: input.analysis,
+                relevantClients,
+              }),
+            },
           ],
         });
-        return { answer: completion?.choices?.[0]?.message?.content ?? "" };
+        return {
+          answer: completion?.choices?.[0]?.message?.content ?? "",
+          relevantClients,
+        };
       }),
 
     /**
