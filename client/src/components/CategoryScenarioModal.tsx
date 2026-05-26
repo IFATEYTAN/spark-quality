@@ -267,18 +267,19 @@ export function CategoryScenarioModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-2 sm:p-6 animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-start sm:items-center justify-center p-2 sm:p-6 animate-fade-in overflow-y-auto"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-navy-deep/85 backdrop-blur-sm" />
+      <div className="fixed inset-0 bg-navy-deep/85 backdrop-blur-sm" />
 
-      {/* Panel - Fixed height to 100vh minus padding, flex column to fill space */}
+      {/* Panel - max-h so it never exceeds viewport, but can shrink to content; internal scroll on body */}
       <div
-        className="relative w-full max-w-6xl h-[92vh] flex flex-col bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up overflow-hidden"
+        className="relative w-full max-w-6xl my-auto max-h-[calc(100vh-1rem)] sm:max-h-[92vh] flex flex-col bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up overflow-hidden"
         onClick={(e) => e.stopPropagation()}
+        data-testid="simulations-modal-panel"
       >
         {/* Header (fixed) */}
         <div className="flex-shrink-0 flex items-start justify-between gap-3 border-b border-border/60 bg-cream px-4 sm:px-10 py-4 sm:py-5">
