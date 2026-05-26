@@ -1232,3 +1232,18 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [ ] Mount ClientDetailModal on top from the edit modal
 - [ ] TS clean + checkpoint
 - [ ] Audit all 16 InteractiveTriggersGrid scenarios (correct/incorrect; flag cross-contamination like power-of-attorney mixed with Tikun-190)
+
+## Round 132 follow-up #2 — 7 new flowcharts + remap (Option 1)
+
+- [x] Audit all 16 triggers → flowchart mapping
+- [ ] Add 7 new flowcharts to FLOWCHART_DATA: poa, selfEmployed, birthday, noContact, concentration, feeReduction, coverageRenewal
+- [ ] Extend FlowchartKey type in triggerScenarios.ts
+- [ ] Remap poaExpired + poaExpiring90d from "190" → "poa"
+- [ ] Remap selfEmployedNoDeposit from "190" → "selfEmployed"
+- [ ] Remap birthdayMilestone + birthdayThisMonth from "vip" → "birthday"
+- [ ] Remap noEmail from "coverageGaps" → "noContact"
+- [ ] Remap concentrationRisk from "lowYield" → "concentration"
+- [ ] Remap highFees from "discount" → "feeReduction"
+- [ ] Remap coverageEnding from "coverageGaps" → "coverageRenewal"
+- [ ] Refresh outcome/pain copy where wording no longer matches new flow
+- [ ] tsc clean + checkpoint

@@ -30,7 +30,15 @@ export type FlowchartKey =
   | "190"
   | "discount"
   | "risk"
-  | "coverageGaps";
+  | "coverageGaps"
+  // Added Round 132 — 7 new flows so every trigger gets a matching flow
+  | "poa"
+  | "selfEmployed"
+  | "birthday"
+  | "noContact"
+  | "concentration"
+  | "feeReduction"
+  | "coverageRenewal";
 
 export interface OutcomeMetric {
   label: string;
@@ -58,7 +66,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   // ─────────────── P0 · קריטי משפטי ───────────────
   poaExpired: {
     triggerKey: "poaExpired",
-    flowchartKey: "190",
+    flowchartKey: "poa",
     priority: "P0",
     title: "ייפוי כוח שפג — חידוש דיגיטלי מיידי",
     pain: "מינוי שפג = חשיפה משפטית מיידית מול חוזר 2013. אסור להמתין יום נוסף — קנס מקצועי וסיכון לאובדן ניהול תיק הלקוח.",
@@ -76,7 +84,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   },
   poaExpiring90d: {
     triggerKey: "poaExpiring90d",
-    flowchartKey: "190",
+    flowchartKey: "poa",
     priority: "P0",
     title: "ייפוי כוח פוקע תוך 90 יום",
     pain: "אם נחכה — נצטרך לרדוף אחרי הלקוח ברגע האחרון. פנייה מסודרת היום מבטיחה חידוש שקט והמשכיות.",
@@ -114,7 +122,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   },
   coverageEnding: {
     triggerKey: "coverageEnding",
-    flowchartKey: "coverageGaps",
+    flowchartKey: "coverageRenewal",
     priority: "P1",
     title: "כיסויים פוגים — הצעת חידוש מוכנה",
     pain: "כיסוי שמסתיים בלי חלופה משאיר את הלקוח חשוף ואת הסוכן ללא עמלת שימור. חלון של ימים, לא חודשים.",
@@ -208,7 +216,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   // ─────────────── P3 · שיפור תיק ───────────────
   highFees: {
     triggerKey: "highFees",
-    flowchartKey: "discount",
+    flowchartKey: "feeReduction",
     priority: "P3",
     title: "דמי ניהול גבוהים — מ״מ מול היצרן",
     pain: "הלקוח משלם יותר מהממוצע, היצרן מרוויח, הסוכן מסוכן לאיבוד. משא ומתן יזום מציל את התיק.",
@@ -244,7 +252,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   },
   selfEmployedNoDeposit: {
     triggerKey: "selfEmployedNoDeposit",
-    flowchartKey: "190",
+    flowchartKey: "selfEmployed",
     priority: "P3",
     title: "עצמאי / בעל שליטה — לא הפקיד השנה",
     pain: "חשיפת מס חמורה לעצמאים שלא ניצלו את ההפקדה השנתית. תזכורת אוטומטית שווה אלפי שקלים ועמלת מכירה.",
@@ -262,7 +270,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   },
   concentrationRisk: {
     triggerKey: "concentrationRisk",
-    flowchartKey: "lowYield",
+    flowchartKey: "concentration",
     priority: "P3",
     title: "ריכוז יתר בחברה אחת — ניתוח פיזור",
     pain: "מעל 35% מ-AUM של הלקוח אצל יצרן אחד = סיכון לא נחוץ. ניתוח פיזור מציע את הצעד הבא.",
@@ -282,7 +290,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   // ─────────────── P4 · שימור ונגיעה ───────────────
   birthdayMilestone: {
     triggerKey: "birthdayMilestone",
-    flowchartKey: "vip",
+    flowchartKey: "birthday",
     priority: "P4",
     title: "יום הולדת מפנה (40 / 50 / 60) — סקירת תיק",
     pain: "ימי הולדת מפנים הם הנקודה הטבעית לסקירת תיק שלמה. הלקוח מצפה לפנייה — ואם לא קיבל, יחפש תחליף.",
@@ -300,7 +308,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   },
   birthdayThisMonth: {
     triggerKey: "birthdayThisMonth",
-    flowchartKey: "vip",
+    flowchartKey: "birthday",
     priority: "P4",
     title: "יום הולדת החודש — נגיעה אישית",
     pain: "ברכה אישית בחודש יום ההולדת מחזקת את הקשר ויוצרת פתח לשיחת שימור. בלי זה — הלקוח שוכח שאתם קיימים.",
@@ -336,7 +344,7 @@ export const TRIGGER_SCENARIOS: Record<TriggerKey, TriggerScenario> = {
   },
   noEmail: {
     triggerKey: "noEmail",
-    flowchartKey: "coverageGaps",
+    flowchartKey: "noContact",
     priority: "P4",
     title: "ללא מייל — בקשת עדכון פרטי קשר",
     pain: "אי-אפשר לדוור או לתקשר עם לקוח בלי מייל. כל הקמפיינים הבאים תלויים בפעולה הזו.",

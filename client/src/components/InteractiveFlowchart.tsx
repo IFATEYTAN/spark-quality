@@ -762,6 +762,188 @@ export const FLOWCHART_DATA: Record<string, FlowchartData> = {
     ],
   },
 
+  // ─────────── New Round 132 flowcharts ───────────
+
+  /**
+   * POA — חידוש ייפוי כוח (תקף לכל POA, גם פג וגם פוקע ב-90 יום)
+   * זהו תהליך רגולטורי טהור: יצירת טופס דיגיטלי, חתימה, רישום במסלקה.
+   * שום קשר ל-תיקון 190 / מס / השקעות.
+   */
+  poa: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי תוקף POA",            detail: "סריקת בסיס: תוקף ייפוי כוח פג / יפוג ב-90 יום הקרובים",            icon: AlertTriangle },
+      { id: "n2", type: "process",  label: "שליפת מסמך ייפוי קיים",       detail: "שליפה אוטומטית של גרסת ה-POA האחרונה מהמסלקה / CRM",              icon: Database },
+      { id: "n3", type: "ai",       label: "הכנת טופס חידוש דיגיטלי",      detail: "AI מייצר טופס חתום-דיגיטלית מוכן עם פרטי הלקוח והסוכן",            icon: Brain, metric: "≈10 שניות" },
+      { id: "n4", type: "action",   label: "שליחת לינק חתימה ל-WhatsApp",  detail: "לינק חד-פעמי לחתימה דיגיטלית — תקף 72 שעות, ללא הדפסה",            icon: MessageSquare, metric: "92% חידוש דיגיטלי" },
+      { id: "n5", type: "approval", label: "אישור הסוכן/ת לפני שליחה",      detail: "מסך אישור 1-קליק: שלח / התאם נוסח / דחה",                            icon: UserCheck },
+      { id: "n6", type: "decision", label: "לקוח חתם?",                     detail: "מעקב אוטומטי 24/48/72 שעות. אם לא חתם — הסלמה לטלפון אישי",         icon: Filter, decisionLabels: { yes: "חתם", no: "לא חתם" } },
+      { id: "n7", type: "action",   label: "רישום במסלקה הפנסיונית",        detail: "דיווח אוטומטי על POA מחודש למסלקה — שמירת רציפות גישה",            icon: Send },
+      { id: "n8", type: "result",   label: "גישה לתיק הלקוח נשמרת",          detail: "POA חדש תקף ל-3 שנים · ללא הפסקת שירות · ללא קנס מקצועי",            icon: Target, metric: "3 שנים תוקף" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7", label: "כן" },
+      { from: "n7", to: "n8" },
+    ],
+  },
+
+  /**
+   * selfEmployed — עצמאי ללא הפקדות שוטפות (חוק ההפקדה הרגולטורי לעצמאים)
+   * שונה לחלוטין מ-תיקון 190 — כאן זה חובת הפקדה לעצמאי, לא הזדמנות מיסויית להון.
+   */
+  selfEmployed: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי עצמאי ללא הפקדה",       detail: "לקוח עם הכנסות מעסק עצמאי + ללא הפקדה שוטפת לקרן",                  icon: AlertTriangle },
+      { id: "n2", type: "process",  label: "חישוב חבות חוקית",            detail: "חישוב לפי % מהכנסה ש assingiona חוק חובת הפקדה לעצמאים",            icon: Database },
+      { id: "n3", type: "ai",       label: "בניית תוכנית הפקדה",          detail: "AI מציע מסלול חודשי + הטבת מס מקסימלית לפי תקנות מס הכנסה",          icon: Brain, metric: "חיסכון מס ≈ ₪9K/שנה" },
+      { id: "n4", type: "decision", label: "הכנסה > תקרת מס מופחת?",       detail: "אם כן — מסלול מקסימלי. אם לא — מסלול בסיסי + תזכורת לעדכון שנתי",     icon: Filter },
+      { id: "n5", type: "action",   label: "מייל עם הצעת תוכנית",          detail: "מייל הסבר על חובת ההפקדה, גובה ההטבה, וקישור לפתיחת קרן",            icon: Mail },
+      { id: "n6", type: "approval", label: "אישור הסוכן/ת",                  detail: "הסוכן/ת בוחנים את ההצעה לפני שליחה ללקוח",                              icon: UserCheck },
+      { id: "n7", type: "action",   label: "תיאום שיחת ייעוץ",              detail: "Calendly אוטומטי + תזכורת + הכנת מסמכים לפתיחת קרן",                icon: Calendar },
+      { id: "n8", type: "result",   label: "קרן עצמאי פתוחה · עמלה שוטפת",   detail: "הפקדה חודשית פעילה · עמלה חודשית לסוכן · הטבת מס ללקוח",              icon: Target, metric: "~₪140K צבירה תוך 5 שנים" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5", label: "כן" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7" },
+      { from: "n7", to: "n8" },
+    ],
+  },
+
+  /**
+   * birthday — מסע יום-הולדת (אבן דרך + החודש)
+   * זהו מסע שימור רגשי — לא VIP, לא הזדמנות מכירה ישירה.
+   * המטרה היחידה: לחזק קשר, להעלות פתיחת הודעות, ולעלות לטופ-של-המייל.
+   */
+  birthday: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי יום הולדת",              detail: "לקוחות שיום הולדתם החודש (או אבן דרך: 40/50/60/65/70)",              icon: Calendar },
+      { id: "n2", type: "ai",       label: "התאמת ברכה אישית",            detail: "AI מייצר ברכה חמה לפי גיל, ותק בתיק, וסגנון תקשורת מועדף",            icon: Brain, metric: "4 וריאציות" },
+      { id: "n3", type: "decision", label: "אבן דרך משמעותית?",            detail: "40/50/60/65/70 = ברכה + הזמנה לשיחה. אחר = ברכה קצרה בלבד",            icon: Filter, decisionLabels: { yes: "כן", no: "לא" } },
+      { id: "n4", type: "action",   label: "ברכת WhatsApp אישית",          detail: "הודעת ברכה + אמוג'י + שם פרטי · ללא תוכן מכירתי",                    icon: MessageSquare, metric: "+30% פתיחה" },
+      { id: "n5", type: "approval", label: "אישור הסוכן/ת",                  detail: "מסך 1-קליק: שלח כמו שזה / התאם / דחה",                                  icon: UserCheck },
+      { id: "n6", type: "action",   label: "הזמנה לשיחת תכנון פיננסי",       detail: "רק לאבני דרך: הזמנה לשיחה לעדכון תיק לקראת שלב חיים חדש",            icon: Mail },
+      { id: "n7", type: "result",   label: "קשר רגשי + שיחה נקבעת",          detail: "לקוח מרגיש שהסוכן זוכר אותו · 18% מאבני הדרך מובילות לשיחה",         icon: Target, metric: "NPS +24" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5" },
+      { from: "n5", to: "n6", label: "כן" },
+      { from: "n6", to: "n7" },
+    ],
+  },
+
+  /**
+   * noContact — לקוח ללא ערוץ קשר דיגיטלי (מייל חסר)
+   * זהו תהליך data-hygiene: השלמת פרטי קשר, לא מכירה / לא חוסר כיסוי.
+   */
+  noContact: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי לקוחות ללא מייל",       detail: "סריקת CRM: לקוחות פעילים שאין להם כתובת מייל מאומתת",                icon: AlertTriangle },
+      { id: "n2", type: "ai",       label: "בחירת ערוץ פנייה חלופי",      detail: "לפי נתונים שיש: SMS / WhatsApp / טלפון — בסדר עדיפויות",              icon: Brain },
+      { id: "n3", type: "action",   label: "הודעת SMS בקשת מייל",          detail: "הודעה קצרה: 'נוכל לעדכן אותך בקובץ דיגיטלי? נשמח לקבל מייל'",       icon: MessageSquare },
+      { id: "n4", type: "approval", label: "אישור הסוכן/ת",                  detail: "מסך 1-קליק לאישור הניסוח לפני שליחה",                                  icon: UserCheck },
+      { id: "n5", type: "decision", label: "לקוח הגיב?",                     detail: "מעקב 48 שעות. אם לא — fallback להתקשרות אישית מהסוכן",                icon: Filter, decisionLabels: { yes: "מסר מייל", no: "לא הגיב" } },
+      { id: "n6", type: "action",   label: "עדכון פרטים ב-CRM",            detail: "מייל נכנס ל-CRM, מאומת אוטומטית, מסומן בדגל ירוק",                    icon: Database },
+      { id: "n7", type: "result",   label: "ערוץ דיגיטלי פעיל",              detail: "הלקוח זמין לכל קמפיין עתידי — מיילים, דוחות, התראות",                  icon: Target, metric: "+1 נקודת קשר" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5" },
+      { from: "n5", to: "n6", label: "כן" },
+      { from: "n6", to: "n7" },
+    ],
+  },
+
+  /**
+   * concentration — סיכון ריכוז (Concentration Risk)
+   * הלקוח חשוף יתר בנכס/מסלול אחד. תהליך פיזור, לא תשואה.
+   */
+  concentration: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי ריכוז יתר",              detail: "מעל 60% מהתיק במסלול / יצרן יחיד → סיכון מערכתי",                    icon: AlertOctagon },
+      { id: "n2", type: "process",  label: "מיפוי תיק לפי קטגוריות",         detail: "פיזור נוכחי: מנייתי / אג'חי / מעורב / ספציפי, לפי יצרן ומסלול",       icon: Database },
+      { id: "n3", type: "ai",       label: "חישוב פיזור אופטימלי",         detail: "AI בוחן גיל, מצב משפחתי, אופק זמן, ומציע פיזור מאוזן",                icon: Brain, metric: "VaR -22%" },
+      { id: "n4", type: "decision", label: "החשיפה > 60%?",                 detail: "מעל 60% → אזהרה אדומה. 40-60% → המלצה רכה. מתחת ל-40% → אין צורך",  icon: Filter },
+      { id: "n5", type: "action",   label: "מייל הסבר + הצעת פיזור",       detail: "מייל עם גרף עוגה (לפני/אחרי) + 3 מסלולי פיזור אפשריים",               icon: Mail },
+      { id: "n6", type: "approval", label: "אישור הסוכן/ת",                  detail: "הסוכן/ת בוחנים את ההמלצה לפני שליחה",                                   icon: UserCheck },
+      { id: "n7", type: "action",   label: "שיחת תיאום ניוד חלקי",            detail: "פגישה לתכנון העברה הדרגתית של 20-40% למסלולי פיזור",                  icon: Calendar },
+      { id: "n8", type: "result",   label: "תיק מפוזר · סיכון מופחת",         detail: "לקוח מוגן מטלטולים חדים · עמלת ניוד · אמון מועצם",                       icon: Target, metric: "57% הצלחה" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5", label: "כן" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7" },
+      { from: "n7", to: "n8" },
+    ],
+  },
+
+  /**
+   * feeReduction — דמי ניהול גבוהים (משא ומתן עם היצרן)
+   * תהליך שונה מ-discount (תום הנחה) — כאן זה הורדה אקטיבית של דמי ניהול גבוהים.
+   */
+  feeReduction: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי דמי ניהול גבוהים",         detail: "דמי ניהול מעל הממוצע (>1.0% צבירה / >6% הפקדה) על קרן ותיקה",         icon: AlertTriangle },
+      { id: "n2", type: "process",  label: "השוואת מסלולים זמינים",          detail: "שליפה ממסלקה: דמי ניהול מקבילים אצל אותו יצרן או יצרנים מתחרים",     icon: Database },
+      { id: "n3", type: "ai",       label: "חישוב חיסכון שנתי",            detail: "חיסכון מצטבר עד גיל פרישה לפי דמי ניהול חדשים אפשריים",             icon: Brain, metric: "~₪48K לכל הצבירה" },
+      { id: "n4", type: "decision", label: "הורדה אפשרית > 0.3%?",          detail: "רק אם הפער מצדיק שיחה — אחרת התהליך נדחה לרבעון הבא",                  icon: Filter },
+      { id: "n5", type: "action",   label: "בקשת הורדה ליצרן",              detail: "מערכת שולחת בקשה אוטומטית ליצרן (טופס סטנדרטי) + מעקב 5 ימים",       icon: Send },
+      { id: "n6", type: "approval", label: "אישור הסוכן/ת לפני שליחה",       detail: "הסוכן/ת בוחנים את הטופס, מגדירים סף לסירוב, ומאשרים",                  icon: UserCheck },
+      { id: "n7", type: "action",   label: "הודעת הצלחה ללקוח",              detail: "מייל ללקוח: 'הצלחנו להוריד דמי ניהול ב-X% · חיסכון של Y ש\"ח'",         icon: Mail },
+      { id: "n8", type: "result",   label: "שימור + הצדקה לפגישה",            detail: "דמי ניהול ירדו · עמלת שימור · הצדקה לפגישה לבחינת מסלולים נוספים",     icon: Target, metric: "68% הצלחת בקשה" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5", label: "כן" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7" },
+      { from: "n7", to: "n8" },
+    ],
+  },
+
+  /**
+   * coverageRenewal — חידוש כיסויים פוקעים (לא חוסר כיסוי + לא תום הנחה)
+   * תהליך proactive renewal של פוליסה שעומדת להסתיים, עם המשכיות.
+   */
+  coverageRenewal: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי כיסוי פוקע",              detail: "פוליסה / כיסוי < 90 יום מתאריך הסיום · עם אופציית חידוש",              icon: AlertTriangle },
+      { id: "n2", type: "process",  label: "שליפת תנאי חידוש",            detail: "שליפה ממסלקה: תנאי חידוש (פרמיה, הסכמי בריאות, החרגות)",              icon: Database },
+      { id: "n3", type: "ai",       label: "השוואה לחלופות תחרותיות",       detail: "AI משווה את ההצעה לחידוש מול 3 חברות מתחרות",                            icon: Brain, metric: "חיסכון אפשרי ≈₪480/שנה" },
+      { id: "n4", type: "decision", label: "חידוש משתלם?",                  detail: "אם תנאי החידוש טובים — שלח. אם פחות טובים — הצע מעבר חברה",            icon: Filter },
+      { id: "n5", type: "action",   label: "מייל הצעת חידוש",                detail: "מייל מובנה: סיכום הכיסוי הקיים, התנאים החדשים, החלופות, ו-CTA חידוש",   icon: Mail },
+      { id: "n6", type: "approval", label: "אישור הסוכן/ת",                  detail: "הסוכן/ת בוחנים, יכולים להוסיף הערות אישיות לפני שליחה",                  icon: UserCheck },
+      { id: "n7", type: "action",   label: "תיאום שיחת חידוש",              detail: "Calendly לשיחת 15 דק' להחתמה דיגיטלית או הסבר אישי",                 icon: Calendar },
+      { id: "n8", type: "result",   label: "כיסוי רציף · עמלה נמשכת",         detail: "הלקוח מבוטח ברציפות · עמלה חודשית נמשכת · ללא חלון חוסר",                icon: Target, metric: "78% חידוש" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5", label: "כן" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7" },
+      { from: "n7", to: "n8" },
+    ],
+  },
+
   coverageGaps: {
     nodes: [
       { id: "n1", type: "trigger",  label: "ניתוח חוסרי כיסוי",              detail: "סריקת תיק - חסרים מוצרים: פנסיה / ריסק חיים / סיעוד / בריאות",       icon: AlertOctagon },
