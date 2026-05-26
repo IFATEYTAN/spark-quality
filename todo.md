@@ -1117,15 +1117,16 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] שמירת checkpoint (f10c3bf4) — מוכן ל-Publish + הנחיית לעקיפת cache של WhatsApp
 
 
-## Round 127 — חזרה אוטומטית מתשלום iCount לתהליך הרישום (2026-05-19)
-- [ ] קריאת server/billing.ts ו-makeCheckout.ts להבנת זרימת התשלום הנוכחית (return_url ל-iCount, callback)
-- [ ] בדיקה איך ה-webhook מעדכן את workspace.accessStatus ל-active לאחר תשלום
-- [ ] חיפוש מסכי "Thank You" / "Payment Success" / continue-onboarding בקוד (BillingWaiting / PaymentSuccess)
-- [ ] דיווח לציפי על המצב הקיים + הצעת המסך/דף לחזרה אוטומטית
-- [ ] קבלת אישור על היעד הסופי (dashboard / onboarding-continue / thank-you)
-- [ ] מימוש redirect + מסך מתאים + polling אם צריך לחכות ל-webhook
-- [ ] בדיקה end-to-end עם קוד קופון (זרם חינמי) + תשלום אמיתי
-- [ ] שמירת checkpoint + הנחיה לפרסום
+## Round 127 — חזרה אוטומטית מתשלום iCount לדשבורד (2026-05-26) — **DONE**
+**תצוגה הקיימת:** BillingWaiting מדלג ישירות ל-/dashboard ברגע שה-webhook מסמן accessStatus=active. BillingSuccess נשמר כ-fallback (1.5ש במקום 6ש). Timeout ל-10 דקות → BillingFailed?reason=timeout.
+- [x] קריאת server/billing.ts + server/makeCheckout.ts: ה-payload החתום מעביר origin ל-Make, Make בונה returnUrl ל-iCount
+- [x] ה-webhook `POST /api/billing/activate` (HMAC-SHA256) מעדכן workspace.accessStatus=active + activatedAt + subscriptionId
+- [x] מסכי BillingWaiting + BillingSuccess + BillingFailed קיימים; המסך BillingWaiting עושה polling כל 3 שניות
+- [x] החלטת מעצב משתמשת: סעיף 1 — חזרה ישירה לדשבורד עם toast "ברוכה הבאה"
+- [x] BillingWaiting: קיצור של OK→/dashboard (בלי לעצור ב-Success); BillingSuccess קיצרה מ-6ש ל-1.5ש; timeout 10 דקות
+- [x] BillingFailed מטפל ב-`reason=timeout` עם הודעה יעודית
+- [x] vitest 6/6 עובר: returnUrl, signed payload, double-slash protection, callback round-trip, XSS guard
+- [x] checkpoint 3a024ddd — מוכן לבדיקה עם תשלום חי / קופון חינם
 
 
 ## Round 128 — דחוף: לקוח חייב להופיע בכל הקטגוריות הרלוונטיות (2026-05-26) — **DONE & PUBLISHED**
@@ -1164,18 +1165,56 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] dev server קומפל נקי (TypeScript: 0 שגיאות)
 
 
-## Round 129 — באג קריטי: SPARK AI Assistant מסרב לתת שמות אמיתיים (2026-05-26)
-**הבעיה:** שאלה "מי 3 הלקוחות עם כספים נזילים?" → המודל ענה "הנתונים אינם כוללים את שמות הלקוחות". זה שקר — השמות נמצאים בטבלת clients ובטבלת clientFlags. ה-context שמועבר ל-LLM מכיל ככל הנראה רק counts ולא לקוחות בפועל.
-- [ ] לאתר את ה-procedure שעונה ל-AI Assistant ולמפות בדיוק איזה context מועבר ל-LLM היום
-- [ ] להעשיר את ה-context: כשהשאלה מאזכרת טריגר ידוע או "מי/אילו/who/which" — לצרף top-N לקוחות (שם + נתון רלוונטי) מ-clientFlags JOIN clients, בכפוף לבידוד workspace ו-role
-- [ ] להדק את system prompt: חובה לציין שמות מהרשימה שסופקה; לעולם לא "אין שמות" אם הרשימה לא ריקה
-- [ ] vitest: שאלה "מי לקוחות עם כספים נזילים" מחזירה לפחות שם אמיתי אחד מאותו workspace; לעולם לא שם מ-workspace אחר
-- [ ] בדיקה ידנית מול ה-UI החי עם השאלה שנכשלה, צילום מתוקן, checkpoint
+## Round 129 — באג קריטי: SPARK AI Assistant מסרב לתת שמות אמיתיים (2026-05-26) — **DONE**
+**הבעיה:** שאלה "מי 3 הלקוחות עם כספים נזילים?" → המודל ענה "הנתונים אינם כוללים את שמות הלקוחות". הסיבה: ה-context ל-LLM כלל רק counts. הפתרון: enricher שמזהה טריגרים בשאלה ומצרף לקוחות אמיתיים מ-clientFlags.
+- [x] איתור ה-procedure הרלוונטי: `ai.qa` ב-server/routers.ts; ה-context הישן כלל רק את ה-`analysis` JSON המצרפי
+- [x] קובץ חדש `server/aiContextEnricher.ts` עם מילון hebrew→triggerKey (16 טריגרים) + זיהוי "מי/אילו/who/which"
+- [x] system prompt + buildQaUserPromptWithRelevant מחייבים לצטט שמות מהרשימה המסופקת
+- [x] vitest 8/8: זיהוי מילות מפתח, שליפת לקוחות אמיתיים ממוין, בידוד workspace מוחלט
+- [x] checkpoint 0752d7f0 — TypeScript נקי; מוכן לבדיקה מול השאלה האמיתית ב-UI
 
 
-## Round 130 — באג: דיאלוג סימולציות נחתך, אין scroll (2026-05-26)
+## Round 130 — באג: דיאלוג סימולציות נחתך, אין scroll (2026-05-26) — **DONE**
 **רקע:** המשתמשת דיווחה שב-modal הסימולציה הכותרת העליונה והתחתונה גלויות אבל אי אפשר לגלול. תוכן ארוך נחתך ולא נגיש.
-- [ ] לאתר את הקומפוננטה של ה-modal של הסימולציות
-- [ ] להוסיף max-h + overflow-y-auto + sticky header/footer
-- [ ] vitest / DOM check שמוודא שה-class הנכון מופעל
-- [ ] בדיקה ידנית ב-preview, צילום מסך, checkpoint
+- [x] איתור הקומפוננטה: `client/src/components/CategoryScenarioModal.tsx`
+- [x] שינוי h-[92vh] (קבוע) ל-max-h-[calc(100vh-1rem)] sm:max-h-[92vh] + my-auto + מעטפת overflow-y-auto
+- [x] הוסף data-testid לבדיקה אוטומטית
+- [x] checkpoint c11a8bb1 — TypeScript + LSP נקיים
+
+
+## Round 131 — מסע לקוח מלא: כרטיס לקוח, יומן פעולות, רימיינדרים, פעולות מהירות (2026-05-26)
+**מטרה:** הסוכן צריך להיות מסוגל לעבוד בפועל מתוך המערכת — לא רק לראות מספרים. כל קטגוריה/טריגר חייב לתמוך במסע לקוח מלא: התקשרות, וואטסאפ, מייל, פגישה, יומן פעולות, snooze, הקצאה לסוכן אחר, וצפייה בכל הטריגרים של אותו לקוח במקום אחד.
+
+### שלב א — DB + שרת (תשתית)
+- [ ] schema: `clientActivities` (workspaceId, clientId, type, content, outcome, createdBy, scheduledFor, createdAt)
+- [ ] schema: `clientReminders` (workspaceId, clientId, triggerKey, remindAt, status, createdBy, createdAt)
+- [ ] migration via pnpm db:push
+- [ ] db helpers: insertActivity, listActivitiesForClient, createReminder, listDueReminders, dismissReminder, getClientDetail (client + all flags + recent activities + open reminders), reassignClient
+- [ ] tRPC: activities.create, activities.listForClient, reminders.create, reminders.listDue, reminders.dismiss, clients.getDetail, clients.reassign — כולם עם בידוד workspace+role
+
+### שלב ב — UI: כרטיס לקוח מלא
+- [ ] ClientDetailModal: פרטי לקוח, badges לכל הטריגרים שלו, יומן פעולות (timeline), רימיינדרים פתוחים
+- [ ] כפתורי פעולה מהירה: התקשר (tel:), וואטסאפ, מייל (mailto:), פגישה, snooze, הקצאה לסוכן אחר, סמן כטופל
+- [ ] טופס הוספת פעולה ליומן: סוג + תוצאה + הערה
+- [ ] טופס snooze: מתי להזכיר + איזה טריגר
+
+### שלב ג — חיווט ל-TriggerClientsModal
+- [ ] לחיצה על שם לקוח פותחת את ClientDetailModal
+- [ ] הוספת כפתור tel: בכל שורה
+- [ ] הוספת badge עם מספר הטריגרים הנוספים שאותו לקוח שייך אליהם
+- [ ] לחיצה על הטלפון = tel:, לחיצה על מייל = mailto:
+
+### שלב ד — בדיקות ומסירה
+- [ ] vitest: activities + reminders + getClientDetail כולל בידוד workspace
+- [ ] vitest: reassignClient מותר רק לאדמין/אונר באותה סוכנות
+- [ ] בדיקה ידנית: לחיצה על כרטיסייה → לקוח → התקשר → רישום פעולה → snooze → אימייל
+- [ ] checkpoint + סיכום למשתמשת
+
+## Round 131 — מסע לקוח מלא (Level 1, 3 פיצ'רים, ~3h) [2026-05-26]
+- [x] Schema: clientActivities + clientReminders (workspace-scoped, FK ל-clients) + push migration
+- [x] DB helpers: insertClientActivity / listActivitiesForClient / createClientReminder / listDueReminders / updateReminderStatus / getClientDetail / reassignClient — בידוד workspace + agent ownership
+- [x] tRPC: clientJourney.logActivity / listActivities / createReminder / listDueReminders / setReminderStatus / getDetail / reassign + workspaces.listMembers
+- [x] ClientDetailModal: פרופיל, badges של כל הטריגרים, כפתורי פעולה (התקשר/וואטסאפ/מייל/פגישה/הערה/snooze/הקצאה/טפלתי), Tabs ליומן + תזכורות
+- [x] TriggerClientsModal: שם לקוח לחיץ → ClientDetailModal; כפתורי tel: + mailto: שמתעדים אוטומטית activity
+- [x] Vitest: 7 בדיקות חדשות (round-trip activities, intra-WS isolation, cross-WS isolation, reminder lifecycle, getClientDetail, reassign permissions) — כולן עוברות
+- [x] insertId reading defensive ב-createClientReminder + insertClientActivity (תואם לדפוס createWorkspace)

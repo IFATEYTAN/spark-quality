@@ -582,3 +582,76 @@ export const clientFlags = mysqlTable(
 );
 export type ClientFlag = typeof clientFlags.$inferSelect;
 export type InsertClientFlag = typeof clientFlags.$inferInsert;
+
+
+// ============================================================
+// CLIENT ACTIVITIES (Round 131) — unified per-client journal:
+// every contact attempt, message, meeting, or freeform note.
+// All rows are tied to a workspace; agents can only read/write
+// activities for clients they are allowed to see.
+// ============================================================
+export const clientActivities = mysqlTable(
+  "client_activities",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    clientId: int("clientId").references(() => clients.id).notNull(),
+    /** "call" | "whatsapp" | "email" | "meeting" | "note" | "sms" */
+    type: varchar("type", { length: 32 }).notNull(),
+    /** Optional outcome tag: "answered", "no_answer", "scheduled", "not_interested", "converted", "needs_followup". */
+    outcome: varchar("outcome", { length: 64 }),
+    /** Free-text content / summary — what was said, what's the next step. */
+    content: text("content"),
+    /** Trigger this activity is tied to (optional — useful for reporting). */
+    triggerKey: varchar("triggerKey", { length: 64 }),
+    /** For meetings or scheduled callbacks. */
+    scheduledFor: timestamp("scheduledFor"),
+    /** User who recorded this activity. */
+    createdBy: int("createdBy").references(() => users.id).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("client_activities_workspace_idx").on(table.workspaceId),
+    clientIdx: index("client_activities_client_idx").on(table.clientId),
+    workspaceClientIdx: index("client_activities_ws_client_idx").on(
+      table.workspaceId,
+      table.clientId,
+    ),
+    typeIdx: index("client_activities_type_idx").on(table.type),
+  }),
+);
+export type ClientActivity = typeof clientActivities.$inferSelect;
+export type InsertClientActivity = typeof clientActivities.$inferInsert;
+
+// ============================================================
+// CLIENT REMINDERS (Round 131) — snooze / follow-up alarms.
+// Each reminder targets a specific client + (optional) trigger,
+// fires at `remindAt`, and ends in one of three states:
+// pending → fired → dismissed (or cancelled).
+// ============================================================
+export const clientReminders = mysqlTable(
+  "client_reminders",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    clientId: int("clientId").references(() => clients.id).notNull(),
+    /** Optional — link to a specific trigger that the reminder is about. */
+    triggerKey: varchar("triggerKey", { length: 64 }),
+    /** Free-text reason — "התקשרתי, אין מענה — לחזור מחר בבוקר" וכו׳. */
+    note: text("note"),
+    /** When the reminder should pop. */
+    remindAt: timestamp("remindAt").notNull(),
+    /** "pending" | "fired" | "dismissed" | "cancelled" */
+    status: varchar("status", { length: 16 }).default("pending").notNull(),
+    createdBy: int("createdBy").references(() => users.id).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("client_reminders_workspace_idx").on(table.workspaceId),
+    clientIdx: index("client_reminders_client_idx").on(table.clientId),
+    statusIdx: index("client_reminders_status_idx").on(table.status),
+    dueIdx: index("client_reminders_due_idx").on(table.workspaceId, table.status, table.remindAt),
+  }),
+);
+export type ClientReminder = typeof clientReminders.$inferSelect;
+export type InsertClientReminder = typeof clientReminders.$inferInsert;

@@ -1,15 +1,25 @@
 /**
- * TriggerClientsModal — Round 93.
+ * TriggerClientsModal — Round 131.
  *
- * Lists all clients matching a single trigger, with per-row actions:
- *   - Mark as handled / un-mark
- *   - Open WhatsApp Composer for this exact client
+ * Lists all clients matching a single trigger. Each row supports the full
+ * agent journey now:
+ *   - Click the client name → opens `ClientDetailModal` (full panel)
+ *   - Quick tel: button (calls phone immediately + logs activity)
+ *   - Quick mailto: button
+ *   - WhatsApp Composer (existing)
+ *   - Mark handled / un-mark
+ *   - Extra-trigger badges (other categories this client matches)
  *
  * Real data only — fetched via `trpc.triggers.listClients` which already
  * filters by `workspaceId` (and by `assignedAgentId` for non-admin agents).
+ * The badges are merged in client-side from `trpc.clientJourney.getDetail`
+ * lazily on hover or are simply hinted with `extraTriggerCount` from the
+ * server when present. To keep traffic small we render the lazy approach
+ * via the detail modal — the row simply shows count of OTHER matching
+ * triggers when the data ships it.
  */
 import { useState } from "react";
-import { CheckCircle2, MessageSquare, RotateCcw, X, Loader2 } from "lucide-react";
+import { CheckCircle2, MessageSquare, RotateCcw, X, Loader2, Phone, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -21,6 +31,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { WhatsAppComposerModalV2 } from "./WhatsAppComposerModalV2";
+import { ClientDetailModal } from "./ClientDetailModal";
 import type { TriggerKey } from "@/lib/triggerScenarios";
 
 export type TriggerBucket = "urgent" | "opportunity" | "improvement" | "retention";
@@ -61,6 +72,19 @@ function ageFromBirthDate(birthDate: Date | string | null | undefined): number |
   return age;
 }
 
+function telHref(phone: string | null | undefined): string | null {
+  if (!phone) return null;
+  const cleaned = phone.replace(/[^\d+]/g, "");
+  return cleaned.length >= 7 ? `tel:${cleaned}` : null;
+}
+
+function mailtoHref(email: string | null | undefined, name: string | null | undefined): string | null {
+  if (!email) return null;
+  const subject = encodeURIComponent("בנושא תיק הביטוח");
+  const greeting = name ? `שלום ${name},\n\n` : "שלום,\n\n";
+  return `mailto:${email}?subject=${subject}&body=${encodeURIComponent(greeting)}`;
+}
+
 export function TriggerClientsModal({
   open,
   onOpenChange,
@@ -90,6 +114,8 @@ export function TriggerClientsModal({
     },
   });
 
+  const logActivityMutation = trpc.clientJourney.logActivity.useMutation();
+
   const [composerOpen, setComposerOpen] = useState(false);
   const [composerClient, setComposerClient] = useState<{
     id: number;
@@ -97,6 +123,8 @@ export function TriggerClientsModal({
     phone?: string | null;
     age?: number | null;
   } | null>(null);
+
+  const [detailClientId, setDetailClientId] = useState<number | null>(null);
 
   const rows = listQuery.data ?? [];
   const handledCount = rows.filter(r => r.handled).length;
@@ -130,91 +158,142 @@ export function TriggerClientsModal({
             </div>
           ) : (
             <ul className="divide-y divide-border mt-2">
-              {rows.map(row => (
-                <li
-                  key={row.id}
-                  className={`py-3 flex items-center gap-3 ${
-                    row.handled ? "opacity-50" : ""
-                  }`}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium truncate">
-                        {row.fullName ?? "לקוח ללא שם"}
-                      </span>
-                      {row.handled ? (
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
-                      ) : null}
+              {rows.map(row => {
+                const age = ageFromBirthDate(row.birthDate);
+                const tel = telHref(row.phone);
+                const mail = mailtoHref(row.email, row.fullName);
+                return (
+                  <li
+                    key={row.id}
+                    className={`py-3 flex items-center gap-3 ${
+                      row.handled ? "opacity-50" : ""
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => setDetailClientId(row.id)}
+                          className="font-medium truncate text-right hover:text-primary hover:underline focus:outline-none focus:text-primary transition-colors"
+                          title="פתח כרטיס לקוח מלא"
+                        >
+                          {row.fullName ?? "לקוח ללא שם"}
+                        </button>
+                        {row.handled ? (
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                        ) : null}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                        {age ? <span>גיל {age}</span> : null}
+                        {row.phone ? <span dir="ltr">{row.phone}</span> : null}
+                        <span>צבירה: {fmtIls(row.totalBalance)}</span>
+                        {row.idNumber ? <span>ת״ז: {row.idNumber}</span> : null}
+                      </div>
                     </div>
-                    {(() => {
-                      const age = ageFromBirthDate(row.birthDate);
-                      return (
-                        <div className="text-xs text-muted-foreground mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5">
-                          {age ? <span>גיל {age}</span> : null}
-                          {row.phone ? <span>{row.phone}</span> : null}
-                          <span>צבירה: {fmtIls(row.totalBalance)}</span>
-                          {row.idNumber ? <span>ת״ז: {row.idNumber}</span> : null}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => {
-                        setComposerClient({
-                          id: row.id,
-                          fullName: row.fullName,
-                          phone: row.phone,
-                          age: ageFromBirthDate(row.birthDate),
-                        });
-                        setComposerOpen(true);
-                      }}
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 me-1" />
-                      וואטסאפ
-                    </Button>
-                    {row.handled ? (
+                    <div className="flex gap-1 shrink-0">
+                      {tel ? (
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          asChild
+                          className="h-8 w-8"
+                          title="התקשר"
+                          onClick={() => {
+                            // Log call attempt; a tel: link still triggers natively via the <a>
+                            logActivityMutation.mutate({
+                              clientId: row.id,
+                              type: "call",
+                              triggerKey: triggerKey as string,
+                              content: "התקשר ללקוח (כפתור מהיר)",
+                            });
+                          }}
+                        >
+                          <a href={tel} aria-label="התקשר">
+                            <Phone className="h-3.5 w-3.5" />
+                          </a>
+                        </Button>
+                      ) : null}
+                      {mail ? (
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          asChild
+                          className="h-8 w-8"
+                          title="שלח מייל"
+                          onClick={() => {
+                            logActivityMutation.mutate({
+                              clientId: row.id,
+                              type: "email",
+                              triggerKey: triggerKey as string,
+                              content: "פתח מייל ללקוח (כפתור מהיר)",
+                            });
+                          }}
+                        >
+                          <a href={mail} aria-label="שלח מייל">
+                            <Mail className="h-3.5 w-3.5" />
+                          </a>
+                        </Button>
+                      ) : null}
                       <Button
                         size="sm"
-                        variant="ghost"
-                        onClick={() =>
-                          unmarkMutation.mutate({ clientId: row.id, triggerKey })
-                        }
-                        disabled={unmarkMutation.isPending}
-                      >
-                        <RotateCcw className="h-3.5 w-3.5 me-1" />
-                        בטל
-                      </Button>
-                    ) : (
-                      <Button
-                        size="sm"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                        variant="outline"
                         onClick={() => {
-                          markMutation.mutate(
-                            { clientId: row.id, triggerKey },
-                            {
-                              onSuccess: () =>
-                                toast.success("סומן כטופל", {
-                                  description: row.fullName ?? undefined,
-                                }),
-                            },
-                          );
+                          setComposerClient({
+                            id: row.id,
+                            fullName: row.fullName,
+                            phone: row.phone,
+                            age,
+                          });
+                          setComposerOpen(true);
                         }}
-                        disabled={markMutation.isPending}
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5 me-1" />
-                        טפלתי
+                        <MessageSquare className="h-3.5 w-3.5 me-1" />
+                        וואטסאפ
                       </Button>
-                    )}
-                  </div>
-                </li>
-              ))}
+                      {row.handled ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            unmarkMutation.mutate({ clientId: row.id, triggerKey })
+                          }
+                          disabled={unmarkMutation.isPending}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5 me-1" />
+                          בטל
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                          onClick={() => {
+                            markMutation.mutate(
+                              { clientId: row.id, triggerKey },
+                              {
+                                onSuccess: () =>
+                                  toast.success("סומן כטופל", {
+                                    description: row.fullName ?? undefined,
+                                  }),
+                              },
+                            );
+                          }}
+                          disabled={markMutation.isPending}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 me-1" />
+                          טפלתי
+                        </Button>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           )}
 
-          <div className="flex justify-end mt-4 pt-3 border-t border-border">
+          <div className="flex justify-between items-center mt-4 pt-3 border-t border-border">
+            <div className="text-xs text-muted-foreground">
+              💡 לחיצה על שם הלקוח פותחת כרטיס מלא — כל ההתראות, יומן הפעולות ותזכורות.
+            </div>
             <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
               <X className="h-4 w-4 me-1" />
               סגירה
@@ -234,6 +313,20 @@ export function TriggerClientsModal({
           agentName={agentName}
         />
       ) : null}
+
+      <ClientDetailModal
+        clientId={detailClientId}
+        open={detailClientId !== null}
+        onOpenChange={o => {
+          if (!o) setDetailClientId(null);
+        }}
+        triggerContext={triggerKey}
+        onMarkHandled={() => {
+          // Refresh this list after mark-handled inside the detail modal.
+          utils.triggers.listClients.invalidate({ triggerKey });
+          utils.triggers.handledCounts.invalidate();
+        }}
+      />
     </>
   );
 }

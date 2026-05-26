@@ -1080,6 +1080,133 @@ export const appRouter = router({
     }),
   }),
 
+  // ========================================================
+  // ROUND 131 — CLIENT JOURNEY ROUTER
+  // Activity log, reminders, full client detail, agent reassign.
+  // Every procedure is workspace-scoped via workspaceProcedure;
+  // mutations that modify ownership go through workspaceAdminProcedure.
+  // ========================================================
+  clientJourney: router({
+    /** Aggregate detail for the client-detail panel. */
+    getDetail: workspaceProcedure
+      .input(z.object({ clientId: z.number().int().positive() }))
+      .query(async ({ ctx, input }) => {
+        return db.getClientDetail({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+      }),
+    /** Append an activity (call/whatsapp/email/meeting/note/sms). */
+    logActivity: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive(),
+          type: z.enum(["call", "whatsapp", "email", "meeting", "note", "sms"]),
+          outcome: z.string().max(64).optional(),
+          content: z.string().max(4000).optional(),
+          triggerKey: z.string().max(64).optional(),
+          scheduledFor: z.date().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.insertClientActivity({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          type: input.type,
+          outcome: input.outcome ?? null,
+          content: input.content ?? null,
+          triggerKey: input.triggerKey ?? null,
+          scheduledFor: input.scheduledFor ?? null,
+        });
+        return { id, ok: true } as const;
+      }),
+    /** List activities for a single client (newest first). */
+    listActivities: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive(),
+          limit: z.number().int().min(1).max(200).optional(),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        return db.listActivitiesForClient({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          limit: input.limit,
+        });
+      }),
+    /** Snooze: remind me about this client at a future date. */
+    createReminder: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive(),
+          remindAt: z.date(),
+          triggerKey: z.string().max(64).optional(),
+          note: z.string().max(2000).optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createClientReminder({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          remindAt: input.remindAt,
+          triggerKey: input.triggerKey ?? null,
+          note: input.note ?? null,
+        });
+        return { id, ok: true } as const;
+      }),
+    /** Pending/due reminders for the caller. */
+    listDueReminders: workspaceProcedure.query(async ({ ctx }) => {
+      return db.listDueReminders({
+        workspaceId: ctx.user.workspaceId,
+        userId: ctx.user.id,
+        workspaceRole: ctx.user.workspaceRole,
+      });
+    }),
+    /** Dismiss / cancel / mark a reminder as fired. */
+    setReminderStatus: workspaceProcedure
+      .input(
+        z.object({
+          reminderId: z.number().int().positive(),
+          status: z.enum(["pending", "fired", "dismissed", "cancelled"]),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        return db.updateReminderStatus({
+          reminderId: input.reminderId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          status: input.status,
+        });
+      }),
+    /** Reassign a client to another agent in the same workspace (admins/owners only). */
+    reassign: workspaceAdminProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive(),
+          newOwnerUserId: z.number().int().positive(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        return db.reassignClient({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          callerUserId: ctx.user.id,
+          callerRole: ctx.user.workspaceRole,
+          newOwnerUserId: input.newOwnerUserId,
+        });
+      }),
+  }),
+
   admin: adminRouter,
 
   billing: billingRouter,

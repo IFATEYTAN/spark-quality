@@ -1,8 +1,12 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
+  clientActivities,
+  clientReminders,
   clients,
   type InsertClient,
+  type InsertClientActivity,
+  type InsertClientReminder,
   type InsertInvitation,
   type InsertReport,
   type InsertUser,
@@ -1816,4 +1820,363 @@ export async function countClientFlags(opts: {
   const out: Record<string, number> = {};
   for (const row of rows) out[row.triggerKey] = Number(row.n);
   return out;
+}
+
+
+// ============================================================
+// ROUND 131 — CLIENT JOURNEY HELPERS
+// Activities (call/whatsapp/email/meeting/note logs), reminders
+// (snoozes), and the unified client-detail aggregate. All helpers
+// take the same workspaceId + userId + workspaceRole tuple so an
+// agent can never see another agent's data, and no row from any
+// other workspace can ever leak in or out.
+// ============================================================
+
+type WorkspaceRole = "owner" | "admin" | "agent";
+
+/**
+ * Internal: assert the (clientId, workspaceId) pair is visible to the caller.
+ * Throws if the agent does not own the client or the client is in a different workspace.
+ * Returns the resolved client row so callers can reuse it without a second query.
+ */
+async function assertClientVisible(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+}) {
+  const row = await getClientById({
+    clientId: opts.clientId,
+    workspaceId: opts.workspaceId,
+    userId: opts.userId,
+    workspaceRole: opts.workspaceRole,
+  });
+  if (!row) {
+    throw new Error("Client not visible to caller (workspace or owner mismatch).");
+  }
+  return row;
+}
+
+/**
+ * Insert a new activity row (call / whatsapp / email / meeting / note / sms).
+ * The workspaceId on the row is derived from the visibility check, so a caller
+ * cannot smuggle a foreign workspaceId.
+ */
+export async function insertClientActivity(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+  type: "call" | "whatsapp" | "email" | "meeting" | "note" | "sms";
+  outcome?: string | null;
+  content?: string | null;
+  triggerKey?: string | null;
+  scheduledFor?: Date | null;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await assertClientVisible({
+    clientId: opts.clientId,
+    workspaceId: opts.workspaceId,
+    userId: opts.userId,
+    workspaceRole: opts.workspaceRole,
+  });
+
+  const insertable: InsertClientActivity = {
+    workspaceId: opts.workspaceId,
+    clientId: opts.clientId,
+    type: opts.type,
+    outcome: opts.outcome ?? null,
+    content: opts.content ?? null,
+    triggerKey: opts.triggerKey ?? null,
+    scheduledFor: opts.scheduledFor ?? null,
+    createdBy: opts.userId,
+  };
+  const result = await db.insert(clientActivities).values(insertable);
+  const insertId =
+    (result as unknown as { insertId?: number }).insertId ??
+    (result as unknown as Array<{ insertId?: number }>)[0]?.insertId;
+  if (typeof insertId !== "number" || !Number.isFinite(insertId) || insertId <= 0) {
+    throw new Error(
+      `Failed to read insertId from insertClientActivity result. Raw: ${JSON.stringify(result)}`,
+    );
+  }
+  return insertId;
+}
+
+/**
+ * List activities for a single client (newest first), strictly scoped.
+ */
+export async function listActivitiesForClient(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  await assertClientVisible({
+    clientId: opts.clientId,
+    workspaceId: opts.workspaceId,
+    userId: opts.userId,
+    workspaceRole: opts.workspaceRole,
+  });
+
+  const limit = Math.min(Math.max(opts.limit ?? 50, 1), 200);
+  return db
+    .select()
+    .from(clientActivities)
+    .where(
+      and(
+        eq(clientActivities.workspaceId, opts.workspaceId),
+        eq(clientActivities.clientId, opts.clientId),
+      ),
+    )
+    .orderBy(desc(clientActivities.createdAt))
+    .limit(limit);
+}
+
+/**
+ * Create a snooze / follow-up reminder for a client.
+ */
+export async function createClientReminder(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+  remindAt: Date;
+  triggerKey?: string | null;
+  note?: string | null;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await assertClientVisible({
+    clientId: opts.clientId,
+    workspaceId: opts.workspaceId,
+    userId: opts.userId,
+    workspaceRole: opts.workspaceRole,
+  });
+
+  const insertable: InsertClientReminder = {
+    workspaceId: opts.workspaceId,
+    clientId: opts.clientId,
+    triggerKey: opts.triggerKey ?? null,
+    note: opts.note ?? null,
+    remindAt: opts.remindAt,
+    status: "pending",
+    createdBy: opts.userId,
+  };
+  const result = await db.insert(clientReminders).values(insertable);
+  const insertId =
+    (result as unknown as { insertId?: number }).insertId ??
+    (result as unknown as Array<{ insertId?: number }>)[0]?.insertId;
+  if (typeof insertId !== "number" || !Number.isFinite(insertId) || insertId <= 0) {
+    throw new Error(
+      `Failed to read insertId from createClientReminder result. Raw: ${JSON.stringify(result)}`,
+    );
+  }
+  return insertId;
+}
+
+/**
+ * List due/pending reminders for the caller's workspace, oldest first.
+ * Agents only see reminders for clients they own; admins/owners see all.
+ */
+export async function listDueReminders(opts: {
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+  onlyPending?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const onlyPending = opts.onlyPending ?? true;
+
+  // For agents we restrict to clients they own by joining clients.
+  const baseJoin = db
+    .select({
+      reminder: clientReminders,
+      clientName: clients.fullName,
+      clientPhone: clients.phone,
+      clientEmail: clients.email,
+      clientOwnerUserId: clients.ownerUserId,
+    })
+    .from(clientReminders)
+    .innerJoin(clients, eq(clientReminders.clientId, clients.id));
+
+  const whereCond = opts.workspaceRole === "agent"
+    ? and(
+        eq(clientReminders.workspaceId, opts.workspaceId),
+        eq(clients.ownerUserId, opts.userId),
+        ...(onlyPending ? [eq(clientReminders.status, "pending")] : []),
+      )
+    : and(
+        eq(clientReminders.workspaceId, opts.workspaceId),
+        ...(onlyPending ? [eq(clientReminders.status, "pending")] : []),
+      );
+
+  return baseJoin
+    .where(whereCond)
+    .orderBy(clientReminders.remindAt)
+    .limit(200);
+}
+
+/**
+ * Mark a reminder as dismissed (or any status). Idempotent.
+ */
+export async function updateReminderStatus(opts: {
+  reminderId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+  status: "pending" | "fired" | "dismissed" | "cancelled";
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Make sure the reminder belongs to this workspace.
+  const existing = await db
+    .select()
+    .from(clientReminders)
+    .where(
+      and(
+        eq(clientReminders.id, opts.reminderId),
+        eq(clientReminders.workspaceId, opts.workspaceId),
+      ),
+    )
+    .limit(1);
+
+  if (existing.length === 0) {
+    throw new Error("Reminder not found in this workspace.");
+  }
+
+  // Agents may only update reminders they themselves created.
+  if (opts.workspaceRole === "agent" && existing[0].createdBy !== opts.userId) {
+    throw new Error("Agents can only modify reminders they created.");
+  }
+
+  await db
+    .update(clientReminders)
+    .set({ status: opts.status })
+    .where(eq(clientReminders.id, opts.reminderId));
+  return { ok: true } as const;
+}
+
+/**
+ * Aggregate client detail: profile + matching trigger keys + recent activities + open reminders.
+ * The single call the ClientDetail UI panel will make.
+ */
+export async function getClientDetail(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const client = await getClientById({
+    clientId: opts.clientId,
+    workspaceId: opts.workspaceId,
+    userId: opts.userId,
+    workspaceRole: opts.workspaceRole,
+  });
+  if (!client) return null;
+
+  // Note: clientFlags / clientActivities / clientReminders are imported elsewhere
+  // in this file; we re-import here as a defensive measure for the symbol scope.
+  const flagsRows = await db
+    .select()
+    .from(clientFlagsTable())
+    .where(
+      and(
+        eq(clientFlagsTable().workspaceId, opts.workspaceId),
+        eq(clientFlagsTable().clientId, opts.clientId),
+      ),
+    );
+
+  const activities = await listActivitiesForClient({
+    clientId: opts.clientId,
+    workspaceId: opts.workspaceId,
+    userId: opts.userId,
+    workspaceRole: opts.workspaceRole,
+    limit: 50,
+  });
+
+  const reminders = await db
+    .select()
+    .from(clientReminders)
+    .where(
+      and(
+        eq(clientReminders.workspaceId, opts.workspaceId),
+        eq(clientReminders.clientId, opts.clientId),
+      ),
+    )
+    .orderBy(desc(clientReminders.createdAt))
+    .limit(50);
+
+  return {
+    client,
+    triggers: flagsRows.map(f => f.triggerKey),
+    activities,
+    reminders,
+  };
+}
+
+// Helper to access the clientFlags table without re-declaring.
+// `clientFlags` is exported from drizzle/schema and already imported via the
+// computeWorkspaceFlags region; we expose a tiny accessor so getClientDetail
+// can be appended without touching the import block.
+import { clientFlags as _clientFlagsTableImport } from "../drizzle/schema";
+function clientFlagsTable() {
+  return _clientFlagsTableImport;
+}
+
+/**
+ * Reassign a client to another agent. Workspace admins/owners only.
+ * The new owner must belong to the same workspace.
+ */
+export async function reassignClient(opts: {
+  clientId: number;
+  workspaceId: number;
+  callerUserId: number;
+  callerRole: WorkspaceRole;
+  newOwnerUserId: number;
+}) {
+  if (opts.callerRole !== "owner" && opts.callerRole !== "admin") {
+    throw new Error("Only workspace owners/admins can reassign clients.");
+  }
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Verify the new owner belongs to this workspace.
+  const newOwner = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.id, opts.newOwnerUserId), eq(users.workspaceId, opts.workspaceId)))
+    .limit(1);
+  if (newOwner.length === 0) {
+    throw new Error("Target user does not belong to this workspace.");
+  }
+
+  // Verify the client lives in this workspace.
+  const existing = await db
+    .select()
+    .from(clients)
+    .where(and(eq(clients.id, opts.clientId), eq(clients.workspaceId, opts.workspaceId)))
+    .limit(1);
+  if (existing.length === 0) {
+    throw new Error("Client not found in this workspace.");
+  }
+
+  await db
+    .update(clients)
+    .set({ ownerUserId: opts.newOwnerUserId })
+    .where(eq(clients.id, opts.clientId));
+  return { ok: true } as const;
 }
