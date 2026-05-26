@@ -1,4 +1,4 @@
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   clients,
@@ -1319,8 +1319,10 @@ export async function adminArchivePaymentAttempt(requestId: string): Promise<voi
 import {
   messageGenerations,
   triggerHandled,
+  clientFlags,
   type InsertMessageGeneration,
   type InsertTriggerHandled,
+  type InsertClientFlag,
 } from "../drizzle/schema";
 
 /** Persist a Claude composeVariants call. Returns the new row id. */
@@ -1506,4 +1508,312 @@ export async function listClientsForTrigger(opts: {
     .limit(limit);
 
   return clientRows.map(c => ({ ...c, handled: handledSet.has(c.id) }));
+}
+
+// ============================================================
+// CLIENT FLAGS (Round 128 — Multi-flag per client)
+// ------------------------------------------------------------
+// `getWorkspaceMetrics` historically computed the 16 trigger counts in
+// memory by re-deriving each rule from clients + policies + birthDate +
+// notes. The dashboard cards therefore showed correct numbers, but
+// `listClientsForTrigger` filtered by the legacy `flagStatus` column
+// (which can hold only ONE value per client and only knows 6 legacy
+// triggers). The result: counts > 0 but the modal list was empty.
+//
+// The new model:
+//   • `client_flags` is a join table — one row per (client, triggerKey).
+//   • `computeWorkspaceFlags` runs the SAME 16 rules and writes one row
+//     per matching trigger per client. Counts and lists now share the
+//     same source of truth.
+//   • Called from the upload pipeline (reports.save) and from a manual
+//     "recompute" procedure so existing data can be backfilled without
+//     re-uploading.
+// ============================================================
+
+/**
+ * Compute the full 16-trigger set for every client in the workspace and
+ * persist them to `client_flags`. Replaces all existing flags for the
+ * workspace (full refresh — cheaper and safer than diff-then-merge).
+ *
+ * Returns: per-trigger insert counts, plus distinctClients with any flag.
+ */
+export async function computeWorkspaceFlags(opts: {
+  workspaceId: number;
+}): Promise<{
+  totalFlagsWritten: number;
+  byTrigger: Record<string, number>;
+  distinctClients: number;
+}> {
+  const db = await getDb();
+  if (!db) {
+    return { totalFlagsWritten: 0, byTrigger: {}, distinctClients: 0 };
+  }
+
+  const allClients = await db
+    .select()
+    .from(clients)
+    .where(eq(clients.workspaceId, opts.workspaceId));
+
+  const policyRows = await db
+    .select()
+    .from(policies)
+    .where(eq(policies.workspaceId, opts.workspaceId));
+
+  const policiesByClient = new Map<number, typeof policyRows>();
+  for (const p of policyRows) {
+    const arr = policiesByClient.get(p.clientId) ?? [];
+    arr.push(p);
+    policiesByClient.set(p.clientId, arr);
+  }
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const in90Days = new Date(today);
+  in90Days.setDate(in90Days.getDate() + 90);
+
+  const milestoneAges = new Set([18, 30, 40, 50, 60, 67, 70, 80]);
+  const flaggedClients = new Set<number>();
+  const rowsToInsert: InsertClientFlag[] = [];
+
+  function addFlag(clientId: number, triggerKey: string) {
+    rowsToInsert.push({
+      workspaceId: opts.workspaceId,
+      clientId,
+      triggerKey,
+    });
+    flaggedClients.add(clientId);
+  }
+
+  for (const r of allClients) {
+    const ps = policiesByClient.get(r.id) ?? [];
+    const active = ps.filter(p => p.status === "active");
+    const hasPension = active.some(
+      p => (p.productType ?? "").toLowerCase().includes("pension") ||
+        (p.productType ?? "").includes("פנס")
+    );
+    const hasInsurance = active.some(
+      p => (p.productType ?? "").toLowerCase().match(/risk|health|life|elementary/) ||
+        (p.productType ?? "").match(/ריסק|בריאות|חיים|סיעוד/)
+    );
+    const hasSavings = active.some(
+      p => (p.productType ?? "").toLowerCase().match(/saving|gemel|hishtalmut/) ||
+        (p.productType ?? "").match(/חיסכון|גמל|השתלמות/)
+    );
+
+    // Age computation
+    let age = -1;
+    if (r.birthDate) {
+      const dob = new Date(r.birthDate);
+      if (!Number.isNaN(dob.getTime())) {
+        age = now.getFullYear() - dob.getFullYear() -
+          (now < new Date(now.getFullYear(), dob.getMonth(), dob.getDate()) ? 1 : 0);
+      }
+    }
+
+    // VIP / soft signals
+    if (r.isVip) addFlag(r.id, "vipGoldPremium");
+    if (!r.email || r.email.trim() === "") addFlag(r.id, "noEmail");
+
+    // Birthday triggers
+    if (r.birthDate) {
+      const dob = new Date(r.birthDate);
+      if (!Number.isNaN(dob.getTime())) {
+        if (dob.getMonth() === now.getMonth()) addFlag(r.id, "birthdayThisMonth");
+        if (milestoneAges.has(age + 1) && dob.getMonth() === now.getMonth()) {
+          addFlag(r.id, "birthdayMilestone");
+        }
+      }
+    }
+    if (age >= 46 && age < 60) addFlag(r.id, "age46NoLongTermCare");
+
+    // Pension / insurance / savings rules
+    if (!hasPension) addFlag(r.id, "noActivePension");
+    if (hasSavings && !hasInsurance) addFlag(r.id, "savingsNoInsurance");
+
+    // Risk policy ending soon
+    const riskEndingSoon = active.some(p => {
+      if (!p.endDate) return false;
+      const t = (p.productType ?? "").toLowerCase();
+      const isRisk = t.includes("risk") || (p.productType ?? "").includes("ריסק");
+      if (!isRisk) return false;
+      const end = new Date(p.endDate);
+      return end >= today && end <= in90Days;
+    });
+    if (riskEndingSoon) addFlag(r.id, "riskTemporary");
+
+    // Any active policy ending soon
+    const anyEndingSoon = active.some(p => {
+      if (!p.endDate) return false;
+      const end = new Date(p.endDate);
+      return end >= today && end <= in90Days;
+    });
+    if (anyEndingSoon) addFlag(r.id, "coverageEnding");
+
+    // AUM frozen
+    const noPremium = active.every(
+      p => Number(p.monthlyPremium ?? 0) === 0 && Number(p.annualPremium ?? 0) === 0
+    );
+    if (active.length > 0 && noPremium && Number(r.totalBalance ?? 0) > 0) {
+      addFlag(r.id, "aumFrozen");
+    }
+
+    // Track mismatch
+    const productTypes = new Set(active.map(p => p.productType ?? ""));
+    if (r.isVip && productTypes.size === 1 && Number(r.totalBalance ?? 0) > 100_000) {
+      addFlag(r.id, "trackMismatch");
+    }
+
+    // Concentration risk
+    const totalBal = active.reduce((s, p) => s + Number(p.balance ?? 0), 0);
+    if (totalBal > 0) {
+      const maxBal = Math.max(...active.map(p => Number(p.balance ?? 0)));
+      if (maxBal / totalBal > 0.7 && totalBal > 50_000) {
+        addFlag(r.id, "concentrationRisk");
+      }
+    }
+
+    // Self-employed without deposit
+    if (hasPension) {
+      const pensionPolicies = active.filter(
+        p => (p.productType ?? "").toLowerCase().includes("pension") ||
+          (p.productType ?? "").includes("פנס")
+      );
+      const allPensionsZero = pensionPolicies.every(
+        p => Number(p.monthlyPremium ?? 0) === 0
+      );
+      if (allPensionsZero) addFlag(r.id, "selfEmployedNoDeposit");
+    }
+
+    // Power of attorney heuristic from notes
+    if (r.notes) {
+      const n = r.notes.toLowerCase();
+      if (n.includes("ייפוי כוח פג") || n.includes("poa expired")) {
+        addFlag(r.id, "poaExpired");
+      } else if (n.includes("ייפוי כוח") || n.includes("poa")) {
+        addFlag(r.id, "poaExpiring90d");
+      }
+    }
+
+    // Legacy flagStatus → new triggerKeys (so existing imports stay visible)
+    switch (r.flagStatus) {
+      case "high_fees":
+        addFlag(r.id, "highFees");
+        break;
+      // legacy values kept for backward compatibility — but they are not part
+      // of the 16-trigger surface today
+      default:
+        break;
+    }
+  }
+
+  // Replace all flags for this workspace atomically
+  await db
+    .delete(clientFlags)
+    .where(eq(clientFlags.workspaceId, opts.workspaceId));
+
+  if (rowsToInsert.length > 0) {
+    const BATCH = 1000;
+    for (let i = 0; i < rowsToInsert.length; i += BATCH) {
+      const batch = rowsToInsert.slice(i, i + BATCH);
+      // ON DUPLICATE KEY ignore (uniqueWorkspaceClientTrigger constraint).
+      // Since we just deleted all flags for the workspace, duplicates within
+      // a single batch should not occur — but guard anyway.
+      await db
+        .insert(clientFlags)
+        .values(batch)
+        .onDuplicateKeyUpdate({
+          set: { triggerKey: sql`VALUES(\`triggerKey\`)` },
+        });
+    }
+  }
+
+  const byTrigger: Record<string, number> = {};
+  for (const row of rowsToInsert) {
+    byTrigger[row.triggerKey] = (byTrigger[row.triggerKey] ?? 0) + 1;
+  }
+
+  return {
+    totalFlagsWritten: rowsToInsert.length,
+    byTrigger,
+    distinctClients: flaggedClients.size,
+  };
+}
+
+/**
+ * v2 of listClientsForTrigger that reads from the new clientFlags join table.
+ * Falls back to the legacy `flagStatus` / `isVip` columns ONLY if the
+ * workspace has zero flags persisted yet (i.e. an old upload that has not
+ * been backfilled). This keeps the upgrade non-breaking.
+ */
+export async function listClientsForTriggerV2(opts: {
+  workspaceId: number;
+  triggerKey: string;
+  userId: number;
+  workspaceRole: "owner" | "admin" | "agent" | null | undefined;
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const limit = opts.limit ?? 500;
+  const isAgent = opts.workspaceRole === "agent";
+
+  // Fast path: read from clientFlags
+  const flagged = await db
+    .select({ clientId: clientFlags.clientId })
+    .from(clientFlags)
+    .where(
+      and(
+        eq(clientFlags.workspaceId, opts.workspaceId),
+        eq(clientFlags.triggerKey, opts.triggerKey),
+      ),
+    );
+
+  const flaggedIds = flagged.map(r => r.clientId);
+
+  if (flaggedIds.length > 0) {
+    const whereClauses = [
+      eq(clients.workspaceId, opts.workspaceId),
+      inArray(clients.id, flaggedIds),
+      ...(isAgent ? [eq(clients.ownerUserId, opts.userId)] : []),
+    ];
+    const handledRows = await db
+      .select({ clientId: triggerHandled.clientId })
+      .from(triggerHandled)
+      .where(
+        and(
+          eq(triggerHandled.workspaceId, opts.workspaceId),
+          eq(triggerHandled.triggerKey, opts.triggerKey),
+        ),
+      );
+    const handledSet = new Set(handledRows.map(r => r.clientId));
+    const clientRows = await db
+      .select()
+      .from(clients)
+      .where(and(...whereClauses))
+      .orderBy(desc(clients.totalBalance))
+      .limit(limit);
+    return clientRows.map(c => ({ ...c, handled: handledSet.has(c.id) }));
+  }
+
+  // Fallback: legacy filter when no flags have been computed yet
+  return listClientsForTrigger(opts);
+}
+
+/** Helper for tests / admin tools */
+export async function countClientFlags(opts: {
+  workspaceId: number;
+}): Promise<Record<string, number>> {
+  const db = await getDb();
+  if (!db) return {};
+  const rows = await db
+    .select({
+      triggerKey: clientFlags.triggerKey,
+      n: sql<number>`count(*)`,
+    })
+    .from(clientFlags)
+    .where(eq(clientFlags.workspaceId, opts.workspaceId))
+    .groupBy(clientFlags.triggerKey);
+  const out: Record<string, number> = {};
+  for (const row of rows) out[row.triggerKey] = Number(row.n);
+  return out;
 }

@@ -631,6 +631,15 @@ export const appRouter = router({
           });
         }
 
+        // Round 128 — immediately compute multi-flag triggers so the modal
+        // lists per category are never empty after an upload. Scoped to the
+        // caller's workspace; other tenants are not touched.
+        try {
+          await db.computeWorkspaceFlags({ workspaceId: ctx.user.workspaceId });
+        } catch (err) {
+          console.warn("[reports.save] computeWorkspaceFlags failed (non-fatal)", err);
+        }
+
         return { id: reportId, importedCount };
       }),
 
@@ -911,13 +920,28 @@ export const appRouter = router({
     listClients: workspaceProcedure
       .input(z.object({ triggerKey: z.string().min(1).max(64) }))
       .query(async ({ ctx, input }) => {
-        return db.listClientsForTrigger({
+        // Round 128 — v2 reads from the multi-flag clientFlags table so a
+        // single client can appear in EVERY trigger list relevant to them.
+        // Falls back to the legacy single-flag column only when the
+        // workspace has not been backfilled yet.
+        return db.listClientsForTriggerV2({
           workspaceId: ctx.user.workspaceId,
           triggerKey: input.triggerKey,
           userId: ctx.user.id,
           workspaceRole: ctx.user.workspaceRole,
         });
       }),
+    /**
+     * Round 128 — Recompute all per-client triggers for the caller's workspace.
+     * Re-derives the 16 priority triggers and writes one row per match into
+     * `client_flags`. Tenant-isolated by workspaceId.
+     */
+    recompute: workspaceProcedure.mutation(async ({ ctx }) => {
+      const result = await db.computeWorkspaceFlags({
+        workspaceId: ctx.user.workspaceId,
+      });
+      return { ok: true as const, ...result };
+    }),
     /** Mark a (clientId, triggerKey) pair as handled by the current user. Idempotent. */
     markHandled: workspaceProcedure
       .input(

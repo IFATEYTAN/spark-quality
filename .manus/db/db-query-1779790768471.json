@@ -1,0 +1,26 @@
+{
+  "query": "SELECT triggerKey, COUNT(*) AS n FROM client_flags WHERE workspaceId = 1 GROUP BY triggerKey ORDER BY n DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user ScXmtJuaTeKxeck.a823cb61aea9 --database ZqvPyEVdTkw9DPvc2ezGwV --execute SELECT triggerKey, COUNT(*) AS n FROM client_flags WHERE workspaceId = 1 GROUP BY triggerKey ORDER BY n DESC;",
+  "rows": [
+    {
+      "triggerKey": "noActivePension",
+      "n": "1460"
+    },
+    {
+      "triggerKey": "noEmail",
+      "n": "252"
+    },
+    {
+      "triggerKey": "highFees",
+      "n": "48"
+    },
+    {
+      "triggerKey": "vipGoldPremium",
+      "n": "30"
+    }
+  ],
+  "messages": [],
+  "stdout": "triggerKey\tn\nnoActivePension\t1460\nnoEmail\t252\nhighFees\t48\nvipGoldPremium\t30\n",
+  "stderr": "",
+  "execution_time_ms": 1770
+}

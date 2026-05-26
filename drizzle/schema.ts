@@ -547,3 +547,38 @@ export const triggerHandled = mysqlTable(
 );
 export type TriggerHandled = typeof triggerHandled.$inferSelect;
 export type InsertTriggerHandled = typeof triggerHandled.$inferInsert;
+
+// ============================================================
+// CLIENT FLAGS (Round 128 — Multi-flag per client)
+// One row per (clientId, triggerKey). Replaces the single `flagStatus` column
+// on `clients` so a client can appear in EVERY relevant trigger list. The
+// upload pipeline writes one row for each trigger that matches the client.
+// ============================================================
+export const clientFlags = mysqlTable(
+  "client_flags",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    clientId: int("clientId").references(() => clients.id).notNull(),
+    /** Trigger key, e.g. "vipGoldPremium", "noEmail", "highFees", "birthdayThisMonth". */
+    triggerKey: varchar("triggerKey", { length: 64 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("client_flags_workspace_idx").on(table.workspaceId),
+    clientIdx: index("client_flags_client_idx").on(table.clientId),
+    triggerIdx: index("client_flags_trigger_idx").on(table.triggerKey),
+    workspaceTriggerIdx: index("client_flags_ws_trigger_idx").on(
+      table.workspaceId,
+      table.triggerKey,
+    ),
+    /** A given (client, trigger) pair can only exist once per workspace. */
+    uniqueWorkspaceClientTrigger: unique("uq_client_flags_ws_client_trigger").on(
+      table.workspaceId,
+      table.clientId,
+      table.triggerKey,
+    ),
+  }),
+);
+export type ClientFlag = typeof clientFlags.$inferSelect;
+export type InsertClientFlag = typeof clientFlags.$inferInsert;

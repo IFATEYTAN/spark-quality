@@ -1113,4 +1113,50 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] הוספת meta description + Open Graph tags + Twitter Card ל-client/index.html
 - [x] יצירת תמונת cover (1200×630) ב-AI עם הזהות החזותית של המוצר
 - [x] עדכון og:image ל-CDN URL הקבוע
-- [ ] שמירת checkpoint + הנחיית הלקוחה לפרסם וכיצד לעקוף את ה-cache של WhatsApp (?v=2)
+- [x] שמירת checkpoint (f10c3bf4) — מוכן ל-Publish + הנחיית לעקיפת cache של WhatsApp
+
+
+## Round 127 — חזרה אוטומטית מתשלום iCount לתהליך הרישום (2026-05-19)
+- [ ] קריאת server/billing.ts ו-makeCheckout.ts להבנת זרימת התשלום הנוכחית (return_url ל-iCount, callback)
+- [ ] בדיקה איך ה-webhook מעדכן את workspace.accessStatus ל-active לאחר תשלום
+- [ ] חיפוש מסכי "Thank You" / "Payment Success" / continue-onboarding בקוד (BillingWaiting / PaymentSuccess)
+- [ ] דיווח לציפי על המצב הקיים + הצעת המסך/דף לחזרה אוטומטית
+- [ ] קבלת אישור על היעד הסופי (dashboard / onboarding-continue / thank-you)
+- [ ] מימוש redirect + מסך מתאים + polling אם צריך לחכות ל-webhook
+- [ ] בדיקה end-to-end עם קוד קופון (זרם חינמי) + תשלום אמיתי
+- [ ] שמירת checkpoint + הנחיה לפרסום
+
+
+## Round 128 — דחוף: לקוח חייב להופיע בכל הקטגוריות הרלוונטיות (2026-05-19)
+- [ ] הוספת טבלת clientFlags ל-drizzle/schema.ts (workspaceId FK, clientId FK, triggerKey, createdAt + unique index)
+- [ ] pnpm db:push להחלת ה-migration
+- [ ] db.ts: פונקציות עזר insertClientFlags, deleteClientFlags, listClientFlags
+- [ ] עדכון parseReport / upload pipeline לכתוב את כל הדגלים המתאימים לכל לקוח (לא רק אחד)
+- [ ] עדכון listClientsForTrigger לקרוא מ-clientFlags במקום flagStatus
+- [ ] עדכון handledCounts ושאר ספירות אם קוראות ל-flagStatus
+- [ ] backfill: סקריפט שמריץ מחדש את חישוב הדגלים על הלקוחות הקיימים, או כפתור "חישוב מחדש" ב-dashboard
+- [ ] vitest: לקוח עם 3 דגלים מופיע ברשימה של כל אחד מהשלושה
+- [ ] vitest: counts תואם ל-list length per trigger
+- [ ] בדיקה end-to-end עם דוח אמיתי ב-dev — VIP, no_pension, high_fees, no_email
+- [ ] שמירת checkpoint + הודעה למשתמשת עם הוראות פרסום
+
+
+## Round 128 - תיקון באג קריטי: לקוח חייב להופיע בכל הקטגוריות הרלוונטיות (2026-05-26)
+**הבעיה (דחוף - יוזרים בטסטים):** הכרטיסיות בדשבורד הציגו מספרים נכונים (30 VIP, 1,460 ללא פנסיה, 252 ללא מייל, 48 דמי ניהול גבוהים), אבל לחיצה על כרטיסייה פתחה מודאל ריק. שורש הבעיה: עמודה יחידה `flagStatus` יכלה לאחסן רק דגל אחד לכל לקוח, גם כשהמערכת זיהתה כמה טריגרים מתאימים.
+**הפתרון:** טבלת join חדשה `client_flags` (workspaceId, clientId, triggerKey) — שורה אחת לכל התאמה. אותה לוגיקה בדיוק שמחשבת את 16 הטריגרים בדשבורד מוחלת בעת שמירת דוח, וגם בקריאה לרשימה מאותו מקור אמת.
+
+- [x] טבלת `client_flags` נוספה לסכמה (workspaceId, clientId, triggerKey, createdAt) + UNIQUE (workspaceId, clientId, triggerKey)
+- [x] `pnpm db:push` רץ ב-MySQL והטבלה נוצרה עם האינדקסים הנכונים
+- [x] `computeWorkspaceFlags(workspaceId)` בשרת — מריץ את אותם 16 כללי טריגרים שמחשבים את הספירה ב-`getWorkspaceMetrics`, ומכניס שורה לכל התאמה
+- [x] `listClientsForTriggerV2` קורא מ-`client_flags` עם סינון לפי תפקיד (אדמין רואה הכל, סוכן רואה רק את הלקוחות שלו)
+- [x] `countClientFlags` משווה ספירה לרשימה — מובטח שזהים
+- [x] `reports.save` מפעיל `computeWorkspaceFlags` אוטומטית בסוף כל העלאת דוח
+- [x] `triggers.recompute` mutation זמין לחישוב מחדש ידני
+- [x] backfill על נתונים קיימים: 1,815 דגלים נכתבו ל-10 workspaces (workspace 1 / יפעת: 30 VIP, 1,460 ללא פנסיה, 252 ללא מייל, 48 דמי ניהול גבוהים)
+- [x] `server/clientFlags.test.ts` נוסף (5/5 בדיקות עוברות):
+  - לקוח עם כמה טריגרים מופיע בכל רשימה רלוונטית
+  - count===length לכל טריגר
+  - בידוד מוחלט בין סוכנויות
+  - חישוב מחדש לסוכנות אחת לא נוגע בנתוני סוכנות אחרת
+  - תפקיד agent רואה רק את הלקוחות שלו, אדמין רואה הכל בסוכנות
+- [x] dev server קומפל נקי (TypeScript: 0 שגיאות)
