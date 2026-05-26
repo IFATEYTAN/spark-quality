@@ -31,6 +31,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { WhatsAppComposerModalV2 } from "./WhatsAppComposerModalV2";
+import { EmailComposerModal } from "./EmailComposerModal";
 import { ClientDetailModal } from "./ClientDetailModal";
 import type { TriggerKey } from "@/lib/triggerScenarios";
 
@@ -78,13 +79,6 @@ function telHref(phone: string | null | undefined): string | null {
   return cleaned.length >= 7 ? `tel:${cleaned}` : null;
 }
 
-function mailtoHref(email: string | null | undefined, name: string | null | undefined): string | null {
-  if (!email) return null;
-  const subject = encodeURIComponent("בנושא תיק הביטוח");
-  const greeting = name ? `שלום ${name},\n\n` : "שלום,\n\n";
-  return `mailto:${email}?subject=${subject}&body=${encodeURIComponent(greeting)}`;
-}
-
 export function TriggerClientsModal({
   open,
   onOpenChange,
@@ -121,6 +115,14 @@ export function TriggerClientsModal({
     id: number;
     fullName?: string | null;
     phone?: string | null;
+    age?: number | null;
+  } | null>(null);
+
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailClient, setEmailClient] = useState<{
+    id: number;
+    fullName?: string | null;
+    email?: string | null;
     age?: number | null;
   } | null>(null);
 
@@ -161,7 +163,7 @@ export function TriggerClientsModal({
               {rows.map(row => {
                 const age = ageFromBirthDate(row.birthDate);
                 const tel = telHref(row.phone);
-                const mail = mailtoHref(row.email, row.fullName);
+                const hasEmail = !!row.email && row.email.includes("@");
                 return (
                   <li
                     key={row.id}
@@ -213,27 +215,23 @@ export function TriggerClientsModal({
                           </a>
                         </Button>
                       ) : null}
-                      {mail ? (
-                        <Button
-                          size="icon"
-                          variant="outline"
-                          asChild
-                          className="h-8 w-8"
-                          title="שלח מייל"
-                          onClick={() => {
-                            logActivityMutation.mutate({
-                              clientId: row.id,
-                              type: "email",
-                              triggerKey: triggerKey as string,
-                              content: "פתח מייל ללקוח (כפתור מהיר)",
-                            });
-                          }}
-                        >
-                          <a href={mail} aria-label="שלח מייל">
-                            <Mail className="h-3.5 w-3.5" />
-                          </a>
-                        </Button>
-                      ) : null}
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        className="h-8 w-8"
+                        title={hasEmail ? "מחולל מיילים AI" : "מחולל מיילים AI (אין כתובת — תוכל להזין ידנית)"}
+                        onClick={() => {
+                          setEmailClient({
+                            id: row.id,
+                            fullName: row.fullName,
+                            email: row.email,
+                            age,
+                          });
+                          setEmailOpen(true);
+                        }}
+                      >
+                        <Mail className="h-3.5 w-3.5" />
+                      </Button>
                       <Button
                         size="sm"
                         variant="outline"
@@ -307,6 +305,18 @@ export function TriggerClientsModal({
           open={composerOpen}
           onOpenChange={setComposerOpen}
           client={composerClient}
+          triggerKey={triggerKey}
+          triggerLabel={triggerLabel}
+          triggerHint={triggerHint}
+          agentName={agentName}
+        />
+      ) : null}
+
+      {emailClient ? (
+        <EmailComposerModal
+          open={emailOpen}
+          onOpenChange={setEmailOpen}
+          client={emailClient}
           triggerKey={triggerKey}
           triggerLabel={triggerLabel}
           triggerHint={triggerHint}

@@ -1218,3 +1218,17 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] TriggerClientsModal: שם לקוח לחיץ → ClientDetailModal; כפתורי tel: + mailto: שמתעדים אוטומטית activity
 - [x] Vitest: 7 בדיקות חדשות (round-trip activities, intra-WS isolation, cross-WS isolation, reminder lifecycle, getClientDetail, reassign permissions) — כולן עוברות
 - [x] insertId reading defensive ב-createClientReminder + insertClientActivity (תואם לדפוס createWorkspace)
+
+## Round 132 — מחולל מיילים AI לכל טריגר [2026-05-26]
+- [ ] Server: triggerEmailTemplates + clientJourney.generateEmail (3 גרסאות, נושא+body, hebrew/RTL, פר-טריגר, פר-טון), persist ל-messageGenerations
+- [ ] EmailComposerModal: בורר טון (חם/מקצועי/דחוף), הקשר נוסף, 3 כרטיסי גרסאות עם עריכת נושא+body, "פתח ב-Mail" (mailto)
+- [ ] חיבור ל-TriggerClientsModal (envelope icon) + ClientDetailModal (כפתור מייל)
+- [ ] vitest: workspace isolation, 3 variants, llm fallback, activity logging
+- [ ] todo.md + checkpoint
+
+## Round 132 follow-up — Option B + scenarios audit
+- [ ] Locate /clients edit modal component & identify clientId access
+- [ ] Insert "active triggers" panel + "open full journey" button inside it
+- [ ] Mount ClientDetailModal on top from the edit modal
+- [ ] TS clean + checkpoint
+- [ ] Audit all 16 InteractiveTriggersGrid scenarios (correct/incorrect; flag cross-contamination like power-of-attorney mixed with Tikun-190)

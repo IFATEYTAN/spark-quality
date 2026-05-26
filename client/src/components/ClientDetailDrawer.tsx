@@ -19,6 +19,35 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ClientDetailModal } from "./ClientDetailModal";
+import { Sparkles as SparklesIcon, Rocket } from "lucide-react";
+
+/** Hebrew label + bucket for each trigger key shown as a badge. */
+const TRIGGER_LABELS: Record<string, { label: string; bucket: "urgent" | "opportunity" | "improvement" | "retention" }> = {
+  noActivePension: { label: "ללא פנסיה פעילה", bucket: "opportunity" },
+  vipGoldPremium: { label: "VIP / זהב", bucket: "opportunity" },
+  highFees: { label: "דמי ניהול גבוהים", bucket: "improvement" },
+  age46NoLongTermCare: { label: "46+ ללא סיעודי", bucket: "improvement" },
+  liquidContinuingEducation: { label: "השתלמות נזילה", bucket: "opportunity" },
+  tikun190Eligible: { label: "זכאי לתיקון 190", bucket: "opportunity" },
+  riskEnding: { label: "ריסק מסתיים", bucket: "urgent" },
+  coverageGaps: { label: "חוסרי כיסוי", bucket: "urgent" },
+  poaExpiring: { label: "ייפוי כוח פוקע", bucket: "urgent" },
+  birthdayThisMonth: { label: "יום הולדת החודש", bucket: "retention" },
+  noEmail: { label: "חסר מייל", bucket: "improvement" },
+  inactive: { label: "חוסר מגע שנתי", bucket: "retention" },
+  noLifeInsurance: { label: "אין ביטוח חיים", bucket: "urgent" },
+  noHealth: { label: "אין ביטוח בריאות", bucket: "improvement" },
+  underInsured: { label: "תת-ביטוח", bucket: "improvement" },
+  highBalance: { label: "צבירה גבוהה", bucket: "opportunity" },
+};
+
+const BUCKET_BADGE: Record<string, string> = {
+  urgent: "bg-rose-500/15 text-rose-300 border-rose-400/40",
+  opportunity: "bg-gold/15 text-gold border-gold/50",
+  improvement: "bg-amber-500/15 text-amber-200 border-amber-400/40",
+  retention: "bg-emerald-500/15 text-emerald-200 border-emerald-400/40",
+};
 
 type FlagStatus =
   | "regular"
@@ -84,9 +113,18 @@ export function ClientDetailDrawer({
     },
   });
 
+  const [journeyOpen, setJourneyOpen] = useState(false);
+
+  // Fetch active triggers for the badges panel.
+  const detailQuery = trpc.clientJourney.getDetail.useQuery(
+    { clientId: client?.id ?? 0 },
+    { enabled: !!client?.id, refetchOnWindowFocus: false },
+  );
+
   if (!client) return null;
 
   const totalBalance = Number(client.totalBalance ?? 0);
+  const activeTriggers = (detailQuery.data?.triggers ?? []) as string[];
   const dirty =
     isVip !== client.isVip ||
     notes !== (client.notes ?? "") ||
@@ -161,6 +199,49 @@ export function ClientDetailDrawer({
               mono
             />
           )}
+        </section>
+
+        {/* Active triggers + journey CTA (Round 132) */}
+        <section className="p-5 border-b border-white/5 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-bold text-gold tracking-wider uppercase">
+              <SparklesIcon className="h-3 w-3 inline ml-1.5" />
+              התראות פעילות
+            </label>
+            <span className="text-[10px] text-white/45">
+              {detailQuery.isLoading ? "טוען…" : `${activeTriggers.length} פעילות`}
+            </span>
+          </div>
+          {detailQuery.isLoading ? (
+            <div className="text-xs text-white/45">בודק התראות…</div>
+          ) : activeTriggers.length === 0 ? (
+            <div className="text-xs text-white/55">
+              ללקוח זה אין כרגע התראות פעילות — מצב טוב.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {activeTriggers.map((t) => {
+                const meta = TRIGGER_LABELS[t];
+                const cls = meta ? BUCKET_BADGE[meta.bucket] : "bg-white/[0.04] text-white/65 border-white/15";
+                return (
+                  <span
+                    key={t}
+                    className={`inline-flex items-center px-2 py-1 rounded-md border text-[10px] font-semibold ${cls}`}
+                  >
+                    {meta?.label ?? t}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setJourneyOpen(true)}
+            className="w-full mt-2 py-2.5 rounded-md border border-gold/50 bg-gradient-to-br from-gold/15 to-gold/5 text-gold text-xs font-bold hover:from-gold/25 hover:to-gold/10 transition flex items-center justify-center gap-2"
+          >
+            <Rocket className="h-3.5 w-3.5" />
+            פתח כרטיס מסע מלא (יומן, מיילים, תזכורות)
+          </button>
         </section>
 
         {/* Editable */}
@@ -270,6 +351,13 @@ export function ClientDetailDrawer({
           </Button>
         </div>
       </aside>
+
+      {/* Round 132 — full client journey panel */}
+      <ClientDetailModal
+        clientId={journeyOpen ? client.id : null}
+        open={journeyOpen}
+        onOpenChange={(o) => setJourneyOpen(o)}
+      />
     </div>
   );
 }

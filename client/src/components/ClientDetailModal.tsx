@@ -186,6 +186,7 @@ export function ClientDetailModal({
 
   // Note composer state
   const [noteOpen, setNoteOpen] = useState(false);
+  const [emailComposerOpen, setEmailComposerOpen] = useState(false);
   const [noteType, setNoteType] = useState<ActivityType>("note");
   const [noteOutcome, setNoteOutcome] = useState<string>("");
   const [noteContent, setNoteContent] = useState("");

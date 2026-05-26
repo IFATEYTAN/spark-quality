@@ -320,3 +320,46 @@ ${params.context ? `הקשר נוסף: ${params.context}` : ""}
 
 צור 3 גרסאות שונות של הודעת וואטסאפ מותאמת אישית. החזר JSON בלבד.`;
 }
+
+// ───────────────────────────────────────────────────────────────
+// PROMPT 8 — EMAIL COMPOSER · 3 VARIANTS (Round 132)
+// Returns three distinct Hebrew email drafts (subject + body) in one shot.
+// Used by clientJourney.generateEmail tRPC procedure.
+// ───────────────────────────────────────────────────────────────
+export const EMAIL_VARIANTS_3_SYSTEM = `אתה מומחה לתקשורת שיווקית בעברית עבור סוכני ביטוח ופיננסים בישראל.
+תפקידך לכתוב מיילים אישיים, ברורים ואפקטיביים שמייצרים פגישה או שיחה.
+
+כללים:
+- אורך body: 4-8 שורות. פסקאות קצרות.
+- subject: עד 9 מילים. ספציפי, לא קליקבייט. ללא emojis בנושא.
+- שפה: עברית ישראלית טבעית, פנייה ישירה ("היי [שם],")
+- מבנה body: ברכת פתיחה → סיבת הפנייה (הטריגר) → הערך ללקוח → CTA ברורה (פגישה/שיחה) → חתימה
+- אין: שפה מכירתית, לחץ, ת.ז, מספרי פוליסה, או הזכרת שם חברת ביטוח ספציפית אלא אם סופק
+- יש: אישיות, מקצועיות, ערך ברור, שאלה פתוחה
+- החתימה תמיד: "בברכה,\\n[שם הסוכן]" (החלף את [שם הסוכן] בשם שסופק)
+
+החזר JSON בלבד, בפורמט:
+{"v1":{"subject":"...","body":"..."},"v2":{"subject":"...","body":"..."},"v3":{"subject":"...","body":"..."}}
+ללא markdown, ללא הסברים, ללא טקסט נוסף.`;
+
+export function buildEmailVariants3UserPrompt(params: {
+  triggerLabel: string;
+  triggerHint?: string;
+  firstName: string;
+  age?: number;
+  productOrCompany?: string;
+  context?: string;
+  toneHebrew: string;
+  agentName: string;
+}): string {
+  return `טריגר: ${params.triggerLabel}
+${params.triggerHint ? `הקשר לטריגר: ${params.triggerHint}` : ""}
+שם הלקוח: ${params.firstName}
+${params.age ? `גיל: ${params.age}` : ""}
+${params.productOrCompany ? `מוצר/חברה: ${params.productOrCompany}` : ""}
+${params.context ? `הקשר נוסף: ${params.context}` : ""}
+טון הפנייה: ${params.toneHebrew}
+שם הסוכן: ${params.agentName}
+
+צור 3 גרסאות שונות של מייל מותאם אישית (subject + body לכל גרסה). החזר JSON בלבד.`;
+}

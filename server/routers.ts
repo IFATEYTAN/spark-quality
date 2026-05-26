@@ -27,6 +27,8 @@ import {
   buildQaUserPrompt,
   VARIANTS_3_SYSTEM,
   buildVariants3UserPrompt,
+  EMAIL_VARIANTS_3_SYSTEM,
+  buildEmailVariants3UserPrompt,
 } from "./prompts";
 import { buildRelevantClientsContext } from "./aiContextEnricher";
 
@@ -1188,6 +1190,63 @@ export const appRouter = router({
           status: input.status,
         });
       }),
+    /**
+     * Round 132 — Email Composer: ask Claude for 3 distinct subject+body variants in one shot,
+     * persist to messageGenerations, and return them with the new generation id.
+     */
+    generateEmail: workspaceProcedure
+      .input(
+        z.object({
+          clientId: z.number().int().positive().nullable().optional(),
+          triggerKey: z.string().min(1).max(64),
+          triggerLabel: z.string().min(1).max(120),
+          triggerHint: z.string().max(400).optional(),
+          firstName: z.string().min(1).max(80),
+          age: z.number().int().min(0).max(130).optional(),
+          productOrCompany: z.string().max(120).optional(),
+          context: z.string().max(800).optional(),
+          tone: z.enum(["warm", "professional", "urgent"]),
+          agentName: z.string().min(1).max(120),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const toneHebrew = ({ warm: "חם ואישי", professional: "מקצועי", urgent: "דחוף" } as const)[input.tone];
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: EMAIL_VARIANTS_3_SYSTEM },
+            { role: "user", content: buildEmailVariants3UserPrompt({ ...input, toneHebrew }) },
+          ],
+        });
+        const rawContent = completion?.choices?.[0]?.message?.content ?? "";
+        const raw = typeof rawContent === "string" ? rawContent : JSON.stringify(rawContent);
+        const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "").trim();
+        type V = { subject?: string; body?: string };
+        let parsed: { v1?: V; v2?: V; v3?: V } = {};
+        try {
+          parsed = JSON.parse(cleaned);
+        } catch (err) {
+          console.warn("[generateEmail] JSON.parse failed, using raw text as v1.body", err);
+          parsed = { v1: { subject: input.triggerLabel, body: raw }, v2: {}, v3: {} };
+        }
+        const variants = [
+          { subject: parsed.v1?.subject ?? input.triggerLabel, body: parsed.v1?.body ?? "" },
+          { subject: parsed.v2?.subject ?? input.triggerLabel, body: parsed.v2?.body ?? "" },
+          { subject: parsed.v3?.subject ?? input.triggerLabel, body: parsed.v3?.body ?? "" },
+        ];
+        // Persist as JSON strings so we reuse the same messageGenerations table.
+        const variantsJson = variants.map(v => JSON.stringify(v));
+        const generationId = await db.createMessageGeneration({
+          workspaceId: ctx.user.workspaceId,
+          clientId: input.clientId ?? null,
+          triggerKey: `email::${input.triggerKey}`,
+          tone: input.tone,
+          freeFormContext: input.context ?? null,
+          variantsJson,
+          createdByUserId: ctx.user.id,
+        });
+        return { generationId, variants } as const;
+      }),
+
     /** Reassign a client to another agent in the same workspace (admins/owners only). */
     reassign: workspaceAdminProcedure
       .input(
