@@ -75,13 +75,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.role = "admin";
     }
 
-    // Auto-grant Super-Admin to the workspace owner + hard-coded SPARK staff
-    const SPARK_SUPERADMIN_EMAILS = new Set([
-      "anathemell@gmail.com",
-    ]);
+    // Auto-grant Super-Admin to the workspace owner or any email in the
+    // SUPER_ADMIN_EMAILS env-configured allow-list (see _core/env.ts).
     const emailLower = (user.email ?? "").trim().toLowerCase();
     const shouldBeSuperAdmin =
-      user.openId === ENV.ownerOpenId || (emailLower && SPARK_SUPERADMIN_EMAILS.has(emailLower));
+      user.openId === ENV.ownerOpenId ||
+      (emailLower !== "" && ENV.superAdminEmails.has(emailLower));
     if (shouldBeSuperAdmin) {
       values.isSuperAdmin = true;
       updateSet.isSuperAdmin = true;
