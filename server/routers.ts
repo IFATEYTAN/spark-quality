@@ -741,6 +741,89 @@ ${input.channel === "whatsapp" ? "ב-WhatsApp, subject חייב להיות מח�
         }
         return { ok: true as const };
       }),
+
+    /**
+     * Send a drafted email directly through Resend (server-side), CC the
+     * sender and set reply-to to their address. WhatsApp is intentionally
+     * unsupported here — there's no provider wired in. After a successful
+     * send the message is flipped to sent.
+     */
+    sendEmailDirect: workspaceProcedure
+      .input(z.object({ messageId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const message = await db.getOutreachMessageById({
+          messageId: input.messageId,
+          workspaceId: ctx.user.workspaceId,
+          senderUserId: ctx.user.id,
+        });
+        if (!message) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "ההודעה לא נמצאה או לא שייכת לסוכן/ת המחובר/ת.",
+          });
+        }
+        if (message.channel !== "email") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "שליחה ישירה זמינה רק לאימיילים.",
+          });
+        }
+        if (message.status === "sent") {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "ההודעה כבר נשלחה.",
+          });
+        }
+
+        const client = await db.getClientById({
+          clientId: message.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+        if (!client?.email) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "ללקוח אין כתובת מייל בתיק.",
+          });
+        }
+
+        // Preserve line breaks; the body comes from the LLM so it has \n separators.
+        const escapedBody = message.body
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/\n/g, "<br/>");
+        const html = `<div dir="rtl" style="font-family:Heebo,Arial,sans-serif;line-height:1.7;color:#1f2233;max-width:560px;margin:0 auto">
+          ${escapedBody}
+          <hr style="border:none;border-top:1px solid #c8a96a33;margin:24px 0"/>
+          <p style="font-size:11px;color:#6b6f80">נשלח באמצעות SPARK Quality. השב/י כדי להגיע ישירות ל${ctx.user.name ?? "סוכן/ת הביטוח"}.</p>
+        </div>`;
+
+        const sendResult = await sendEmail({
+          to: client.email,
+          subject: message.subject ?? "עדכון מהסוכנות",
+          html,
+          replyTo: ctx.user.email ?? undefined,
+          cc: ctx.user.email ?? undefined,
+          fromName: ctx.user.name ?? null,
+        });
+
+        if (!sendResult.ok) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: `שליחה נכשלה: ${sendResult.error}`,
+          });
+        }
+
+        await db.markOutreachSent({
+          messageId: input.messageId,
+          workspaceId: ctx.user.workspaceId,
+          senderUserId: ctx.user.id,
+        });
+        return { ok: true as const, providerId: sendResult.id };
+      }),
   }),
 
   admin: adminRouter,

@@ -9,8 +9,10 @@ import {
   CheckCircle2,
   Copy,
   ExternalLink,
+  Loader2,
   Mail,
   MessageSquare,
+  Send,
   Sparkles,
   Wand2,
   X,
@@ -54,6 +56,7 @@ export function ClientAIComposerModal({ client, channel, onClose }: Props) {
   const utils = trpc.useUtils();
   const composeMutation = trpc.ai.composeMessage.useMutation();
   const markSentMutation = trpc.outreach.markSent.useMutation();
+  const sendDirectMutation = trpc.outreach.sendEmailDirect.useMutation();
 
   useEffect(() => {
     if (!client || !channel) return;
@@ -157,6 +160,22 @@ export function ClientAIComposerModal({ client, channel, onClose }: Props) {
       toast.success("ההודעה הועתקה לזיכרון");
     } catch {
       toast.error("לא ניתן להעתיק");
+    }
+  };
+
+  const handleSendDirect = async () => {
+    if (!messageId) {
+      toast.error("ההודעה לא נשמרה — נסה/י מחדש");
+      return;
+    }
+    try {
+      await sendDirectMutation.mutateAsync({ messageId });
+      toast.success("נשלח! עותק נשלח גם אליך");
+      utils.outreach.listForClient.invalidate({ clientId: client!.id });
+      onClose();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "שגיאת שליחה";
+      toast.error(msg);
     }
   };
 
@@ -375,6 +394,21 @@ export function ClientAIComposerModal({ client, channel, onClose }: Props) {
                   <Copy className="h-3.5 w-3.5" />
                   העתק
                 </button>
+                {isEmail && (
+                  <button
+                    onClick={handleSendDirect}
+                    disabled={phase !== "done" || sendDirectMutation.isPending || !messageId}
+                    title="שולח דרך SPARK עם עותק אליך וב-Reply-To המייל שלך"
+                    className="group flex items-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-50 px-4 py-2 text-xs font-bold text-emerald-800 transition-all hover:bg-emerald-100 hover:border-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {sendDirectMutation.isPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5" />
+                    )}
+                    שלח דרך SPARK
+                  </button>
+                )}
                 <button
                   onClick={handleSend}
                   disabled={phase !== "done"}

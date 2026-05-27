@@ -779,6 +779,28 @@ export async function createOutreachMessage(data: InsertOutreachMessage): Promis
   }
 }
 
+/** Load a single outreach message, ensuring it belongs to the given sender. */
+export async function getOutreachMessageById(opts: {
+  messageId: number;
+  workspaceId: number;
+  senderUserId: number;
+}) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(outreachMessages)
+    .where(
+      and(
+        eq(outreachMessages.id, opts.messageId),
+        eq(outreachMessages.workspaceId, opts.workspaceId),
+        eq(outreachMessages.senderUserId, opts.senderUserId)
+      )
+    )
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
 /** Mark a previously drafted message as sent (workspace-scoped). */
 export async function markOutreachSent(opts: {
   messageId: number;

@@ -5,6 +5,15 @@ const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 // Verified domain in Resend (see scripts: GET /domains -> spark-ai.co.il)
 const FROM_ADDRESS = "SPARK Quality <noreply@spark-ai.co.il>";
+const FROM_LOCAL = "noreply@spark-ai.co.il";
+
+/** Sanitize a display name for the From header (drop characters Resend rejects). */
+function buildFromAddress(displayName?: string | null): string {
+  if (!displayName) return FROM_ADDRESS;
+  const safe = displayName.replace(/[<>"\\]/g, "").trim();
+  if (!safe) return FROM_ADDRESS;
+  return `${safe} · SPARK <${FROM_LOCAL}>`;
+}
 
 export type SendEmailInput = {
   to: string | string[];
@@ -17,6 +26,8 @@ export type SendEmailInput = {
   replyTo?: string;
   /** Optional CC list. */
   cc?: string | string[];
+  /** Override the From display name. Address stays on the verified SPARK domain. */
+  fromName?: string | null;
 };
 
 export type SendEmailResult =
@@ -33,7 +44,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   }
 
   const payload: Record<string, unknown> = {
-    from: FROM_ADDRESS,
+    from: buildFromAddress(input.fromName),
     to: Array.isArray(input.to) ? input.to : [input.to],
     subject: input.subject,
   };

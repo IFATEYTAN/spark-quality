@@ -6,6 +6,8 @@ import { TRPCError } from "@trpc/server";
 const mockGetClientById = vi.fn();
 const mockListOutreachForClient = vi.fn();
 const mockMarkOutreachSent = vi.fn();
+const mockGetOutreachMessageById = vi.fn();
+const mockSendEmail = vi.fn();
 
 vi.mock("./db", async () => {
   const actual = await vi.importActual<typeof import("./db")>("./db");
@@ -14,8 +16,13 @@ vi.mock("./db", async () => {
     getClientById: (...args: unknown[]) => mockGetClientById(...args),
     listOutreachForClient: (...args: unknown[]) => mockListOutreachForClient(...args),
     markOutreachSent: (...args: unknown[]) => mockMarkOutreachSent(...args),
+    getOutreachMessageById: (...args: unknown[]) => mockGetOutreachMessageById(...args),
   };
 });
+
+vi.mock("./email", () => ({
+  sendEmail: (...args: unknown[]) => mockSendEmail(...args),
+}));
 
 import { appRouter } from "./routers";
 
@@ -124,5 +131,119 @@ describe("outreach.markSent", () => {
     await expect(
       caller.outreach.markSent({ messageId: 1 })
     ).rejects.toBeInstanceOf(TRPCError);
+  });
+});
+
+describe("outreach.sendEmailDirect", () => {
+  beforeEach(() => {
+    mockGetOutreachMessageById.mockReset();
+    mockGetClientById.mockReset();
+    mockSendEmail.mockReset();
+    mockMarkOutreachSent.mockReset();
+  });
+
+  it("returns NOT_FOUND when the message doesn't belong to the sender", async () => {
+    mockGetOutreachMessageById.mockResolvedValue(undefined);
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(
+      caller.outreach.sendEmailDirect({ messageId: 99 })
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("rejects WhatsApp messages — direct send is email-only", async () => {
+    mockGetOutreachMessageById.mockResolvedValue({
+      id: 5,
+      channel: "whatsapp",
+      status: "drafted",
+      clientId: 1,
+      body: "hi",
+    });
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(
+      caller.outreach.sendEmailDirect({ messageId: 5 })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("rejects messages that are already sent", async () => {
+    mockGetOutreachMessageById.mockResolvedValue({
+      id: 5,
+      channel: "email",
+      status: "sent",
+      clientId: 1,
+      body: "hi",
+    });
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(
+      caller.outreach.sendEmailDirect({ messageId: 5 })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("rejects when the client has no email on file", async () => {
+    mockGetOutreachMessageById.mockResolvedValue({
+      id: 5,
+      channel: "email",
+      status: "drafted",
+      clientId: 1,
+      subject: "x",
+      body: "y",
+    });
+    mockGetClientById.mockResolvedValue({ id: 1, workspaceId: 42, email: null });
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(
+      caller.outreach.sendEmailDirect({ messageId: 5 })
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(mockSendEmail).not.toHaveBeenCalled();
+  });
+
+  it("propagates a Resend failure as INTERNAL_SERVER_ERROR", async () => {
+    mockGetOutreachMessageById.mockResolvedValue({
+      id: 5,
+      channel: "email",
+      status: "drafted",
+      clientId: 1,
+      subject: "x",
+      body: "y",
+    });
+    mockGetClientById.mockResolvedValue({ id: 1, workspaceId: 42, email: "c@x.com" });
+    mockSendEmail.mockResolvedValue({ ok: false, error: "RESEND_API_KEY missing" });
+    const caller = appRouter.createCaller(makeCtx());
+    await expect(
+      caller.outreach.sendEmailDirect({ messageId: 5 })
+    ).rejects.toMatchObject({ code: "INTERNAL_SERVER_ERROR" });
+    expect(mockMarkOutreachSent).not.toHaveBeenCalled();
+  });
+
+  it("sends via Resend with CC + reply-to to the agent, then marks sent", async () => {
+    mockGetOutreachMessageById.mockResolvedValue({
+      id: 5,
+      channel: "email",
+      status: "drafted",
+      clientId: 1,
+      subject: "שלום דני",
+      body: "שורה 1\nשורה 2",
+    });
+    mockGetClientById.mockResolvedValue({ id: 1, workspaceId: 42, email: "dani@x.com" });
+    mockSendEmail.mockResolvedValue({ ok: true, id: "resend-abc" });
+    mockMarkOutreachSent.mockResolvedValue(true);
+    const caller = appRouter.createCaller(makeCtx());
+    const result = await caller.outreach.sendEmailDirect({ messageId: 5 });
+
+    expect(result).toEqual({ ok: true, providerId: "resend-abc" });
+    expect(mockSendEmail).toHaveBeenCalledOnce();
+    const call = mockSendEmail.mock.calls[0][0];
+    expect(call.to).toBe("dani@x.com");
+    expect(call.subject).toBe("שלום דני");
+    expect(call.replyTo).toBe("ifat@example.com");
+    expect(call.cc).toBe("ifat@example.com");
+    expect(call.fromName).toBe("יפעת");
+    // Body line breaks become <br/> in HTML
+    expect(call.html).toContain("שורה 1<br/>שורה 2");
+    expect(mockMarkOutreachSent).toHaveBeenCalledWith({
+      messageId: 5,
+      workspaceId: 42,
+      senderUserId: 7,
+    });
   });
 });
