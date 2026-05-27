@@ -530,6 +530,40 @@ export const appRouter = router({
          const fullName = client.fullName ?? "לקוח/ה יקר/ה";
          const firstName = fullName.split(" ")[0];
 
+         // Compute age from birthDate so the LLM can use it (critical for
+         // tikun_190, useful for liquid_fund / coverage_gaps phrasing).
+         const ageYears: number | null = client.birthDate
+           ? Math.floor(
+               (Date.now() - new Date(client.birthDate).getTime()) /
+                 (365.25 * 24 * 60 * 60 * 1000)
+             )
+           : null;
+
+         // Pull active policies for richer message context (insurer, product,
+         // premium). Limit to the 3 with the biggest balance to keep the
+         // prompt focused.
+         const policies = await db.getClientPolicies(client.id, ctx.user.workspaceId);
+         const activePolicies = policies
+           .filter(p => p.status === "active")
+           .sort((a, b) => Number(b.balance ?? 0) - Number(a.balance ?? 0))
+           .slice(0, 3);
+         const policySummary = activePolicies
+           .map(p => {
+             const parts: string[] = [];
+             if (p.company) parts.push(p.company);
+             if (p.productType) parts.push(p.productType);
+             const meta: string[] = [];
+             const balanceNum = Number(p.balance ?? 0);
+             if (balanceNum > 0) meta.push(`צבירה ${balanceNum.toLocaleString("he-IL")} ₪`);
+             const monthly = Number(p.monthlyPremium ?? 0);
+             if (monthly > 0) meta.push(`פרמיה ${monthly.toLocaleString("he-IL")} ₪/חודש`);
+             if (p.endDate) {
+               meta.push(`מסתיים ${new Date(p.endDate).toLocaleDateString("he-IL")}`);
+             }
+             return `  - ${parts.join(" · ") || "מוצר"}${meta.length ? ` (${meta.join(", ")})` : ""}`;
+           })
+           .join("\n");
+
          const flagDescription: Record<typeof flag, string> = {
            vip: "לקוח VIP עם צבירה גבוהה — מעל סף ה-VIP של הסוכנות",
            tikun_190: "מועמד פוטנציאלי לתיקון 190 — גיל 60+ עם צבירה מספקת",
@@ -558,16 +592,18 @@ export const appRouter = router({
 
 פרטי הלקוח:
 - שם פרטי: ${firstName}
-- שם מלא: ${fullName}
+- שם מלא: ${fullName}${ageYears !== null ? `\n- גיל: ${ageYears}` : ""}
 - מצב מזוהה: ${flagDescription[flag]}
-- צבירה בתיק: ${balance.toLocaleString("he-IL")} ₪
-- VIP: ${client.isVip ? "כן" : "לא"}
+- צבירה כוללת בתיק: ${balance.toLocaleString("he-IL")} ₪
+- VIP: ${client.isVip ? "כן" : "לא"}${policySummary ? `\n\nפוליסות פעילות עיקריות:\n${policySummary}` : ""}
 
 המטרה של ההודעה: ${flagCta[flag]}
 
 הנחיות סגנון: ${channelHint}
 
 שולח/ת: ${senderFirstName} — סוכן/ת ביטוח, SPARK AI.
+
+הנחיה חשובה: התייחס/י לפרטים הספציפיים של הלקוח (גיל, חברת ביטוח, מוצר) — אל תכתוב/י הודעה גנרית.
 
 החזר/י תשובה ב-JSON בלבד עם המבנה: { "subject": "...", "body": "..." }.
 ${input.channel === "whatsapp" ? "ב-WhatsApp, subject חייב להיות מחרוזת ריקה (\"\")." : "ב-email, subject חייב להיות נושא ממוקד באורך עד 80 תווים."}

@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { TRPCError } from "@trpc/server";
 
 const mockGetClientById = vi.fn();
+const mockGetClientPolicies = vi.fn();
 const mockInvokeLLM = vi.fn();
 const mockCreateOutreachMessage = vi.fn();
 
@@ -12,6 +13,7 @@ vi.mock("./db", async () => {
   return {
     ...actual,
     getClientById: (...args: unknown[]) => mockGetClientById(...args),
+    getClientPolicies: (...args: unknown[]) => mockGetClientPolicies(...args),
     createOutreachMessage: (...args: unknown[]) => mockCreateOutreachMessage(...args),
   };
 });
@@ -53,8 +55,10 @@ function makeCtx(overrides: Partial<typeof baseUser> = {}) {
 describe("ai.composeMessage", () => {
   beforeEach(() => {
     mockGetClientById.mockReset();
+    mockGetClientPolicies.mockReset();
     mockInvokeLLM.mockReset();
     mockCreateOutreachMessage.mockReset();
+    mockGetClientPolicies.mockResolvedValue([]);
     mockCreateOutreachMessage.mockResolvedValue(123);
   });
 
@@ -232,6 +236,120 @@ describe("ai.composeMessage", () => {
     const result = await caller.ai.composeMessage({ clientId: 11, channel: "email" });
     expect(result.messageId).toBeNull();
     expect(result.body).toBe("y");
+  });
+
+  it("enriches the LLM prompt with computed age and top active policies", async () => {
+    // Birthdate ~62 years ago
+    const sixtyTwoYearsAgo = new Date();
+    sixtyTwoYearsAgo.setFullYear(sixtyTwoYearsAgo.getFullYear() - 62);
+    mockGetClientById.mockResolvedValue({
+      id: 12,
+      workspaceId: 42,
+      ownerUserId: 7,
+      fullName: "יעקב שפירא",
+      email: "yaakov@example.com",
+      phone: "0541112222",
+      isVip: false,
+      flagStatus: "tikun_190",
+      totalBalance: "450000",
+      birthDate: sixtyTwoYearsAgo,
+    });
+    mockGetClientPolicies.mockResolvedValue([
+      {
+        id: 1,
+        clientId: 12,
+        workspaceId: 42,
+        company: "מגדל",
+        productType: "חיסכון פרט",
+        balance: "300000",
+        monthlyPremium: "0",
+        endDate: null,
+        status: "active",
+      },
+      {
+        id: 2,
+        clientId: 12,
+        workspaceId: 42,
+        company: "הפניקס",
+        productType: "ריסק זמני",
+        balance: "0",
+        monthlyPremium: "850",
+        endDate: new Date("2026-01-31"),
+        status: "active",
+      },
+      {
+        id: 3,
+        clientId: 12,
+        workspaceId: 42,
+        company: "old",
+        productType: "x",
+        balance: "9999999",
+        monthlyPremium: "0",
+        endDate: null,
+        status: "inactive", // should be filtered out
+      },
+    ]);
+    mockInvokeLLM.mockResolvedValue({
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: JSON.stringify({ subject: "ok", body: "ok" }),
+          },
+          finish_reason: "stop",
+        },
+      ],
+    });
+    const caller = appRouter.createCaller(makeCtx());
+    await caller.ai.composeMessage({ clientId: 12, channel: "email" });
+
+    expect(mockInvokeLLM).toHaveBeenCalledOnce();
+    const sentMessages = mockInvokeLLM.mock.calls[0][0].messages;
+    const userMessage = sentMessages[sentMessages.length - 1].content as string;
+    // Age line is present and shows a sensible 60s value (61 or 62 depending
+    // on leap-year alignment — we just want a real number near the target).
+    const ageMatch = userMessage.match(/גיל: (\d+)/);
+    expect(ageMatch).not.toBeNull();
+    expect(Number(ageMatch![1])).toBeGreaterThanOrEqual(60);
+    expect(Number(ageMatch![1])).toBeLessThanOrEqual(63);
+    // Active policies are present
+    expect(userMessage).toContain("פוליסות פעילות");
+    expect(userMessage).toContain("מגדל");
+    expect(userMessage).toContain("הפניקס");
+    // Inactive policy is filtered out
+    expect(userMessage).not.toContain("old");
+    // Prompt instructs the LLM to reference specific details, not generic
+    expect(userMessage).toContain("אל תכתוב/י הודעה גנרית");
+  });
+
+  it("omits the age line when birthDate is missing", async () => {
+    mockGetClientById.mockResolvedValue({
+      id: 13,
+      workspaceId: 42,
+      fullName: "אנונימי",
+      email: null,
+      phone: "0501234567",
+      isVip: false,
+      flagStatus: "regular",
+      totalBalance: "0",
+      birthDate: null,
+    });
+    mockInvokeLLM.mockResolvedValue({
+      choices: [
+        {
+          index: 0,
+          message: { role: "assistant", content: JSON.stringify({ subject: "", body: "hi" }) },
+          finish_reason: "stop",
+        },
+      ],
+    });
+    const caller = appRouter.createCaller(makeCtx());
+    await caller.ai.composeMessage({ clientId: 13, channel: "whatsapp" });
+
+    const userMessage = mockInvokeLLM.mock.calls[0][0].messages.at(-1).content as string;
+    expect(userMessage).not.toContain("גיל:");
+    expect(userMessage).not.toContain("פוליסות פעילות");
   });
 
   it("forces empty subject on whatsapp regardless of LLM output", async () => {
