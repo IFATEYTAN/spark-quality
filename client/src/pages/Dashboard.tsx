@@ -79,6 +79,7 @@ export default function Dashboard() {
   const firstName = user?.name?.split(" ")[0] || "סוכן";
 
   // Trial flow removed: every account is paid from day one (Round 33).
+  const isFirstRun = totalClients === 0 && totalReports === 0 && !clientsQuery.isLoading && !reportsQuery.isLoading;
 
   return (
     <CinematicShell heroAsset="hero" overlayStrength={88} showSidebar>
@@ -93,11 +94,77 @@ export default function Dashboard() {
             <span className="text-gold">.</span>
           </h1>
           <p className="mt-4 text-base lg:text-lg text-white/70 max-w-2xl leading-relaxed">
-            {isAdmin
-              ? "מבט-על על כל הסוכנות והפעילות של הצוות."
-              : "הלקוחות שלך, הדוחות והמשימות שלך — במקום אחד."}
+            {isFirstRun
+              ? "ברוכ/ה הבא/ה ל-SPARK Quality. כדי שנציג לך את התובנות על תיק הלקוחות — נתחיל בהעלאת הדוח הראשון."
+              : isAdmin
+                ? "מבט-על על כל הסוכנות והפעילות של הצוות."
+                : "הלקוחות שלך, הדוחות והמשימות שלך — במקום אחד."}
           </p>
         </div>
+
+        {/* First-run onboarding hero (replaces stats/action-center when there's no data yet) */}
+        {isFirstRun && (
+          <GlassCard
+            goldAccent
+            className="mb-10 p-8 lg:p-12 bg-gradient-to-br from-gold/[0.08] to-[#06101F]/40 animate-fade-up"
+          >
+            <div className="flex items-start gap-6 mb-8">
+              <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-gold to-[#B89346] border border-gold/60 flex items-center justify-center shrink-0 shadow-lg shadow-gold/30">
+                <Sparkles className="h-7 w-7 text-[#06101F]" strokeWidth={2.5} />
+              </div>
+              <div className="flex-1">
+                <h2 className="font-display text-2xl lg:text-4xl font-black text-white tracking-tight mb-2">
+                  3 צעדים, ואת בפנים.
+                </h2>
+                <p className="text-sm lg:text-base text-white/65 leading-relaxed max-w-2xl">
+                  ה-AI שלנו עושה את העבודה הקשה. תוך פחות מדקה תקבלי תיק לקוחות
+                  מנותח, מסומן בדגלים, ועם הצעות פעולה ברורות.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-3 gap-4 mb-8">
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-5">
+                <div className="font-display text-3xl font-black text-gold mb-1">1</div>
+                <div className="font-display text-base font-bold text-white mb-1">העלי את דוח השורנס</div>
+                <div className="text-xs text-white/60 leading-relaxed">
+                  גרירה והשלמה של קובץ ה-Excel — אנחנו מבינים את כל הגיליונות אוטומטית.
+                </div>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-5">
+                <div className="font-display text-3xl font-black text-gold mb-1">2</div>
+                <div className="font-display text-base font-bold text-white mb-1">קבלי ניתוח חכם</div>
+                <div className="text-xs text-white/60 leading-relaxed">
+                  זיהוי VIP, תיקון 190, השתלמויות נזילות וריסקים שמסתיימים — בכל לקוח.
+                </div>
+              </div>
+              <div className="rounded-lg border border-white/10 bg-white/[0.03] p-5">
+                <div className="font-display text-3xl font-black text-gold mb-1">3</div>
+                <div className="font-display text-base font-bold text-white mb-1">פעלי בלחיצה</div>
+                <div className="text-xs text-white/60 leading-relaxed">
+                  ה-AI מנסח לך אימייל / WhatsApp מותאם לכל לקוח — ושומר היסטוריה.
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href="/upload">
+                <Button className="bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-105 hover:shadow-xl hover:shadow-gold/40 font-bold text-base px-6 py-6">
+                  <Upload className="h-4 w-4 ml-2" />
+                  התחילי כאן · העלאת דוח ראשון
+                </Button>
+              </Link>
+              <Link href="/demo">
+                <Button
+                  variant="outline"
+                  className="border-white/20 bg-white/[0.04] text-white hover:bg-white/[0.08] hover:border-gold/40 font-semibold"
+                >
+                  לא מוכנה? צפי בדמו של 90 שניות
+                </Button>
+              </Link>
+            </div>
+          </GlassCard>
+        )}
 
         {/* Stats grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
@@ -256,31 +323,6 @@ export default function Dashboard() {
             </Link>
           )}
         </div>
-
-        {/* Empty state */}
-        {totalClients === 0 && totalReports === 0 && (
-          <GlassCard
-            goldAccent
-            className="mt-10 p-12 text-center bg-gradient-to-br from-gold/8 to-[#06101F]/40"
-          >
-            <div className="h-16 w-16 rounded-full bg-gold/15 border border-gold/40 flex items-center justify-center mx-auto mb-6">
-              <Sparkles className="h-7 w-7 text-gold" />
-            </div>
-            <h3 className="font-display text-2xl lg:text-3xl font-black text-white tracking-tight mb-3">
-              מתחילים? <span className="text-gold">בואו נראה לכם איך זה עובד.</span>
-            </h3>
-            <p className="text-base text-white/70 mb-8 max-w-xl mx-auto leading-relaxed">
-              העלו את דוח השורנס הראשון שלכם, ותראו תוך שניות ניתוח מלא: מצב
-              התיק, הזדמנויות שימור, וכל הפעולות שהמערכת מציעה.
-            </p>
-            <Link href="/upload">
-              <Button className="bg-gradient-to-br from-gold to-[#B89346] text-[#06101F] hover:scale-105 font-bold shadow-lg shadow-gold/30">
-                <Upload className="h-4 w-4 ml-2" />
-                העלאת דוח ראשון
-              </Button>
-            </Link>
-          </GlassCard>
-        )}
       </div>
     </CinematicShell>
   );
