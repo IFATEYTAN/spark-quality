@@ -1,6 +1,5 @@
-// SPARK AI · ClientDetailDrawer — מציג פרטי לקוח מלאים + עריכת VIP/הערות/דגל
+// SPARK AI · ClientDetailDrawer — מציג פרטי לקוח מלאים + עריכת VIP/הערות/דגל + ניסוח AI
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import {
   Crown,
@@ -16,9 +15,11 @@ import {
   Shield,
   FileWarning,
   Calendar,
+  MessageSquare,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { ClientAIComposerModal } from "@/components/ClientAIComposerModal";
 
 type FlagStatus =
   | "regular"
@@ -63,6 +64,7 @@ export function ClientDetailDrawer({
   const [isVip, setIsVip] = useState(false);
   const [notes, setNotes] = useState("");
   const [flagStatus, setFlagStatus] = useState<FlagStatus>("regular");
+  const [composerChannel, setComposerChannel] = useState<"email" | "whatsapp" | null>(null);
 
   useEffect(() => {
     if (!client) return;
@@ -161,6 +163,48 @@ export function ClientDetailDrawer({
               mono
             />
           )}
+        </section>
+
+        {/* AI Composer actions */}
+        <section className="p-5 border-b border-white/5 space-y-2">
+          <label className="text-[11px] font-bold text-gold tracking-wider uppercase mb-1 block">
+            ניסוח אוטומטי ב-AI
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (!client.email) {
+                  toast.error("ללקוח אין מייל בתיק");
+                  return;
+                }
+                setComposerChannel("email");
+              }}
+              className="group flex items-center justify-center gap-2 rounded-md border border-gold/40 bg-gold/[0.08] px-3 py-2.5 text-xs font-bold text-gold transition hover:bg-gold/15 hover:border-gold disabled:opacity-40"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <Mail className="h-3.5 w-3.5" />
+              <span>נסחי אימייל</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (!client.phone) {
+                  toast.error("ללקוח אין טלפון בתיק");
+                  return;
+                }
+                setComposerChannel("whatsapp");
+              }}
+              className="group flex items-center justify-center gap-2 rounded-md border border-emerald-400/40 bg-emerald-500/[0.08] px-3 py-2.5 text-xs font-bold text-emerald-300 transition hover:bg-emerald-500/15 hover:border-emerald-400"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>נסחי WhatsApp</span>
+            </button>
+          </div>
+          <p className="text-[10px] text-white/40">
+            ה-AI ינסח הודעה מותאמת אישית לפי הדגל והצבירה של הלקוח.
+          </p>
         </section>
 
         {/* Editable */}
@@ -270,6 +314,12 @@ export function ClientDetailDrawer({
           </Button>
         </div>
       </aside>
+
+      <ClientAIComposerModal
+        client={client}
+        channel={composerChannel}
+        onClose={() => setComposerChannel(null)}
+      />
     </div>
   );
 }

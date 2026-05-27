@@ -330,6 +330,16 @@ export async function listWorkspaceInvitations(workspaceId: number) {
     .orderBy(desc(invitations.createdAt));
 }
 
+/** Mark an invitation as accepted after the invitee joins the workspace. */
+export async function markInvitationAccepted(invitationId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(invitations)
+    .set({ status: "accepted", acceptedAt: new Date() })
+    .where(eq(invitations.id, invitationId));
+}
+
 
 // ============================================================
 // BULK CLIENT IMPORT (used after report parsing)

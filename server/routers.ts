@@ -5,6 +5,7 @@ import { z } from "zod";
 import * as db from "./db";
 import { storagePut } from "./storage";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
 import { sendEmail } from "./email";
 import { systemRouter } from "./_core/systemRouter";
@@ -241,7 +242,32 @@ export const appRouter = router({
           invitedByUserId: ctx.user.id,
           expiresAt,
         });
-        return { invitationId, token };
+
+        // Best-effort email to the invitee with the accept link.
+        // Origin is taken from the request so the link points at the same host (dev or prod).
+        const proto = (ctx.req.headers["x-forwarded-proto"] as string) || ctx.req.protocol || "https";
+        const host = (ctx.req.headers["x-forwarded-host"] as string) || (ctx.req.headers.host as string) || "spark-ai.co.il";
+        const acceptUrl = `${proto}://${host}/onboarding?invite=${encodeURIComponent(token)}`;
+        const workspace = await db.getWorkspaceById(ctx.user.workspaceId);
+        const wsName = workspace?.name ?? "סוכנות SPARK";
+        const inviterName = ctx.user.name ?? ctx.user.email ?? "מנהל/ת הסוכנות";
+        const roleLabel = input.workspaceRole === "admin" ? "מנהל/ת" : "סוכן/ת";
+        const html = `<div dir="rtl" style="font-family:Heebo,Arial,sans-serif;line-height:1.7;color:#1f2233;max-width:560px;margin:0 auto">
+          <h2 style="color:#0A1628;margin:0 0 12px 0">✨ הוזמנת ל-${escapeHtml(wsName)} ב-SPARK Quality</h2>
+          <p>${escapeHtml(inviterName)} הזמין/ה אותך להצטרף כ-<strong>${escapeHtml(roleLabel)}</strong> בסוכנות.</p>
+          <p style="margin:24px 0"><a href="${acceptUrl}" style="background:#C9A961;color:#0A1628;padding:12px 24px;border-radius:6px;font-weight:bold;text-decoration:none">קבלת ההזמנה</a></p>
+          <p style="font-size:12px;color:#6b6f80">הקישור תקף ל-7 ימים. אם הכפתור לא עובד: <br/><span style="word-break:break-all">${acceptUrl}</span></p>
+        </div>`;
+        const emailResult = await sendEmail({
+          to: input.email,
+          subject: `הזמנה ל-${wsName} · SPARK Quality`,
+          html,
+        });
+        if (!emailResult.ok) {
+          console.warn("[workspaces.invite] Failed to send invitation email:", emailResult.error);
+        }
+
+        return { invitationId, token, emailed: emailResult.ok };
       }),
 
     /** List pending invitations */
@@ -293,6 +319,7 @@ export const appRouter = router({
           invitation.workspaceId,
           invitation.workspaceRole as "admin" | "agent"
         );
+        await db.markInvitationAccepted(invitation.id);
         return { workspaceId: invitation.workspaceId };
       }),
   }),
@@ -459,6 +486,159 @@ export const appRouter = router({
         return { id: reportId, importedCount };
       }),
   }),
+
+  // ========================================================
+   // AI COMPOSER (LLM-backed message drafting per client)
+   // ========================================================
+   ai: router({
+     /**
+      * Draft a personalized email or WhatsApp message for a real client.
+      * Uses invokeLLM with a strict JSON schema; falls back to a Hebrew template
+      * if the LLM is unavailable so the UI never breaks.
+      */
+     composeMessage: workspaceProcedure
+       .input(
+         z.object({
+           clientId: z.number().int().positive(),
+           channel: z.enum(["email", "whatsapp"]),
+         })
+       )
+       .mutation(async ({ ctx, input }) => {
+         const client = await db.getClientById({
+           clientId: input.clientId,
+           workspaceId: ctx.user.workspaceId,
+           userId: ctx.user.id,
+           workspaceRole: ctx.user.workspaceRole,
+         });
+         if (!client) {
+           throw new TRPCError({
+             code: "NOT_FOUND",
+             message: "הלקוח לא נמצא או לא שייך לסוכנות שלך.",
+           });
+         }
+
+         const flag = (client.flagStatus ?? "regular") as
+           | "vip"
+           | "tikun_190"
+           | "liquid_fund"
+           | "high_fees"
+           | "risk_ending"
+           | "coverage_gaps"
+           | "regular";
+         const balance = Number(client.totalBalance ?? 0);
+         const senderFirstName = ctx.user.name?.split(" ")[0] ?? "סוכן/ת הביטוח שלך";
+         const fullName = client.fullName ?? "לקוח/ה יקר/ה";
+         const firstName = fullName.split(" ")[0];
+
+         const flagDescription: Record<typeof flag, string> = {
+           vip: "לקוח VIP עם צבירה גבוהה — מעל סף ה-VIP של הסוכנות",
+           tikun_190: "מועמד פוטנציאלי לתיקון 190 — גיל 60+ עם צבירה מספקת",
+           liquid_fund: "בעל קרן השתלמות נזילה (ותק 6+ שנים)",
+           high_fees: "בתיק יש דמי ניהול גבוהים או תשואה נמוכה ביחס לתקופה",
+           risk_ending: "פוליסת ריסק שעומדת להסתיים בקרוב — דורש טיפול",
+           coverage_gaps: "חוסר בכיסוי פנסיוני או חוסר במוצרי חיסכון מרכזיים",
+           regular: "לקוח ללא דגלים מיוחדים — פנייה לעדכון תקופתי",
+         };
+         const flagCta: Record<typeof flag, string> = {
+           vip: "פגישת ייעוץ פיננסי מקיפה ותכנון העברה בין-דורית",
+           tikun_190: "הצגת סימולציית תיקון 190 והפקדה לפטור ממס",
+           liquid_fund: "הצעה להעברה לקרן השקעה / IRA / פוליסת חיסכון",
+           high_fees: "פגישת שימור — הפחתת דמי ניהול והתאמת מסלול",
+           risk_ending: "תיאום שיחה דחופה לחידוש כיסוי",
+           coverage_gaps: "פגישת ייעוץ פנסיוני וקרוס-סייל",
+           regular: "סקירה תקופתית של ההתאמה של המוצרים בתיק",
+         };
+
+         const channelHint =
+           input.channel === "email"
+             ? "כתוב/י אימייל מקצועי וחם באורך 4–6 פסקאות עם נושא ברור. פתיחה אישית, הזכרת הדגל הספציפי בעדינות, הצעה לשיחה/פגישה קצרה, חתימה."
+             : "כתוב/י הודעת WhatsApp קצרה (2–4 משפטים, מקסימום ~350 תווים), אישית, חמה ומזמינה, עם CTA אחד ברור. אפשר אימוג'י אחד.";
+
+         const userPrompt = `נא לנסח ${input.channel === "email" ? "אימייל" : "הודעת WhatsApp"} ל${fullName}.
+
+פרטי הלקוח:
+- שם פרטי: ${firstName}
+- שם מלא: ${fullName}
+- מצב מזוהה: ${flagDescription[flag]}
+- צבירה בתיק: ${balance.toLocaleString("he-IL")} ₪
+- VIP: ${client.isVip ? "כן" : "לא"}
+
+המטרה של ההודעה: ${flagCta[flag]}
+
+הנחיות סגנון: ${channelHint}
+
+שולח/ת: ${senderFirstName} — סוכן/ת ביטוח, SPARK AI.
+
+החזר/י תשובה ב-JSON בלבד עם המבנה: { "subject": "...", "body": "..." }.
+${input.channel === "whatsapp" ? "ב-WhatsApp, subject חייב להיות מחרוזת ריקה (\"\")." : "ב-email, subject חייב להיות נושא ממוקד באורך עד 80 תווים."}
+אל תוסיף/י הסברים מחוץ ל-JSON.`;
+
+         const responseSchema = {
+           name: "ComposedMessage",
+           schema: {
+             type: "object",
+             properties: {
+               subject: { type: "string", description: "נושא האימייל; ל-WhatsApp להחזיר מחרוזת ריקה" },
+               body: { type: "string", description: "גוף ההודעה המלא בעברית" },
+             },
+             required: ["subject", "body"],
+             additionalProperties: false,
+           },
+           strict: true,
+         };
+
+         const fallback = (): { subject: string; body: string; source: "template" } => {
+           const subject =
+             input.channel === "email"
+               ? `${firstName}, עדכון לגבי תיק הביטוח שלך`
+               : "";
+           const body =
+             input.channel === "email"
+               ? `שלום ${firstName},\n\nכאן ${senderFirstName} מ-SPARK AI. עברתי על התיק שלך וזיהיתי הזדמנות שחשוב לי לדבר איתך עליה — ${flagCta[flag]}.\n\nאשמח לתאם איתך שיחה קצרה (10–15 דקות) השבוע.\n\nבברכה,\n${senderFirstName}\nSPARK AI`
+               : `שלום ${firstName} 👋\n\nכאן ${senderFirstName} מ-SPARK AI. רציתי לתאם איתך שיחה קצרה השבוע — יש לי הצעה שיכולה להתאים לך בדיוק (${flagCta[flag]}).\n\nמתי נוח לך?`;
+           return { subject, body, source: "template" };
+         };
+
+         try {
+           const result = await invokeLLM({
+             messages: [
+               {
+                 role: "system",
+                 content:
+                   "את/ה עוזר/ת ניסוח לסוכני ביטוח ישראלים. את/ה כותב/ת הודעות בעברית רהוטה, מקצועית, חמה ולא מכירתית-לחוצה. תמיד להחזיר JSON עם השדות subject ו-body בלבד.",
+               },
+               { role: "user", content: userPrompt },
+             ],
+             responseFormat: { type: "json_schema", json_schema: responseSchema },
+             maxTokens: 1500,
+           });
+
+           const rawContent = result.choices[0]?.message?.content;
+           const text =
+             typeof rawContent === "string"
+               ? rawContent
+               : Array.isArray(rawContent)
+                 ? rawContent.map(p => ("text" in p ? p.text : "")).join("")
+                 : "";
+           const cleaned = text
+             .replace(/^```(?:json)?\s*\n?/i, "")
+             .replace(/\n?```\s*$/, "")
+             .trim();
+           const parsed = JSON.parse(cleaned) as { subject?: string; body?: string };
+           if (!parsed.body || typeof parsed.body !== "string") {
+             throw new Error("LLM returned empty body");
+           }
+           return {
+             subject: input.channel === "email" ? parsed.subject ?? "" : "",
+             body: parsed.body,
+             source: "llm" as const,
+           };
+         } catch (err) {
+           console.warn("[ai.composeMessage] LLM call failed, using template:", err instanceof Error ? err.message : err);
+           return fallback();
+         }
+       }),
+   }),
 
   admin: adminRouter,
 
