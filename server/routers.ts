@@ -599,6 +599,7 @@ ${input.channel === "whatsapp" ? "ב-WhatsApp, subject חייב להיות מח�
            return { subject, body, source: "template" };
          };
 
+         let composed: { subject: string; body: string; source: "llm" | "template" };
          try {
            const result = await invokeLLM({
              messages: [
@@ -628,17 +629,83 @@ ${input.channel === "whatsapp" ? "ב-WhatsApp, subject חייב להיות מח�
            if (!parsed.body || typeof parsed.body !== "string") {
              throw new Error("LLM returned empty body");
            }
-           return {
+           composed = {
              subject: input.channel === "email" ? parsed.subject ?? "" : "",
              body: parsed.body,
-             source: "llm" as const,
+             source: "llm",
            };
          } catch (err) {
            console.warn("[ai.composeMessage] LLM call failed, using template:", err instanceof Error ? err.message : err);
-           return fallback();
+           composed = fallback();
          }
+
+         // Persist the draft so it shows up in the client's outreach history.
+         // Best-effort: errors are logged inside createOutreachMessage; the
+         // compose flow never fails because of a DB hiccup.
+         const messageId = await db.createOutreachMessage({
+           workspaceId: ctx.user.workspaceId,
+           clientId: client.id,
+           senderUserId: ctx.user.id,
+           channel: input.channel,
+           subject: composed.subject || null,
+           body: composed.body,
+           source: composed.source,
+           status: "drafted",
+           flagAtCompose: flag,
+         });
+
+         return { ...composed, messageId: messageId > 0 ? messageId : null };
        }),
    }),
+
+  // ========================================================
+  // OUTREACH (AI composer history per client)
+  // ========================================================
+  outreach: router({
+    /** List messages composed for a single client (most recent first). */
+    listForClient: workspaceProcedure
+      .input(z.object({ clientId: z.number().int().positive(), limit: z.number().int().min(1).max(200).optional() }))
+      .query(async ({ ctx, input }) => {
+        // Make sure the user can see this client (workspace + role isolation).
+        const client = await db.getClientById({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+        if (!client) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "הלקוח לא נמצא או לא שייך לסוכנות שלך.",
+          });
+        }
+        return db.listOutreachForClient({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          limit: input.limit,
+        });
+      }),
+
+    /** Mark a drafted message as sent (called after the user clicks Send). */
+    markSent: workspaceProcedure
+      .input(z.object({ messageId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        const ok = await db.markOutreachSent({
+          messageId: input.messageId,
+          workspaceId: ctx.user.workspaceId,
+          senderUserId: ctx.user.id,
+        });
+        if (!ok) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "ההודעה לא נמצאה או לא שייכת לסוכן/ת המחובר/ת.",
+          });
+        }
+        return { ok: true as const };
+      }),
+  }),
 
   admin: adminRouter,
 

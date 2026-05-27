@@ -374,3 +374,42 @@ export const auditLog = mysqlTable(
 );
 export type AuditLog = typeof auditLog.$inferSelect;
 export type InsertAuditLog = typeof auditLog.$inferInsert;
+
+// ============================================================
+// OUTREACH MESSAGES - היסטוריית הודעות AI שנוסחו ללקוחות
+// ============================================================
+export const outreachMessages = mysqlTable(
+  "outreach_messages",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    /** Tenant scoping */
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    /** Client the message is directed to */
+    clientId: int("clientId").references(() => clients.id).notNull(),
+    /** Agent who drafted / sent it */
+    senderUserId: int("senderUserId").references(() => users.id).notNull(),
+    /** Channel: email | whatsapp */
+    channel: mysqlEnum("channel", ["email", "whatsapp"]).notNull(),
+    /** Subject line (empty for whatsapp) */
+    subject: varchar("subject", { length: 300 }),
+    /** Message body (Hebrew, can be long) */
+    body: text("body").notNull(),
+    /** Where the text came from: llm | template | manual */
+    source: mysqlEnum("source", ["llm", "template", "manual"]).default("llm").notNull(),
+    /** drafted (just composed) | sent (user clicked send) */
+    status: mysqlEnum("status", ["drafted", "sent"]).default("drafted").notNull(),
+    /** Snapshot of the client's flagStatus when the message was composed, for analytics */
+    flagAtCompose: varchar("flagAtCompose", { length: 32 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    /** Set when status flips from drafted → sent */
+    sentAt: timestamp("sentAt"),
+  },
+  table => ({
+    workspaceIdx: index("outreach_workspace_idx").on(table.workspaceId),
+    clientIdx: index("outreach_client_idx").on(table.clientId),
+    senderIdx: index("outreach_sender_idx").on(table.senderUserId),
+    createdIdx: index("outreach_created_idx").on(table.createdAt),
+  })
+);
+export type OutreachMessage = typeof outreachMessages.$inferSelect;
+export type InsertOutreachMessage = typeof outreachMessages.$inferInsert;

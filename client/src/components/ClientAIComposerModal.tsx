@@ -47,10 +47,13 @@ export function ClientAIComposerModal({ client, channel, onClose }: Props) {
   const [typedSubject, setTypedSubject] = useState("");
   const [typedBody, setTypedBody] = useState("");
   const [source, setSource] = useState<"llm" | "template" | null>(null);
+  const [messageId, setMessageId] = useState<number | null>(null);
   const messageRef = useRef<{ subject: string; body: string } | null>(null);
   const bodyContainerRef = useRef<HTMLDivElement>(null);
 
+  const utils = trpc.useUtils();
   const composeMutation = trpc.ai.composeMessage.useMutation();
+  const markSentMutation = trpc.outreach.markSent.useMutation();
 
   useEffect(() => {
     if (!client || !channel) return;
@@ -60,6 +63,7 @@ export function ClientAIComposerModal({ client, channel, onClose }: Props) {
     setTypedSubject("");
     setTypedBody("");
     setSource(null);
+    setMessageId(null);
     messageRef.current = null;
 
     const thinkingTimers: ReturnType<typeof setTimeout>[] = [];
@@ -75,6 +79,7 @@ export function ClientAIComposerModal({ client, channel, onClose }: Props) {
         if (cancelled) return;
         messageRef.current = { subject: result.subject ?? "", body: result.body };
         setSource(result.source);
+        setMessageId(result.messageId ?? null);
         // Wait at least until thinking animation finishes for a polished feel.
         const minDelay = THINKING_STEPS.length * 350 + 200;
         setTimeout(() => {
@@ -172,6 +177,17 @@ export function ClientAIComposerModal({ client, channel, onClose }: Props) {
       const text = encodeURIComponent(typedBody);
       window.open(`https://wa.me/${intl}?text=${text}`, "_blank");
       toast.success("נפתח WhatsApp עם ההודעה");
+    }
+    // Record the send so it shows up as "נשלח" in the client's outreach history.
+    if (messageId) {
+      markSentMutation.mutate(
+        { messageId },
+        {
+          onSuccess: () => {
+            utils.outreach.listForClient.invalidate({ clientId: client.id });
+          },
+        }
+      );
     }
   };
 

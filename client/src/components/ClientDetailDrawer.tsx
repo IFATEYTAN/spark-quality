@@ -2,20 +2,22 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import {
+  Calendar,
+  CheckCheck,
+  Clock,
   Crown,
-  Mail,
-  Phone,
-  X,
-  User,
-  Save,
+  FileWarning,
   Loader2,
-  Wallet,
+  Mail,
+  MessageSquare,
+  Phone,
+  Save,
+  Shield,
   Sparkles,
   TrendingUp,
-  Shield,
-  FileWarning,
-  Calendar,
-  MessageSquare,
+  User,
+  Wallet,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -207,6 +209,8 @@ export function ClientDetailDrawer({
           </p>
         </section>
 
+        <OutreachHistory clientId={client.id} />
+
         {/* Editable */}
         <section className="p-5 space-y-5">
           <div>
@@ -345,6 +349,86 @@ function Row({
         <p className={`text-sm text-white truncate ${mono ? "font-mono" : ""}`}>{value}</p>
       </div>
     </div>
+  );
+}
+
+function OutreachHistory({ clientId }: { clientId: number }) {
+  const historyQuery = trpc.outreach.listForClient.useQuery(
+    { clientId, limit: 10 },
+    { staleTime: 30_000 }
+  );
+  const messages = historyQuery.data ?? [];
+
+  if (historyQuery.isLoading) {
+    return (
+      <section className="p-5 border-b border-white/5">
+        <label className="text-[11px] font-bold text-gold tracking-wider uppercase mb-2 block">
+          היסטוריית פניות
+        </label>
+        <div className="flex items-center gap-2 text-xs text-white/40">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          טוען...
+        </div>
+      </section>
+    );
+  }
+
+  if (messages.length === 0) return null;
+
+  return (
+    <section className="p-5 border-b border-white/5 space-y-2">
+      <label className="text-[11px] font-bold text-gold tracking-wider uppercase mb-2 block">
+        היסטוריית פניות · {messages.length}
+      </label>
+      <div className="space-y-2">
+        {messages.map((m) => {
+          const isEmail = m.channel === "email";
+          const isSent = m.status === "sent";
+          const ChannelIcon = isEmail ? Mail : MessageSquare;
+          const when = new Date(m.createdAt).toLocaleString("he-IL", {
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          const preview = (m.subject || m.body || "").trim().slice(0, 90);
+          return (
+            <div
+              key={m.id}
+              className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2.5"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <ChannelIcon
+                  className={`h-3.5 w-3.5 ${isEmail ? "text-gold" : "text-emerald-300"}`}
+                />
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-wider ${
+                    isSent ? "text-emerald-300" : "text-white/45"
+                  }`}
+                >
+                  {isSent ? (
+                    <span className="flex items-center gap-1">
+                      <CheckCheck className="h-3 w-3" />
+                      נשלח
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      טיוטה
+                    </span>
+                  )}
+                </span>
+                <span className="text-[10px] text-white/35 mr-auto font-mono">{when}</span>
+              </div>
+              <div className="text-xs text-white/75 line-clamp-2 leading-snug">{preview}</div>
+              {m.source === "template" && (
+                <div className="mt-1 text-[9px] text-amber-300/80">תבנית (LLM לא היה זמין)</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

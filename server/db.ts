@@ -4,10 +4,12 @@ import {
   clients,
   type InsertClient,
   type InsertInvitation,
+  type InsertOutreachMessage,
   type InsertReport,
   type InsertUser,
   type InsertWorkspace,
   invitations,
+  outreachMessages,
   policies,
   reports,
   users,
@@ -757,4 +759,78 @@ export async function getGlobalDashboardStats() {
     contactsNew: Number((contactsNew as any)?.c ?? 0),
     aum: Number((aumSum as any)?.s ?? 0),
   };
+}
+
+// ============================================================
+// OUTREACH MESSAGES (AI composer history)
+// ============================================================
+
+/** Persist a composed message (draft by default). Returns the new row id. */
+export async function createOutreachMessage(data: InsertOutreachMessage): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  try {
+    const result = await db.insert(outreachMessages).values(data);
+    return Number((result as unknown as { insertId?: number }).insertId ?? 0);
+  } catch (err) {
+    // History is non-critical — never break the compose flow if persistence fails.
+    console.warn("[outreach] failed to persist message:", err);
+    return 0;
+  }
+}
+
+/** Mark a previously drafted message as sent (workspace-scoped). */
+export async function markOutreachSent(opts: {
+  messageId: number;
+  workspaceId: number;
+  senderUserId: number;
+}): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  const result = await db
+    .update(outreachMessages)
+    .set({ status: "sent", sentAt: new Date() })
+    .where(
+      and(
+        eq(outreachMessages.id, opts.messageId),
+        eq(outreachMessages.workspaceId, opts.workspaceId),
+        eq(outreachMessages.senderUserId, opts.senderUserId)
+      )
+    );
+  const affected = (result as unknown as { affectedRows?: number }).affectedRows ?? 0;
+  return affected > 0;
+}
+
+/**
+ * List outreach history for a client, scoped to workspace + role:
+ * agents see only messages they themselves sent; admins/owners see all
+ * messages on the client.
+ */
+export async function listOutreachForClient(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: "owner" | "admin" | "agent";
+  limit?: number;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const limit = opts.limit ?? 50;
+  const conditions =
+    opts.workspaceRole === "agent"
+      ? and(
+          eq(outreachMessages.clientId, opts.clientId),
+          eq(outreachMessages.workspaceId, opts.workspaceId),
+          eq(outreachMessages.senderUserId, opts.userId)
+        )
+      : and(
+          eq(outreachMessages.clientId, opts.clientId),
+          eq(outreachMessages.workspaceId, opts.workspaceId)
+        );
+  return db
+    .select()
+    .from(outreachMessages)
+    .where(conditions)
+    .orderBy(desc(outreachMessages.createdAt))
+    .limit(limit);
 }

@@ -5,12 +5,14 @@ import { TRPCError } from "@trpc/server";
 
 const mockGetClientById = vi.fn();
 const mockInvokeLLM = vi.fn();
+const mockCreateOutreachMessage = vi.fn();
 
 vi.mock("./db", async () => {
   const actual = await vi.importActual<typeof import("./db")>("./db");
   return {
     ...actual,
     getClientById: (...args: unknown[]) => mockGetClientById(...args),
+    createOutreachMessage: (...args: unknown[]) => mockCreateOutreachMessage(...args),
   };
 });
 
@@ -52,6 +54,8 @@ describe("ai.composeMessage", () => {
   beforeEach(() => {
     mockGetClientById.mockReset();
     mockInvokeLLM.mockReset();
+    mockCreateOutreachMessage.mockReset();
+    mockCreateOutreachMessage.mockResolvedValue(123);
   });
 
   it("rejects when user has no workspace", async () => {
@@ -154,6 +158,80 @@ describe("ai.composeMessage", () => {
     expect(result.subject).toContain("מיכל");
     expect(result.body).toContain("מיכל");
     expect(result.body).toContain("SPARK AI");
+  });
+
+  it("persists a drafted outreach message and returns its id", async () => {
+    mockGetClientById.mockResolvedValue({
+      id: 10,
+      workspaceId: 42,
+      ownerUserId: 7,
+      fullName: "רונית גולן",
+      email: "ronit@example.com",
+      phone: null,
+      isVip: false,
+      flagStatus: "high_fees",
+      totalBalance: "510000",
+    });
+    mockInvokeLLM.mockResolvedValue({
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: JSON.stringify({
+              subject: "רונית, הצעה לבחינת תיק",
+              body: "שלום רונית, נדבר השבוע?",
+            }),
+          },
+          finish_reason: "stop",
+        },
+      ],
+    });
+    mockCreateOutreachMessage.mockResolvedValue(777);
+    const caller = appRouter.createCaller(makeCtx());
+    const result = await caller.ai.composeMessage({ clientId: 10, channel: "email" });
+    expect(result.messageId).toBe(777);
+    expect(mockCreateOutreachMessage).toHaveBeenCalledWith({
+      workspaceId: 42,
+      clientId: 10,
+      senderUserId: 7,
+      channel: "email",
+      subject: "רונית, הצעה לבחינת תיק",
+      body: "שלום רונית, נדבר השבוע?",
+      source: "llm",
+      status: "drafted",
+      flagAtCompose: "high_fees",
+    });
+  });
+
+  it("returns messageId:null when persistence fails (history is non-critical)", async () => {
+    mockGetClientById.mockResolvedValue({
+      id: 11,
+      workspaceId: 42,
+      fullName: "אבי ברק",
+      email: "avi@example.com",
+      phone: "0501112222",
+      isVip: false,
+      flagStatus: "regular",
+      totalBalance: "0",
+    });
+    mockInvokeLLM.mockResolvedValue({
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: JSON.stringify({ subject: "x", body: "y" }),
+          },
+          finish_reason: "stop",
+        },
+      ],
+    });
+    mockCreateOutreachMessage.mockResolvedValue(0); // DB unavailable → returns 0
+    const caller = appRouter.createCaller(makeCtx());
+    const result = await caller.ai.composeMessage({ clientId: 11, channel: "email" });
+    expect(result.messageId).toBeNull();
+    expect(result.body).toBe("y");
   });
 
   it("forces empty subject on whatsapp regardless of LLM output", async () => {
