@@ -8,6 +8,7 @@ import {
   Crown,
   Loader2,
   Mail,
+  MessageSquare,
   Phone,
   Search,
   User,
@@ -26,6 +27,11 @@ import {
   ClientDetailDrawer,
   type ClientDetailRow,
 } from "@/components/ClientDetailDrawer";
+import {
+  ClientAIComposerModal,
+  type ComposerClient,
+} from "@/components/ClientAIComposerModal";
+import { toast } from "sonner";
 
 type FlagKind = "all" | "vip" | "liquid_fund" | "tikun_190" | "high_fees" | "risk_ending" | "coverage_gaps";
 
@@ -100,6 +106,10 @@ export default function Clients() {
 
   const [flowCategory, setFlowCategory] = useState<DashboardCategory | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientDetailRow | null>(null);
+  const [composer, setComposer] = useState<{
+    client: ComposerClient;
+    channel: "email" | "whatsapp";
+  } | null>(null);
 
   const exportColumns: ExportColumn<(typeof filtered)[number]>[] = useMemo(
     () => [
@@ -412,6 +422,62 @@ export default function Clients() {
                         </span>
                       </div>
                     )}
+                    <div className="flex items-center gap-1.5 border-r border-white/10 pr-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!client.email) {
+                            toast.error("ללקוח אין מייל בתיק");
+                            return;
+                          }
+                          setComposer({
+                            client: {
+                              id: client.id,
+                              fullName: client.fullName,
+                              email: client.email,
+                              phone: client.phone,
+                              isVip: client.isVip,
+                              flagStatus: (client as { flagStatus?: string }).flagStatus,
+                              totalBalance: (client as { totalBalance?: string | number }).totalBalance,
+                            },
+                            channel: "email",
+                          });
+                        }}
+                        title="נסחי אימייל ב-AI"
+                        className="flex items-center gap-1 rounded-md border border-gold/30 bg-gold/[0.06] px-2 py-1 text-[11px] font-bold text-gold transition hover:bg-gold/15 hover:border-gold/60"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        <Mail className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!client.phone) {
+                            toast.error("ללקוח אין טלפון בתיק");
+                            return;
+                          }
+                          setComposer({
+                            client: {
+                              id: client.id,
+                              fullName: client.fullName,
+                              email: client.email,
+                              phone: client.phone,
+                              isVip: client.isVip,
+                              flagStatus: (client as { flagStatus?: string }).flagStatus,
+                              totalBalance: (client as { totalBalance?: string | number }).totalBalance,
+                            },
+                            channel: "whatsapp",
+                          });
+                        }}
+                        title="נסחי הודעת WhatsApp ב-AI"
+                        className="flex items-center gap-1 rounded-md border border-emerald-400/30 bg-emerald-500/[0.06] px-2 py-1 text-[11px] font-bold text-emerald-300 transition hover:bg-emerald-500/15 hover:border-emerald-400/60"
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        <MessageSquare className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </GlassCard>
@@ -420,6 +486,12 @@ export default function Clients() {
           </div>
         )}
       </div>
+
+      <ClientAIComposerModal
+        client={composer?.client ?? null}
+        channel={composer?.channel ?? null}
+        onClose={() => setComposer(null)}
+      />
     </CinematicShell>
   );
 }
