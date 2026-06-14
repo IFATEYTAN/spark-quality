@@ -1437,6 +1437,20 @@ export const appRouter = router({
         return { ok: true } as const;
       }),
   }),
+
+  /** Analytics — honest aggregates from the activity journal + reminders. */
+  analytics: router({
+    overview: workspaceProcedure
+      .input(z.object({ rangeDays: z.number().int().min(1).max(365).optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return db.getAnalyticsOverview({
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          sinceDays: input?.rangeDays ?? 30,
+        });
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
