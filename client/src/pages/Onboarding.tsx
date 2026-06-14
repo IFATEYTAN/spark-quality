@@ -516,21 +516,23 @@ function BillingStep({
   onUpgrade,
   isPending,
 }: BillingStepProps) {
-  // Source of truth lives in server/billing.ts; mirrored here for SSR-free display.
-  const basicPrice = 150;
-  const proPrice = 249;
-  const premiumPrice = 389;
+  // Single-tier model (Round 125) — source of truth is server/billing.ts.
+  // SPARK Quality is one plan at ₪199/month, ₪169/mo effective when billed
+  // yearly (₪2,028/yr). Mirrored here for display; kept in sync with Pricing.tsx.
+  const monthlyPrice = 199;
+  const yearlyPerMonth = 169;
+  const price = period === "yearly" ? yearlyPerMonth : monthlyPrice;
 
   return (
     <div className="animate-fade-up" style={{ animationDelay: "0.1s" }}>
       <GlassCard goldAccent className="p-7 lg:p-10">
         <GoldEyebrow>בחירת תוכנית · {workspaceName || "הסוכנות שלכם"}</GoldEyebrow>
         <h2 className="font-display text-2xl lg:text-3xl font-bold text-white tracking-tight mb-3">
-          איזו תוכנית מתאימה לכם?
+          תוכנית אחת, הכול כלול
         </h2>
         <p className="text-sm text-white/70 leading-relaxed mb-7">
-          בחרו את התוכנית שמתאימה לגודל הסוכנות שלכם. כל שינוי מתבצע
-          בלחיצה — בלי התחייבויות.
+          לקוחות ללא הגבלה, כל 16 הטריגרים ו-AI מלא — ללא התחייבות.
+          ניתן לבטל בכל עת.
         </p>
 
         {/* Period toggle - mirrors the Pricing page pattern exactly */}
@@ -556,65 +558,38 @@ function BillingStep({
             className={`text-sm font-medium ${period === "yearly" ? "text-white" : "text-white/50"}`}
           >
             שנתי{" "}
-            <span className="text-gold text-xs">(חיסכון של 16%)</span>
+            <span className="text-gold text-xs">(חיסכון של 15%)</span>
           </span>
         </div>
 
-        <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
-          <PlanCard
-            icon={<Building2 className="h-5 w-5 text-gold" />}
-            eyebrow="לסוכן עצמאי"
-            title="Base"
-            priceLabel={`₪${basicPrice}`}
-            priceSuffix={period === "yearly" ? "לחודש (חיוב שנתי)" : "לחודש"}
-            features={[
-              "עד 300 לקוחות פעילים",
-              "זיהוי דגלים אוטומטי",
-              "דוחות חודשיים + תמיכה במייל",
-            ]}
-            ctaLabel="בחר Base"
-            ctaVariant="outline"
-            onClick={() => onUpgrade("basic")}
-            disabled={isPending}
-          />
-          <PlanCard
-            icon={<Sparkles className="h-5 w-5 text-gold" />}
-            eyebrow="לסוכנות בצמיחה"
-            title="Pro"
-            priceLabel={`₪${proPrice}`}
-            priceSuffix={period === "yearly" ? "לחודש (חיוב שנתי)" : "לחודש"}
-            features={[
-              "עד 1000 לקוחות פעילים",
-              "זיהוי דגלים מורחב",
-              "ייצוא נתונים מלא",
-            ]}
-            ctaLabel="בחר Pro"
-            ctaVariant="outline"
-            onClick={() => onUpgrade("pro")}
-            disabled={isPending}
-          />
+        <div className="max-w-md mx-auto">
           <PlanCard
             icon={<Crown className="h-5 w-5 text-[#06101F]" />}
-            eyebrow="המומלץ ביותר"
-            title="Premium"
-            priceLabel={`₪${premiumPrice}`}
-            priceSuffix={period === "yearly" ? "לחודש (חיוב שנתי)" : "לחודש"}
+            eyebrow="SPARK Quality"
+            title="SPARK Quality"
+            priceLabel={`₪${price}`}
+            priceSuffix={
+              period === "yearly"
+                ? `לחודש · חיוב שנתי של ₪${(yearlyPerMonth * 12).toLocaleString("he-IL")}`
+                : "לחודש"
+            }
             features={[
               "לקוחות ללא הגבלה",
-              "זיהוי VIP, תיקון 190, השתלמות",
-              "אוטומציות WhatsApp + תמיכה VIP",
+              "כל 16 הטריגרים · P0–P4",
+              "AI Composer + תדריך בוקר + שאל את ה-AI",
+              "אוטומציות WhatsApp / Email + ייצוא נתונים מלא",
             ]}
-            ctaLabel="בחר Premium"
+            ctaLabel="הפעלת המנוי"
             ctaVariant="gold"
-            onClick={() => onUpgrade("premium")}
+            onClick={() => onUpgrade("basic")}
             disabled={isPending}
             highlighted
           />
         </div>
 
         <p className="text-xs text-white/55 leading-relaxed text-center mt-6">
-          * שדרוג בתשלום מועבר כעת לטיפול ידני של צוות SPARK AI עד להפעלת iCount.
-          תקבלו מייל עם לינק תשלום מאובטח תוך זמן קצר.
+          * התשלום מתבצע באמצעות עמוד תשלום מאובטח (iCount). אם החיוב האוטומטי
+          אינו זמין, צוות SPARK AI יצור קשר עם לינק תשלום תוך זמן קצר.
         </p>
       </GlassCard>
     </div>
