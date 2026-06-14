@@ -1280,6 +1280,73 @@ export const appRouter = router({
         return { generationId, variants } as const;
       }),
 
+    /**
+     * Bulk email — send one (optionally personalized) email to many clients at
+     * once via Resend. `{{name}}` / `{{שם}}` in the subject/body is replaced
+     * with each client's first name. Clients without an email are skipped; each
+     * successful send is logged to the client's activity journal. Gated to an
+     * active subscription. Role-isolated (agents only reach their own clients).
+     */
+    bulkEmail: workspaceActiveProcedure
+      .input(
+        z.object({
+          clientIds: z.array(z.number().int().positive()).min(1).max(200),
+          subject: z.string().min(1).max(200),
+          body: z.string().min(1).max(5000),
+          triggerKey: z.string().max(64).optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const rows = await db.getClientsByIds({
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          ids: input.clientIds,
+        });
+        const personalize = (tpl: string, name: string) =>
+          tpl.replace(/\{\{\s*(?:name|שם)\s*\}\}/g, name);
+
+        let sent = 0;
+        let skipped = 0;
+        let failed = 0;
+        for (const c of rows) {
+          const email = (c.email ?? "").trim();
+          if (!email) {
+            skipped++;
+            continue;
+          }
+          const firstName = (c.fullName ?? "").trim().split(/\s+/)[0] || "לקוח";
+          const subject = personalize(input.subject, firstName);
+          const text = personalize(input.body, firstName);
+          const res = await sendEmail({
+            to: email,
+            subject,
+            text,
+            replyTo: ctx.user.email ?? undefined,
+          });
+          if (res.ok) {
+            sent++;
+            try {
+              await db.insertClientActivity({
+                clientId: c.id,
+                workspaceId: ctx.user.workspaceId,
+                userId: ctx.user.id,
+                workspaceRole: ctx.user.workspaceRole,
+                type: "email",
+                outcome: "נשלח",
+                content: `נושא: ${subject}\n\n${text}`,
+                triggerKey: input.triggerKey ?? null,
+              });
+            } catch (err) {
+              console.warn("[bulkEmail] activity log failed (non-fatal)", err);
+            }
+          } else {
+            failed++;
+          }
+        }
+        return { sent, skipped, failed, total: rows.length } as const;
+      }),
+
     /** Reassign a client to another agent in the same workspace (admins/owners only). */
     reassign: workspaceAdminProcedure
       .input(

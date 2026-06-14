@@ -8,6 +8,7 @@ import {
   Users,
   Upload as UploadIcon,
   UserCog,
+  ListChecks,
   LogOut,
   Sparkles,
   ShieldCheck,
@@ -252,6 +253,7 @@ export function CinematicHeader({
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "דשבורד", icon: LayoutDashboard, superAdminOnly: false },
+  { href: "/tasks", label: "המשימות שלי", icon: ListChecks, superAdminOnly: false },
   { href: "/clients", label: "לקוחות", icon: Users, superAdminOnly: false },
   { href: "/upload", label: "העלאת דוח", icon: UploadIcon, superAdminOnly: false },
   { href: "/team", label: "צוות", icon: UserCog, superAdminOnly: false },
@@ -281,6 +283,7 @@ export function TopZoneNav() {
   // Determine current zone
   const isProductZone =
     location.startsWith("/dashboard") ||
+    location.startsWith("/tasks") ||
     location.startsWith("/clients") ||
     location.startsWith("/upload") ||
     location.startsWith("/team") ||
