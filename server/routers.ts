@@ -1369,6 +1369,74 @@ export const appRouter = router({
   admin: adminRouter,
 
   billing: billingRouter,
+
+  /** Reusable message templates (workspace-shared). */
+  templates: router({
+    list: workspaceProcedure
+      .input(z.object({ channel: z.string().max(16).optional() }).optional())
+      .query(async ({ ctx, input }) => {
+        return db.listMessageTemplates({
+          workspaceId: ctx.user.workspaceId,
+          channel: input?.channel,
+        });
+      }),
+    create: workspaceProcedure
+      .input(
+        z.object({
+          name: z.string().min(1).max(120),
+          channel: z.enum(["email", "whatsapp", "sms"]).default("email"),
+          subject: z.string().max(200).nullable().optional(),
+          body: z.string().min(1).max(5000),
+          triggerKey: z.string().max(64).nullable().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        const id = await db.createMessageTemplate({
+          workspaceId: ctx.user.workspaceId,
+          createdBy: ctx.user.id,
+          name: input.name,
+          channel: input.channel,
+          subject: input.subject ?? null,
+          body: input.body,
+          triggerKey: input.triggerKey ?? null,
+        });
+        return { id } as const;
+      }),
+    update: workspaceProcedure
+      .input(
+        z.object({
+          id: z.number().int().positive(),
+          name: z.string().min(1).max(120).optional(),
+          subject: z.string().max(200).nullable().optional(),
+          body: z.string().min(1).max(5000).optional(),
+          triggerKey: z.string().max(64).nullable().optional(),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        await db.updateMessageTemplate({
+          id: input.id,
+          workspaceId: ctx.user.workspaceId,
+          requesterId: ctx.user.id,
+          requesterRole: ctx.user.workspaceRole,
+          name: input.name,
+          subject: input.subject,
+          body: input.body,
+          triggerKey: input.triggerKey,
+        });
+        return { ok: true } as const;
+      }),
+    delete: workspaceProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        await db.deleteMessageTemplate({
+          id: input.id,
+          workspaceId: ctx.user.workspaceId,
+          requesterId: ctx.user.id,
+          requesterRole: ctx.user.workspaceRole,
+        });
+        return { ok: true } as const;
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

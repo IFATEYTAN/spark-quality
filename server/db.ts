@@ -16,6 +16,7 @@ import {
   reports,
   users,
   workspaces,
+  messageTemplates,
 } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
@@ -2321,4 +2322,104 @@ export async function reassignClient(opts: {
     .set({ ownerUserId: opts.newOwnerUserId })
     .where(eq(clients.id, opts.clientId));
   return { ok: true } as const;
+}
+
+// ============================================================
+// MESSAGE TEMPLATES (Round 135)
+// Workspace-shared. Anyone in the workspace can list/create; update & delete
+// are restricted to the template creator or a workspace admin/owner.
+// ============================================================
+export async function listMessageTemplates(opts: {
+  workspaceId: number;
+  channel?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const cond = opts.channel
+    ? and(eq(messageTemplates.workspaceId, opts.workspaceId), eq(messageTemplates.channel, opts.channel))
+    : eq(messageTemplates.workspaceId, opts.workspaceId);
+  return db
+    .select()
+    .from(messageTemplates)
+    .where(cond)
+    .orderBy(desc(messageTemplates.updatedAt));
+}
+
+export async function createMessageTemplate(opts: {
+  workspaceId: number;
+  createdBy: number;
+  name: string;
+  channel: string;
+  subject?: string | null;
+  body: string;
+  triggerKey?: string | null;
+}): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const res = await db.insert(messageTemplates).values({
+    workspaceId: opts.workspaceId,
+    createdBy: opts.createdBy,
+    name: opts.name,
+    channel: opts.channel,
+    subject: opts.subject ?? null,
+    body: opts.body,
+    triggerKey: opts.triggerKey ?? null,
+  });
+  return Number((res as unknown as { insertId: number }).insertId ?? 0);
+}
+
+/** Returns true if the requester may modify/delete the template. */
+async function assertTemplateWritable(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+  opts: { id: number; workspaceId: number; requesterId: number; requesterRole: WorkspaceRole },
+): Promise<void> {
+  const rows = await db
+    .select({ createdBy: messageTemplates.createdBy })
+    .from(messageTemplates)
+    .where(and(eq(messageTemplates.id, opts.id), eq(messageTemplates.workspaceId, opts.workspaceId)));
+  const tpl = rows[0];
+  if (!tpl) throw new Error("Template not found");
+  const isAdmin = opts.requesterRole === "admin" || opts.requesterRole === "owner";
+  if (!isAdmin && tpl.createdBy !== opts.requesterId) {
+    throw new Error("Not allowed to modify this template");
+  }
+}
+
+export async function updateMessageTemplate(opts: {
+  id: number;
+  workspaceId: number;
+  requesterId: number;
+  requesterRole: WorkspaceRole;
+  name?: string;
+  subject?: string | null;
+  body?: string;
+  triggerKey?: string | null;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await assertTemplateWritable(db, opts);
+  const set: Partial<{ name: string; subject: string | null; body: string; triggerKey: string | null }> = {};
+  if (opts.name !== undefined) set.name = opts.name;
+  if (opts.subject !== undefined) set.subject = opts.subject;
+  if (opts.body !== undefined) set.body = opts.body;
+  if (opts.triggerKey !== undefined) set.triggerKey = opts.triggerKey;
+  if (Object.keys(set).length === 0) return;
+  await db
+    .update(messageTemplates)
+    .set(set)
+    .where(and(eq(messageTemplates.id, opts.id), eq(messageTemplates.workspaceId, opts.workspaceId)));
+}
+
+export async function deleteMessageTemplate(opts: {
+  id: number;
+  workspaceId: number;
+  requesterId: number;
+  requesterRole: WorkspaceRole;
+}): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await assertTemplateWritable(db, opts);
+  await db
+    .delete(messageTemplates)
+    .where(and(eq(messageTemplates.id, opts.id), eq(messageTemplates.workspaceId, opts.workspaceId)));
 }

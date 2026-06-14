@@ -611,3 +611,36 @@ export const clientReminders = mysqlTable(
 );
 export type ClientReminder = typeof clientReminders.$inferSelect;
 export type InsertClientReminder = typeof clientReminders.$inferInsert;
+
+// ============================================================
+// MESSAGE TEMPLATES (Round 135 — reusable email/WhatsApp templates)
+// Workspace-shared templates the team can save once and reuse from the
+// composer / bulk-email flow. {{שם}} / {{name}} in the body is replaced with
+// the client's first name at send time.
+// ============================================================
+export const messageTemplates = mysqlTable(
+  "message_templates",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
+    createdBy: int("createdBy").references(() => users.id).notNull(),
+    /** Short display name, e.g. "תזכורת חידוש ריסק". */
+    name: varchar("name", { length: 120 }).notNull(),
+    /** "email" | "whatsapp" | "sms" — which composer it belongs to. */
+    channel: varchar("channel", { length: 16 }).default("email").notNull(),
+    /** Email subject (null for whatsapp/sms). */
+    subject: varchar("subject", { length: 200 }),
+    /** Message body (supports {{שם}} / {{name}} token). */
+    body: text("body").notNull(),
+    /** Optional association to a trigger, for quick filtering. */
+    triggerKey: varchar("triggerKey", { length: 64 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    workspaceIdx: index("message_templates_workspace_idx").on(table.workspaceId),
+    channelIdx: index("message_templates_channel_idx").on(table.workspaceId, table.channel),
+  }),
+);
+export type MessageTemplate = typeof messageTemplates.$inferSelect;
+export type InsertMessageTemplate = typeof messageTemplates.$inferInsert;
