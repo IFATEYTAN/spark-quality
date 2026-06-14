@@ -93,10 +93,14 @@ export function EmailComposerModal({
   const [variants, setVariants] = useState<EmailVariant[]>([]);
   const [activeTab, setActiveTab] = useState("v0");
   const [pickedIndex, setPickedIndex] = useState<number | null>(null);
+  const [generationId, setGenerationId] = useState<number | null>(null);
+
+  const markSelectedMutation = trpc.reports.markVariantSelected.useMutation();
 
   const generateMutation = trpc.clientJourney.generateEmail.useMutation({
     onSuccess: data => {
       setVariants(data.variants);
+      setGenerationId(data.generationId);
       setPickedIndex(null);
       setActiveTab("v0");
     },
@@ -116,6 +120,7 @@ export function EmailComposerModal({
   useEffect(() => {
     if (!open) {
       setVariants([]);
+      setGenerationId(null);
       setPickedIndex(null);
       setContext("");
       setTone("warm");
@@ -160,6 +165,15 @@ export function EmailComposerModal({
     const url = buildMailtoHref(variant, client?.email);
     window.location.href = url;
     setPickedIndex(idx);
+    // Persist the (possibly edited) variants + which one was used, so edits
+    // are not lost on navigation and the history reflects what was sent.
+    if (generationId !== null) {
+      markSelectedMutation.mutate({
+        generationId,
+        selectedIndex: idx,
+        variantsJson: variants.map(v => JSON.stringify(v)),
+      });
+    }
     if (client?.id) {
       logActivity.mutate({
         clientId: client.id,

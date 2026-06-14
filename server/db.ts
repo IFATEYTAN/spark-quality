@@ -1432,12 +1432,18 @@ export async function markMessageGenerationSelected(opts: {
   workspaceId: number;
   generationId: number;
   selectedIndex: number;
+  /** When provided, persists the (possibly edited) variants over the originals. */
+  variantsJson?: unknown[];
 }): Promise<void> {
   const db = await getDb();
   if (!db) return;
+  const set: { selectedIndex: number; variantsJson?: unknown[] } = {
+    selectedIndex: opts.selectedIndex,
+  };
+  if (opts.variantsJson !== undefined) set.variantsJson = opts.variantsJson;
   await db
     .update(messageGenerations)
-    .set({ selectedIndex: opts.selectedIndex })
+    .set(set)
     .where(
       and(
         eq(messageGenerations.id, opts.generationId),

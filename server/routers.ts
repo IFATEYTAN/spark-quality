@@ -931,6 +931,8 @@ export const appRouter = router({
         z.object({
           generationId: z.number().int().positive(),
           selectedIndex: z.number().int().min(0).max(2),
+          /** Optional edited variants to persist over the originals. */
+          variantsJson: z.array(z.string()).optional(),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -938,6 +940,7 @@ export const appRouter = router({
           workspaceId: ctx.user.workspaceId,
           generationId: input.generationId,
           selectedIndex: input.selectedIndex,
+          variantsJson: input.variantsJson,
         });
         return { ok: true } as const;
       }),
