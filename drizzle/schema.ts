@@ -318,50 +318,6 @@ export type Report = typeof reports.$inferSelect;
 export type InsertReport = typeof reports.$inferInsert;
 
 // ============================================================
-// ACTION ITEMS - משימות שימור ופעולה אוטומטיות
-// ============================================================
-export const actionItems = mysqlTable(
-  "action_items",
-  {
-    id: int("id").autoincrement().primaryKey(),
-    workspaceId: int("workspaceId").references(() => workspaces.id).notNull(),
-    /** The client this action relates to */
-    clientId: int("clientId").references(() => clients.id).notNull(),
-    /** Assigned agent (usually the client's owner) */
-    assignedToUserId: int("assignedToUserId").references(() => users.id),
-    /**
-     * Type of action:
-     * - missing_email | missing_pension | missing_phone
-     * - discount_expiring | risk_expiring | policy_renewal
-     * - cross_sell_opportunity | retention_risk | birthday
-     */
-    type: varchar("type", { length: 50 }).notNull(),
-    /** Priority: low | medium | high | urgent */
-    priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
-    /** Status: open | in_progress | done | dismissed */
-    status: mysqlEnum("status", ["open", "in_progress", "done", "dismissed"]).default("open").notNull(),
-    /** Action title (Hebrew) */
-    title: varchar("title", { length: 300 }).notNull(),
-    /** Detailed description */
-    description: text("description"),
-    /** Suggested due date (e.g. discount expires in 30 days) */
-    dueDate: timestamp("dueDate"),
-    /** When user marked as done */
-    completedAt: timestamp("completedAt"),
-    createdAt: timestamp("createdAt").defaultNow().notNull(),
-    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  },
-  table => ({
-    workspaceIdx: index("actions_workspace_idx").on(table.workspaceId),
-    clientIdx: index("actions_client_idx").on(table.clientId),
-    assigneeIdx: index("actions_assignee_idx").on(table.assignedToUserId),
-    statusIdx: index("actions_status_idx").on(table.status),
-  })
-);
-
-export type ActionItem = typeof actionItems.$inferSelect;
-export type InsertActionItem = typeof actionItems.$inferInsert;
-// ============================================================
 // CONTACT SUBMISSIONS - פניות מטופס צור קשר ב- Landing
 // ============================================================
 export const contactSubmissions = mysqlTable(
