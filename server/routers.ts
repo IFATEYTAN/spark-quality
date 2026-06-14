@@ -1451,6 +1451,38 @@ export const appRouter = router({
         });
       }),
   }),
+
+  /**
+   * Follow-up sequences — enroll clients in a timed cadence. Each step becomes
+   * a scheduled reminder (surfaced in "My Tasks Today"); no auto-send.
+   */
+  sequences: router({
+    enroll: workspaceProcedure
+      .input(
+        z.object({
+          clientIds: z.array(z.number().int().positive()).min(1).max(200),
+          steps: z
+            .array(
+              z.object({
+                offsetDays: z.number().int().min(0).max(365),
+                channel: z.enum(["whatsapp", "email", "call", "sms", "meeting"]),
+                note: z.string().min(1).max(500),
+              }),
+            )
+            .min(1)
+            .max(10),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        return db.enrollSequence({
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+          clientIds: input.clientIds,
+          steps: input.steps,
+        });
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
