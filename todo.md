@@ -1186,29 +1186,29 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 **מטרה:** הסוכן צריך להיות מסוגל לעבוד בפועל מתוך המערכת — לא רק לראות מספרים. כל קטגוריה/טריגר חייב לתמוך במסע לקוח מלא: התקשרות, וואטסאפ, מייל, פגישה, יומן פעולות, snooze, הקצאה לסוכן אחר, וצפייה בכל הטריגרים של אותו לקוח במקום אחד.
 
 ### שלב א — DB + שרת (תשתית)
-- [ ] schema: `clientActivities` (workspaceId, clientId, type, content, outcome, createdBy, scheduledFor, createdAt)
-- [ ] schema: `clientReminders` (workspaceId, clientId, triggerKey, remindAt, status, createdBy, createdAt)
-- [ ] migration via pnpm db:push
-- [ ] db helpers: insertActivity, listActivitiesForClient, createReminder, listDueReminders, dismissReminder, getClientDetail (client + all flags + recent activities + open reminders), reassignClient
-- [ ] tRPC: activities.create, activities.listForClient, reminders.create, reminders.listDue, reminders.dismiss, clients.getDetail, clients.reassign — כולם עם בידוד workspace+role
+- [x] schema: `clientActivities` (workspaceId, clientId, type, content, outcome, createdBy, scheduledFor, createdAt)
+- [x] schema: `clientReminders` (workspaceId, clientId, triggerKey, remindAt, status, createdBy, createdAt)
+- [x] migration via pnpm db:push
+- [x] db helpers: insertActivity, listActivitiesForClient, createReminder, listDueReminders, dismissReminder, getClientDetail (client + all flags + recent activities + open reminders), reassignClient
+- [x] tRPC: activities.create, activities.listForClient, reminders.create, reminders.listDue, reminders.dismiss, clients.getDetail, clients.reassign — כולם עם בידוד workspace+role
 
 ### שלב ב — UI: כרטיס לקוח מלא
-- [ ] ClientDetailModal: פרטי לקוח, badges לכל הטריגרים שלו, יומן פעולות (timeline), רימיינדרים פתוחים
-- [ ] כפתורי פעולה מהירה: התקשר (tel:), וואטסאפ, מייל (mailto:), פגישה, snooze, הקצאה לסוכן אחר, סמן כטופל
-- [ ] טופס הוספת פעולה ליומן: סוג + תוצאה + הערה
-- [ ] טופס snooze: מתי להזכיר + איזה טריגר
+- [x] ClientDetailModal: פרטי לקוח, badges לכל הטריגרים שלו, יומן פעולות (timeline), רימיינדרים פתוחים
+- [x] כפתורי פעולה מהירה: התקשר (tel:), וואטסאפ, מייל (mailto:), פגישה, snooze, הקצאה לסוכן אחר, סמן כטופל
+- [x] טופס הוספת פעולה ליומן: סוג + תוצאה + הערה
+- [x] טופס snooze: מתי להזכיר + איזה טריגר
 
 ### שלב ג — חיווט ל-TriggerClientsModal
-- [ ] לחיצה על שם לקוח פותחת את ClientDetailModal
-- [ ] הוספת כפתור tel: בכל שורה
-- [ ] הוספת badge עם מספר הטריגרים הנוספים שאותו לקוח שייך אליהם
-- [ ] לחיצה על הטלפון = tel:, לחיצה על מייל = mailto:
+- [x] לחיצה על שם לקוח פותחת את ClientDetailModal
+- [x] הוספת כפתור tel: בכל שורה
+- [x] הוספת badge עם מספר הטריגרים הנוספים שאותו לקוח שייך אליהם
+- [x] לחיצה על הטלפון = tel:, לחיצה על מייל = mailto:
 
 ### שלב ד — בדיקות ומסירה
-- [ ] vitest: activities + reminders + getClientDetail כולל בידוד workspace
-- [ ] vitest: reassignClient מותר רק לאדמין/אונר באותה סוכנות
-- [ ] בדיקה ידנית: לחיצה על כרטיסייה → לקוח → התקשר → רישום פעולה → snooze → אימייל
-- [ ] checkpoint + סיכום למשתמשת
+- [x] vitest: activities + reminders + getClientDetail כולל בידוד workspace
+- [x] vitest: reassignClient מותר רק לאדמין/אונר באותה סוכנות
+- [x] בדיקה ידנית: לחיצה על כרטיסייה → לקוח → התקשר → רישום פעולה → snooze → אימייל
+- [x] checkpoint + סיכום למשתמשת
 
 ## Round 131 — מסע לקוח מלא (Level 1, 3 פיצ'רים, ~3h) [2026-05-26]
 - [x] Schema: clientActivities + clientReminders (workspace-scoped, FK ל-clients) + push migration
@@ -1220,30 +1220,30 @@ Bug reported by יפה: the gold "הצטרפו ל-SPARK Quality" button inside t
 - [x] insertId reading defensive ב-createClientReminder + insertClientActivity (תואם לדפוס createWorkspace)
 
 ## Round 132 — מחולל מיילים AI לכל טריגר [2026-05-26]
-- [ ] Server: triggerEmailTemplates + clientJourney.generateEmail (3 גרסאות, נושא+body, hebrew/RTL, פר-טריגר, פר-טון), persist ל-messageGenerations
-- [ ] EmailComposerModal: בורר טון (חם/מקצועי/דחוף), הקשר נוסף, 3 כרטיסי גרסאות עם עריכת נושא+body, "פתח ב-Mail" (mailto)
-- [ ] חיבור ל-TriggerClientsModal (envelope icon) + ClientDetailModal (כפתור מייל)
-- [ ] vitest: workspace isolation, 3 variants, llm fallback, activity logging
-- [ ] todo.md + checkpoint
+- [x] Server: triggerEmailTemplates + clientJourney.generateEmail (3 גרסאות, נושא+body, hebrew/RTL, פר-טריגר, פר-טון), persist ל-messageGenerations
+- [x] EmailComposerModal: בורר טון (חם/מקצועי/דחוף), הקשר נוסף, 3 כרטיסי גרסאות עם עריכת נושא+body, "פתח ב-Mail" (mailto)
+- [x] חיבור ל-TriggerClientsModal (envelope icon) + ClientDetailModal (כפתור מייל)
+- [x] vitest: workspace isolation, 3 variants, llm fallback, activity logging
+- [x] todo.md + checkpoint
 
 ## Round 132 follow-up — Option B + scenarios audit
-- [ ] Locate /clients edit modal component & identify clientId access
-- [ ] Insert "active triggers" panel + "open full journey" button inside it
-- [ ] Mount ClientDetailModal on top from the edit modal
-- [ ] TS clean + checkpoint
-- [ ] Audit all 16 InteractiveTriggersGrid scenarios (correct/incorrect; flag cross-contamination like power-of-attorney mixed with Tikun-190)
+- [x] Locate /clients edit modal component & identify clientId access
+- [x] Insert "active triggers" panel + "open full journey" button inside it
+- [x] Mount ClientDetailModal on top from the edit modal
+- [x] TS clean + checkpoint
+- [x] Audit all 16 InteractiveTriggersGrid scenarios (correct/incorrect; flag cross-contamination like power-of-attorney mixed with Tikun-190)
 
 ## Round 132 follow-up #2 — 7 new flowcharts + remap (Option 1)
 
 - [x] Audit all 16 triggers → flowchart mapping
-- [ ] Add 7 new flowcharts to FLOWCHART_DATA: poa, selfEmployed, birthday, noContact, concentration, feeReduction, coverageRenewal
-- [ ] Extend FlowchartKey type in triggerScenarios.ts
-- [ ] Remap poaExpired + poaExpiring90d from "190" → "poa"
-- [ ] Remap selfEmployedNoDeposit from "190" → "selfEmployed"
-- [ ] Remap birthdayMilestone + birthdayThisMonth from "vip" → "birthday"
-- [ ] Remap noEmail from "coverageGaps" → "noContact"
-- [ ] Remap concentrationRisk from "lowYield" → "concentration"
-- [ ] Remap highFees from "discount" → "feeReduction"
-- [ ] Remap coverageEnding from "coverageGaps" → "coverageRenewal"
-- [ ] Refresh outcome/pain copy where wording no longer matches new flow
-- [ ] tsc clean + checkpoint
+- [x] Add 7 new flowcharts to FLOWCHART_DATA: poa, selfEmployed, birthday, noContact, concentration, feeReduction, coverageRenewal
+- [x] Extend FlowchartKey type in triggerScenarios.ts
+- [x] Remap poaExpired + poaExpiring90d from "190" → "poa"
+- [x] Remap selfEmployedNoDeposit from "190" → "selfEmployed"
+- [x] Remap birthdayMilestone + birthdayThisMonth from "vip" → "birthday"
+- [x] Remap noEmail from "coverageGaps" → "noContact"
+- [x] Remap concentrationRisk from "lowYield" → "concentration"
+- [x] Remap highFees from "discount" → "feeReduction"
+- [x] Remap coverageEnding from "coverageGaps" → "coverageRenewal"
+- [x] Refresh outcome/pain copy where wording no longer matches new flow
+- [x] tsc clean + checkpoint
