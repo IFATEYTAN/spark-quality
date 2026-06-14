@@ -8,8 +8,28 @@
 import * as XLSX from "xlsx";
 import type { Customer } from "./demoData";
 
+/**
+ * A single policy row extracted from the report, keyed back to its client by
+ * `idNumber`. Persisted server-side (table `policies`) so the 16-trigger engine
+ * (`computeWorkspaceFlags`) has real per-policy data to work with — without it,
+ * coverage/risk/concentration/frozen triggers run on empty input.
+ */
+export interface ParsedPolicy {
+  idNumber: string;
+  productType: string;
+  company: string;
+  policyNumber: string;
+  monthlyPremium: number;
+  annualPremium: number;
+  balance: number;
+  startDate: string | null; // ISO
+  endDate: string | null; // ISO
+  status: "active" | "inactive" | "cancelled" | "expired";
+}
+
 export interface ParsedReport {
   customers: Customer[];
+  policies: ParsedPolicy[];
   customerCount: number;
   productCount: number;
   rawRows: number;
@@ -120,6 +140,17 @@ function toDate(v: any): Date | null {
     if (!isNaN(d.getTime())) return d;
   }
   return null;
+}
+
+// Map a Hebrew product status to the policies.status enum used by the trigger
+// engine. Unknown / "פעיל" / "ריסק זמני" → active (so they are counted).
+function mapPolicyStatus(he: string): "active" | "inactive" | "cancelled" | "expired" {
+  const s = HE(he);
+  if (!s) return "active";
+  if (s.includes("מבוטל")) return "cancelled";
+  if (s.includes("פג") || s.includes("הסתיים") || s.includes("הופסק")) return "expired";
+  if (s.includes("לא פעיל")) return "inactive";
+  return "active";
 }
 
 function ageFromBirth(birth: Date | null, fallback: number): number {
@@ -458,7 +489,7 @@ function applyCoverage(a: Aggregate, cov: CoverageRow) {
 }
 
 // Map an aggregated customer to a Customer + flagStatus per the 7 demo buckets.
-function classifyAggregate(a: Aggregate): Customer & { flagStatus: string; isVip: boolean } {
+function classifyAggregate(a: Aggregate): Customer & { flagStatus: string; isVip: boolean; birthDate: string | null } {
   const productLabel = a.productLabel || "—";
   const hasPension = Array.from(a.productTypes).some((t) => PENSION_PRODUCT_TYPES.includes(t));
   const isSelfEmployed = SELF_EMPLOYED_STATUSES.includes(a.employment);
@@ -599,7 +630,8 @@ function classifyAggregate(a: Aggregate): Customer & { flagStatus: string; isVip
     recommendation,
     flagStatus,
     isVip,
-  } as Customer & { flagStatus: string; isVip: boolean };
+    birthDate: a.birthDate ? a.birthDate.toISOString() : null,
+  } as Customer & { flagStatus: string; isVip: boolean; birthDate: string | null };
 }
 
 // ---- public entry ---------------------------------------------------------
@@ -640,6 +672,58 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
 
   if (customers.length === 0) {
     throw new Error('לא זוהו לקוחות בגיליון "מוצרי חיסכון". בדקי שהקובץ תקין.');
+  }
+
+  // ---- per-policy rows (persisted for the trigger engine) ----------------
+  // Only emit policies whose client is in the aggregate map (so they map to a
+  // saved client row). For savings products we use lastDeposit as a deposit
+  // proxy for monthlyPremium so the "frozen fund" / "self-employed no deposit"
+  // triggers fire only when there is genuinely no recent deposit.
+  const policies: ParsedPolicy[] = [];
+  for (const s of savings) {
+    if (!agg.has(s.id)) continue;
+    policies.push({
+      idNumber: s.id,
+      productType: s.productType || s.product || "",
+      company: s.insurer || "",
+      policyNumber: s.policyNumber || "",
+      monthlyPremium: s.lastDeposit > 0 ? Math.round(s.lastDeposit) : 0,
+      annualPremium: 0,
+      balance: Math.round(s.savings),
+      startDate: s.joinDate ? s.joinDate.toISOString() : null,
+      endDate: null,
+      status: mapPolicyStatus(s.status),
+    });
+  }
+  for (const ins of insurance) {
+    if (!agg.has(ins.id)) continue;
+    policies.push({
+      idNumber: ins.id,
+      productType: ins.productType || "",
+      company: "",
+      policyNumber: "",
+      monthlyPremium: Math.round((ins.premium / 12) * 100) / 100,
+      annualPremium: Math.round(ins.premium * 100) / 100,
+      balance: 0,
+      startDate: null,
+      endDate: null,
+      status: mapPolicyStatus(ins.status),
+    });
+  }
+  for (const cov of coverages) {
+    if (!agg.has(cov.id)) continue;
+    policies.push({
+      idNumber: cov.id,
+      productType: cov.coverageType || "",
+      company: "",
+      policyNumber: cov.policyNumber || "",
+      monthlyPremium: 0,
+      annualPremium: 0,
+      balance: 0,
+      startDate: null,
+      endDate: cov.coverageEnd ? cov.coverageEnd.toISOString() : null,
+      status: "active",
+    });
   }
 
   // ---- KPIs aligned with the skill spec ---------------------------------
@@ -707,6 +791,7 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
 
   return {
     customers: customers as Customer[],
+    policies,
     customerCount: totalCustomers,
     productCount: savings.length + insurance.length,
     rawRows: savings.length + insurance.length + coverages.length,

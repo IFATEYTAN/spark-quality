@@ -57,11 +57,17 @@ export default function UploadReport() {
           fullName: c.name ?? null,
           email: c.email ?? null,
           phone: c.phone ?? null,
+          birthDate: (c as { birthDate?: string | null }).birthDate ?? null,
           flagStatus: (c as any).flagStatus ?? "regular",
           isVip: !!(c as any).isVip,
           totalBalance: Number(c.accumulation ?? 0),
         }))
         .filter((c) => c.idNumber.length > 0);
+
+      const validIds = new Set(clientRows.map((c) => c.idNumber));
+      const policyRows = result.policies.filter(
+        (p) => validIds.has(String(p.idNumber ?? "").trim()),
+      );
 
       await saveReport.mutateAsync({
         fileName: file.name,
@@ -77,6 +83,7 @@ export default function UploadReport() {
         clientCount: result.stats.totalCustomers,
         totalAum: result.stats.totalAUM,
         clients: clientRows,
+        policies: policyRows,
       });
     } catch (err) {
       console.error(err);
