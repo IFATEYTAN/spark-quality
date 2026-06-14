@@ -127,6 +127,13 @@
       "when": 1781468155407,
       "tag": "0017_talented_supernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1781471661875,
+      "tag": "0018_zippy_princess_powerful",
+      "breakpoints": true
     }
   ]
 }
