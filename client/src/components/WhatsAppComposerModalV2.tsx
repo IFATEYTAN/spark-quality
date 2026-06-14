@@ -138,6 +138,16 @@ export function WhatsAppComposerModalV2({
     },
   });
 
+  // Mirror the email composer: opening WhatsApp logs the outreach to the
+  // client's activity journal so it isn't invisible in the timeline.
+  const logActivity = trpc.clientJourney.logActivity.useMutation({
+    onSuccess: () => {
+      if (client?.id) {
+        utils.clientJourney.getDetail.invalidate({ clientId: client.id });
+      }
+    },
+  });
+
   const historyQuery = trpc.reports.listGenerationsForClient.useQuery(
     { clientId: client?.id ?? 0, limit: 10 },
     { enabled: open && !!client?.id },
@@ -193,6 +203,15 @@ export function WhatsAppComposerModalV2({
     if (generationId !== null && pickedIndex !== idx) {
       setPickedIndex(idx);
       markSelectedMutation.mutate({ generationId, selectedIndex: idx });
+    }
+    if (client?.id) {
+      logActivity.mutate({
+        clientId: client.id,
+        type: "whatsapp",
+        outcome: "sent",
+        content: text,
+        triggerKey,
+      });
     }
   };
 
