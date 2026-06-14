@@ -2493,3 +2493,55 @@ export async function getAnalyticsOverview(opts: {
 
   return { activities: { total, byType }, reminders, rangeDays: opts.sinceDays };
 }
+
+// ============================================================
+// FOLLOW-UP SEQUENCES (Round 137)
+// Enrolling clients in a sequence schedules one reminder per step (offset in
+// days) so the cadence surfaces in "My Tasks Today". No background worker —
+// the agent is prompted at the right day and acts (consistent with the app's
+// agent-initiated sending model). Role-isolated via getClientsByIds.
+// ============================================================
+export async function enrollSequence(opts: {
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+  clientIds: number[];
+  steps: Array<{ offsetDays: number; channel: string; note: string }>;
+}): Promise<{ enrolledClients: number; remindersCreated: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (opts.clientIds.length === 0 || opts.steps.length === 0) {
+    return { enrolledClients: 0, remindersCreated: 0 };
+  }
+
+  // Role-isolated resolution: agents only enroll their own clients.
+  const visible = await getClientsByIds({
+    workspaceId: opts.workspaceId,
+    userId: opts.userId,
+    workspaceRole: opts.workspaceRole,
+    ids: opts.clientIds,
+  });
+  if (visible.length === 0) return { enrolledClients: 0, remindersCreated: 0 };
+
+  const now = Date.now();
+  const rows: InsertClientReminder[] = [];
+  for (const c of visible) {
+    for (const step of opts.steps) {
+      rows.push({
+        workspaceId: opts.workspaceId,
+        clientId: c.id,
+        triggerKey: `sequence:${step.channel}`,
+        note: step.note,
+        remindAt: new Date(now + step.offsetDays * 24 * 60 * 60 * 1000),
+        status: "pending",
+        createdBy: opts.userId,
+      });
+    }
+  }
+
+  const BATCH = 500;
+  for (let i = 0; i < rows.length; i += BATCH) {
+    await db.insert(clientReminders).values(rows.slice(i, i + BATCH));
+  }
+  return { enrolledClients: visible.length, remindersCreated: rows.length };
+}

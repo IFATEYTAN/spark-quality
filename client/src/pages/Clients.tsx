@@ -22,9 +22,11 @@ import {
   CheckSquare,
   Square,
   Mail as MailIcon,
+  CalendarClock,
 } from "lucide-react";
 import { CategoryScenarioModal } from "@/components/CategoryScenarioModal";
 import { BulkEmailModal } from "@/components/BulkEmailModal";
+import { SequenceModal } from "@/components/SequenceModal";
 import { TableToolbar, type ExportColumn } from "@/components/TableToolbar";
 import {
   ClientDetailDrawer,
@@ -113,6 +115,7 @@ export default function Clients() {
   const [selectedClient, setSelectedClient] = useState<ClientDetailRow | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const [seqOpen, setSeqOpen] = useState(false);
 
   const toggleSelected = (id: number) =>
     setSelectedIds((prev) => {
@@ -301,6 +304,9 @@ export default function Clients() {
               <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
                 נקה בחירה
               </Button>
+              <Button variant="outline" size="sm" onClick={() => setSeqOpen(true)}>
+                <CalendarClock className="h-4 w-4 ml-1" /> רצף מעקב
+              </Button>
               <Button size="sm" onClick={() => setBulkOpen(true)}>
                 <MailIcon className="h-4 w-4 ml-1" /> שליחת מייל מרוכז
               </Button>
@@ -313,6 +319,13 @@ export default function Clients() {
           onOpenChange={setBulkOpen}
           clientIds={Array.from(selectedIds)}
           onSent={() => setSelectedIds(new Set())}
+        />
+
+        <SequenceModal
+          open={seqOpen}
+          onOpenChange={setSeqOpen}
+          clientIds={Array.from(selectedIds)}
+          onEnrolled={() => setSelectedIds(new Set())}
         />
 
         {/* Body */}
