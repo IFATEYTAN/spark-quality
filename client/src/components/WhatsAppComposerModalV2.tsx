@@ -208,7 +208,7 @@ export function WhatsAppComposerModalV2({
       logActivity.mutate({
         clientId: client.id,
         type: "whatsapp",
-        outcome: "sent",
+        outcome: "נפתח לשליחה",
         content: text,
         triggerKey,
       });

@@ -164,7 +164,7 @@ export function EmailComposerModal({
       logActivity.mutate({
         clientId: client.id,
         type: "email",
-        outcome: "sent",
+        outcome: "נפתח לשליחה",
         content: `נושא: ${variant.subject}\n\n${variant.body}`,
         triggerKey,
       });
