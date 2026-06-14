@@ -461,6 +461,7 @@ export async function bulkUpsertClients(opts: {
     fullName?: string | null;
     email?: string | null;
     phone?: string | null;
+    birthDate?: string | null;
     notes?: string | null;
     flagStatus?: "vip" | "liquid_fund" | "tikun_190" | "high_fees" | "risk_ending" | "coverage_gaps" | "regular";
     isVip?: boolean;
@@ -471,6 +472,12 @@ export async function bulkUpsertClients(opts: {
   if (!db) throw new Error("Database not available");
   if (opts.rows.length === 0) return 0;
 
+  function parseDate(v: string | null | undefined): Date | null {
+    if (!v) return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
   // Insert with ON DUPLICATE KEY UPDATE (idNumber+workspaceId is unique)
   const values = opts.rows.map(row => ({
     workspaceId: opts.workspaceId,
@@ -479,6 +486,7 @@ export async function bulkUpsertClients(opts: {
     fullName: row.fullName ?? null,
     email: row.email ?? null,
     phone: row.phone ?? null,
+    birthDate: parseDate(row.birthDate),
     notes: row.notes ?? null,
     sourceReportId: opts.reportId,
     flagStatus: row.flagStatus ?? "regular",
@@ -496,11 +504,91 @@ export async function bulkUpsertClients(opts: {
         fullName: sql`COALESCE(VALUES(\`fullName\`), \`fullName\`)`,
         email: sql`COALESCE(VALUES(\`email\`), \`email\`)`,
         phone: sql`COALESCE(VALUES(\`phone\`), \`phone\`)`,
+        birthDate: sql`COALESCE(VALUES(\`birthDate\`), \`birthDate\`)`,
         flagStatus: sql`VALUES(\`flagStatus\`)`,
         isVip: sql`VALUES(\`isVip\`)`,
         totalBalance: sql`VALUES(\`totalBalance\`)`,
       },
     });
+    total += batch.length;
+  }
+  return total;
+}
+
+/**
+ * Replace all policies for the clients referenced in `rows` (matched by
+ * idNumber within the workspace). Existing policies for those clients are
+ * deleted first so re-uploading a report does not duplicate rows. Policies
+ * whose idNumber has no matching client are skipped.
+ */
+export async function bulkReplacePolicies(opts: {
+  workspaceId: number;
+  rows: Array<{
+    idNumber: string;
+    productType?: string | null;
+    company?: string | null;
+    policyNumber?: string | null;
+    monthlyPremium?: number | null;
+    annualPremium?: number | null;
+    balance?: number | null;
+    startDate?: string | null;
+    endDate?: string | null;
+    status?: "active" | "inactive" | "cancelled" | "expired";
+  }>;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  if (opts.rows.length === 0) return 0;
+
+  function parseDate(v: string | null | undefined): Date | null {
+    if (!v) return null;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  function dec(v: number | null | undefined): string | null {
+    return v == null ? null : v.toString();
+  }
+
+  // Map idNumber -> clientId for this workspace.
+  const idNumbers = Array.from(new Set(opts.rows.map(r => r.idNumber)));
+  const clientRows = await db
+    .select({ id: clients.id, idNumber: clients.idNumber })
+    .from(clients)
+    .where(and(eq(clients.workspaceId, opts.workspaceId), inArray(clients.idNumber, idNumbers)));
+  const idToClient = new Map(clientRows.map(c => [c.idNumber, c.id]));
+  const clientIds = clientRows.map(c => c.id);
+  if (clientIds.length === 0) return 0;
+
+  // Clear existing policies for these clients, then insert fresh.
+  await db
+    .delete(policies)
+    .where(and(eq(policies.workspaceId, opts.workspaceId), inArray(policies.clientId, clientIds)));
+
+  const values = opts.rows
+    .map(row => {
+      const clientId = idToClient.get(row.idNumber);
+      if (clientId == null) return null;
+      return {
+        workspaceId: opts.workspaceId,
+        clientId,
+        productType: row.productType ?? null,
+        company: row.company ?? null,
+        policyNumber: row.policyNumber ?? null,
+        monthlyPremium: dec(row.monthlyPremium),
+        annualPremium: dec(row.annualPremium),
+        balance: dec(row.balance),
+        startDate: parseDate(row.startDate),
+        endDate: parseDate(row.endDate),
+        status: row.status ?? "active",
+      };
+    })
+    .filter((v): v is NonNullable<typeof v> => v !== null);
+
+  const BATCH = 500;
+  let total = 0;
+  for (let i = 0; i < values.length; i += BATCH) {
+    const batch = values.slice(i, i + BATCH);
+    await db.insert(policies).values(batch);
     total += batch.length;
   }
   return total;
@@ -1344,12 +1432,18 @@ export async function markMessageGenerationSelected(opts: {
   workspaceId: number;
   generationId: number;
   selectedIndex: number;
+  /** When provided, persists the (possibly edited) variants over the originals. */
+  variantsJson?: unknown[];
 }): Promise<void> {
   const db = await getDb();
   if (!db) return;
+  const set: { selectedIndex: number; variantsJson?: unknown[] } = {
+    selectedIndex: opts.selectedIndex,
+  };
+  if (opts.variantsJson !== undefined) set.variantsJson = opts.variantsJson;
   await db
     .update(messageGenerations)
-    .set({ selectedIndex: opts.selectedIndex })
+    .set(set)
     .where(
       and(
         eq(messageGenerations.id, opts.generationId),
@@ -1588,8 +1682,15 @@ export async function computeWorkspaceFlags(opts: {
     flaggedClients.add(clientId);
   }
 
+  // Sentinel productType emitted by the parser for the agent-appointment
+  // ("מינוי סוכן") date. Excluded from all derivations except POA. Must match
+  // AGENT_APPOINTMENT_PRODUCT_TYPE in client/src/lib/parseReport.ts.
+  const AGENT_APPOINTMENT = "מינוי סוכן";
+
   for (const r of allClients) {
-    const ps = policiesByClient.get(r.id) ?? [];
+    const allPs = policiesByClient.get(r.id) ?? [];
+    const apptPs = allPs.filter(p => (p.productType ?? "") === AGENT_APPOINTMENT);
+    const ps = allPs.filter(p => (p.productType ?? "") !== AGENT_APPOINTMENT);
     const active = ps.filter(p => p.status === "active");
     const hasPension = active.some(
       p => (p.productType ?? "").toLowerCase().includes("pension") ||
@@ -1688,8 +1789,24 @@ export async function computeWorkspaceFlags(opts: {
       if (allPensionsZero) addFlag(r.id, "selfEmployedNoDeposit");
     }
 
-    // Power of attorney heuristic from notes
-    if (r.notes) {
+    // Power of attorney — the agent appointment ("מינוי סוכן") is treated as
+    // the POA for trigger purposes. Prefer the real appointment end date; fall
+    // back to the notes heuristic only when no appointment date is present.
+    let poaFromDate = false;
+    const apptEndTimes = apptPs
+      .map(p => (p.endDate ? new Date(p.endDate).getTime() : NaN))
+      .filter(t => !Number.isNaN(t));
+    if (apptEndTimes.length > 0) {
+      const earliestEnd = new Date(Math.min(...apptEndTimes));
+      if (earliestEnd < today) {
+        addFlag(r.id, "poaExpired");
+        poaFromDate = true;
+      } else if (earliestEnd <= in90Days) {
+        addFlag(r.id, "poaExpiring90d");
+        poaFromDate = true;
+      }
+    }
+    if (!poaFromDate && r.notes) {
       const n = r.notes.toLowerCase();
       if (n.includes("ייפוי כוח פג") || n.includes("poa expired")) {
         addFlag(r.id, "poaExpired");

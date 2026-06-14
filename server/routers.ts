@@ -601,9 +601,26 @@ export const appRouter = router({
                 fullName: z.string().nullable().optional(),
                 email: z.string().nullable().optional(),
                 phone: z.string().nullable().optional(),
+                birthDate: z.string().nullable().optional(),
                 flagStatus: z.enum(["vip", "liquid_fund", "tikun_190", "high_fees", "risk_ending", "coverage_gaps", "regular"]).optional(),
                 isVip: z.boolean().optional(),
                 totalBalance: z.number().optional(),
+              })
+            )
+            .optional(),
+          policies: z
+            .array(
+              z.object({
+                idNumber: z.string(),
+                productType: z.string().nullable().optional(),
+                company: z.string().nullable().optional(),
+                policyNumber: z.string().nullable().optional(),
+                monthlyPremium: z.number().nullable().optional(),
+                annualPremium: z.number().nullable().optional(),
+                balance: z.number().nullable().optional(),
+                startDate: z.string().nullable().optional(),
+                endDate: z.string().nullable().optional(),
+                status: z.enum(["active", "inactive", "cancelled", "expired"]).optional(),
               })
             )
             .optional(),
@@ -632,6 +649,19 @@ export const appRouter = router({
             reportId,
             rows: input.clients,
           });
+        }
+
+        // Persist per-policy rows so the trigger engine has real coverage /
+        // premium / balance data. Scoped + replaced per workspace.
+        if (input.policies && input.policies.length > 0) {
+          try {
+            await db.bulkReplacePolicies({
+              workspaceId: ctx.user.workspaceId,
+              rows: input.policies,
+            });
+          } catch (err) {
+            console.warn("[reports.save] bulkReplacePolicies failed (non-fatal)", err);
+          }
         }
 
         // Round 128 — immediately compute multi-flag triggers so the modal
@@ -901,6 +931,8 @@ export const appRouter = router({
         z.object({
           generationId: z.number().int().positive(),
           selectedIndex: z.number().int().min(0).max(2),
+          /** Optional edited variants to persist over the originals. */
+          variantsJson: z.array(z.string()).optional(),
         }),
       )
       .mutation(async ({ ctx, input }) => {
@@ -908,6 +940,7 @@ export const appRouter = router({
           workspaceId: ctx.user.workspaceId,
           generationId: input.generationId,
           selectedIndex: input.selectedIndex,
+          variantsJson: input.variantsJson,
         });
         return { ok: true } as const;
       }),
@@ -958,7 +991,7 @@ export const appRouter = router({
      * Re-derives the 16 priority triggers and writes one row per match into
      * `client_flags`. Tenant-isolated by workspaceId.
      */
-    recompute: workspaceProcedure.mutation(async ({ ctx }) => {
+    recompute: workspaceAdminProcedure.mutation(async ({ ctx }) => {
       const result = await db.computeWorkspaceFlags({
         workspaceId: ctx.user.workspaceId,
       });

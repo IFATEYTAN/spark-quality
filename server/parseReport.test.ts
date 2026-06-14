@@ -132,3 +132,54 @@ describe("parseReport · רגרסיה: merge בין sheet ביטוח וsheet ח�
     expect(c.flagStatus).toBe("tikun_190");
   });
 });
+
+describe("parseReport · פוליסות לשמירה (קלט למנוע הטריגרים)", () => {
+  it("מפיק שורת פוליסה לכל מוצר עם שדות productType/balance/status", async () => {
+    const file = makeSavingsExcel([
+      { ...baseRow("305555555", 250_000, "01/01/2019"), "סוג מוצר": "קרן פנסיה חדשה מקיפה" },
+    ]);
+    const result = await parseShorensReport(file);
+    expect(result.policies.length).toBeGreaterThan(0);
+    const p = result.policies.find((x) => x.idNumber === "305555555");
+    expect(p).toBeDefined();
+    expect(p!.productType).toContain("פנס");
+    expect(p!.balance).toBe(250_000);
+    expect(p!.status).toBe("active");
+  });
+
+  it("ממפה סטטוס 'לא פעיל' ל-inactive ומשייך פוליסה ללקוח", async () => {
+    const file = makeSavingsExcel([
+      { ...baseRow("306666666", 80_000, "01/01/2017"), "סטטוס מוצר": "לא פעיל" },
+    ]);
+    const result = await parseShorensReport(file);
+    const p = result.policies.find((x) => x.idNumber === "306666666");
+    expect(p).toBeDefined();
+    expect(p!.status).toBe("inactive");
+  });
+
+  it("מפיק תאריך לידה (ISO) על שורת הלקוח", async () => {
+    const file = makeSavingsExcel([
+      { ...baseRow("307777777", 120_000, "01/01/2019"), "תאריך לידה": "15/06/1970" },
+    ]);
+    const result = await parseShorensReport(file);
+    const c = result.customers[0] as { birthDate?: string | null };
+    expect(c.birthDate).toBeTruthy();
+    expect(new Date(c.birthDate as string).getFullYear()).toBe(1970);
+  });
+
+  it("מפיק פוליסת 'מינוי סוכן' עם תאריך תום מינוי (לזיהוי POA)", async () => {
+    const file = makeSavingsExcel([
+      {
+        ...baseRow("308888888", 90_000, "01/01/2019"),
+        "תאריך תום תוקף מינוי סוכן": "01/01/2030",
+      },
+    ]);
+    const result = await parseShorensReport(file);
+    const appt = result.policies.find(
+      (p) => p.idNumber === "308888888" && p.productType === "מינוי סוכן",
+    );
+    expect(appt).toBeDefined();
+    expect(appt!.endDate).toBeTruthy();
+    expect(new Date(appt!.endDate as string).getFullYear()).toBe(2030);
+  });
+});

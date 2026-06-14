@@ -8,6 +8,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { GoldEyebrow } from "./CinematicShell";
 import { CategoryScenarioModal } from "./CategoryScenarioModal";
+import { TriggerClientsModal, type TriggerBucket } from "./TriggerClientsModal";
 import type { TriggerKey } from "@/lib/triggerScenarios";
 
 export interface PriorityCounts {
@@ -207,6 +208,27 @@ const GROUPS: GroupDef[] = [
   },
 ];
 
+// Map each priority group to the TriggerClientsModal bucket (drives header tone).
+const PRIORITY_BUCKET: Record<Priority, TriggerBucket> = {
+  P0: "urgent",
+  P1: "urgent",
+  P2: "opportunity",
+  P3: "improvement",
+  P4: "retention",
+};
+
+// Flat lookup: triggerKey → { label, hint, bucket } so opening the actionable
+// client list from any card has the metadata it needs.
+const TRIGGER_META: Record<string, { label: string; hint: string; bucket: TriggerBucket }> = (() => {
+  const map: Record<string, { label: string; hint: string; bucket: TriggerBucket }> = {};
+  for (const g of GROUPS) {
+    for (const t of g.triggers) {
+      map[t.key] = { label: t.name, hint: t.description, bucket: PRIORITY_BUCKET[g.priority] };
+    }
+  }
+  return map;
+})();
+
 // Palette-aligned tones: gold + white opacities only (no rainbow).
 // Priority is conveyed through gold intensity, ring strength, and opacity — not colored hues.
 const PRIORITY_COLORS: Record<Priority, { dot: string; pill: string; border: string; cta: string; num: string }> = {
@@ -261,6 +283,8 @@ interface PriorityActionGroupsProps {
   eyebrow?: string;
   title?: ReactNode;
   subtitle?: string;
+  /** Agent display name, threaded into the client-list modal signatures. */
+  agentName?: string;
 }
 
 export function PriorityActionGroups({
@@ -271,8 +295,11 @@ export function PriorityActionGroups({
   eyebrow = "SPARK QUALITY ENGINE · מרכז הפעולות",
   title,
   subtitle,
+  agentName = "סוכן",
 }: PriorityActionGroupsProps) {
   const [activeTrigger, setActiveTrigger] = useState<TriggerKey | null>(null);
+  // The trigger whose actionable client list is open (after "activate").
+  const [listTrigger, setListTrigger] = useState<TriggerKey | null>(null);
   // Tabs: each priority is its own discrete "screen" — only the active one renders.
   const [activeTab, setActiveTab] = useState<Priority>("P0");
 
@@ -471,7 +498,25 @@ export function PriorityActionGroups({
         count={activeTrigger ? counts[activeTrigger] ?? 0 : undefined}
         analysis={analysis}
         onClose={() => setActiveTrigger(null)}
-        onActivate={() => setActiveTrigger(null)}
+        onActivate={() => {
+          // "הפעל את הסנריו עכשיו" → close the explainer and open the
+          // actionable client list for that trigger (previously a no-op).
+          const t = activeTrigger;
+          setActiveTrigger(null);
+          if (t) setListTrigger(t);
+        }}
+      />
+
+      <TriggerClientsModal
+        open={listTrigger !== null}
+        onOpenChange={(o) => {
+          if (!o) setListTrigger(null);
+        }}
+        triggerKey={(listTrigger ?? "vipGoldPremium") as TriggerKey}
+        triggerLabel={listTrigger ? TRIGGER_META[listTrigger]?.label ?? "" : ""}
+        triggerHint={listTrigger ? TRIGGER_META[listTrigger]?.hint : undefined}
+        bucket={listTrigger ? TRIGGER_META[listTrigger]?.bucket ?? "opportunity" : "opportunity"}
+        agentName={agentName}
       />
     </section>
   );
