@@ -18,6 +18,7 @@ import BillingFailed from "./pages/BillingFailed";
 import Team from "./pages/Team";
 import UploadReport from "./pages/UploadReport";
 import Tasks from "./pages/Tasks";
+import Analytics from "./pages/Analytics";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -28,6 +29,7 @@ function Router() {
       <Route path={"/onboarding"} component={Onboarding} />
       <Route path={"/dashboard"} component={Dashboard} />
       <Route path={"/tasks"} component={Tasks} />
+      <Route path={"/analytics"} component={Analytics} />
       <Route path={"/team"} component={Team} />
       <Route path={"/upload"} component={UploadReport} />
       <Route path={"/clients"} component={Clients} />

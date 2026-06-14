@@ -9,6 +9,7 @@ import {
   Upload as UploadIcon,
   UserCog,
   ListChecks,
+  BarChart3,
   LogOut,
   Sparkles,
   ShieldCheck,
@@ -255,6 +256,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", label: "דשבורד", icon: LayoutDashboard, superAdminOnly: false },
   { href: "/tasks", label: "המשימות שלי", icon: ListChecks, superAdminOnly: false },
   { href: "/clients", label: "לקוחות", icon: Users, superAdminOnly: false },
+  { href: "/analytics", label: "אנליטיקה", icon: BarChart3, superAdminOnly: false },
   { href: "/upload", label: "העלאת דוח", icon: UploadIcon, superAdminOnly: false },
   { href: "/team", label: "צוות", icon: UserCog, superAdminOnly: false },
   { href: "/admin", label: "מנהל מערכת", icon: ShieldCheck, superAdminOnly: true },
@@ -284,6 +286,7 @@ export function TopZoneNav() {
   const isProductZone =
     location.startsWith("/dashboard") ||
     location.startsWith("/tasks") ||
+    location.startsWith("/analytics") ||
     location.startsWith("/clients") ||
     location.startsWith("/upload") ||
     location.startsWith("/team") ||

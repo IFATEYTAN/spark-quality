@@ -2423,3 +2423,73 @@ export async function deleteMessageTemplate(opts: {
     .delete(messageTemplates)
     .where(and(eq(messageTemplates.id, opts.id), eq(messageTemplates.workspaceId, opts.workspaceId)));
 }
+
+// ============================================================
+// ANALYTICS (Round 136) — honest aggregates from data already collected:
+// the activity journal, reminders. Trigger totals/handled come from the
+// existing metrics + countHandledByTrigger helpers on the caller side.
+// ============================================================
+export async function getAnalyticsOverview(opts: {
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+  sinceDays: number;
+}) {
+  const db = await getDb();
+  if (!db) {
+    return {
+      activities: { total: 0, byType: {} as Record<string, number> },
+      reminders: { pending: 0, fired: 0, dismissed: 0 },
+      rangeDays: opts.sinceDays,
+    };
+  }
+  const since = new Date(Date.now() - opts.sinceDays * 24 * 60 * 60 * 1000);
+  const isAgent = opts.workspaceRole === "agent";
+
+  const actRows = await db
+    .select({ type: clientActivities.type, count: sql<number>`count(*)` })
+    .from(clientActivities)
+    .innerJoin(clients, eq(clientActivities.clientId, clients.id))
+    .where(
+      isAgent
+        ? and(
+            eq(clientActivities.workspaceId, opts.workspaceId),
+            eq(clients.ownerUserId, opts.userId),
+            sql`${clientActivities.createdAt} >= ${since}`,
+          )
+        : and(
+            eq(clientActivities.workspaceId, opts.workspaceId),
+            sql`${clientActivities.createdAt} >= ${since}`,
+          ),
+    )
+    .groupBy(clientActivities.type);
+
+  const byType: Record<string, number> = {};
+  let total = 0;
+  for (const r of actRows) {
+    const n = Number(r.count) || 0;
+    byType[r.type] = n;
+    total += n;
+  }
+
+  const remRows = await db
+    .select({ status: clientReminders.status, count: sql<number>`count(*)` })
+    .from(clientReminders)
+    .innerJoin(clients, eq(clientReminders.clientId, clients.id))
+    .where(
+      isAgent
+        ? and(eq(clientReminders.workspaceId, opts.workspaceId), eq(clients.ownerUserId, opts.userId))
+        : eq(clientReminders.workspaceId, opts.workspaceId),
+    )
+    .groupBy(clientReminders.status);
+
+  const reminders = { pending: 0, fired: 0, dismissed: 0 };
+  for (const r of remRows) {
+    const n = Number(r.count) || 0;
+    if (r.status === "pending") reminders.pending = n;
+    else if (r.status === "fired") reminders.fired = n;
+    else if (r.status === "dismissed") reminders.dismissed = n;
+  }
+
+  return { activities: { total, byType }, reminders, rangeDays: opts.sinceDays };
+}
