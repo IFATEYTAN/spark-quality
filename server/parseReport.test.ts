@@ -166,4 +166,20 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     expect(c.birthDate).toBeTruthy();
     expect(new Date(c.birthDate as string).getFullYear()).toBe(1970);
   });
+
+  it("מפיק פוליסת 'מינוי סוכן' עם תאריך תום מינוי (לזיהוי POA)", async () => {
+    const file = makeSavingsExcel([
+      {
+        ...baseRow("308888888", 90_000, "01/01/2019"),
+        "תאריך תום תוקף מינוי סוכן": "01/01/2030",
+      },
+    ]);
+    const result = await parseShorensReport(file);
+    const appt = result.policies.find(
+      (p) => p.idNumber === "308888888" && p.productType === "מינוי סוכן",
+    );
+    expect(appt).toBeDefined();
+    expect(appt!.endDate).toBeTruthy();
+    expect(new Date(appt!.endDate as string).getFullYear()).toBe(2030);
+  });
 });

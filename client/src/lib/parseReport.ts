@@ -14,6 +14,14 @@ import type { Customer } from "./demoData";
  * (`computeWorkspaceFlags`) has real per-policy data to work with — without it,
  * coverage/risk/concentration/frozen triggers run on empty input.
  */
+/**
+ * Sentinel productType for the synthetic "agent appointment" policy. The
+ * trigger engine (server/db.ts · computeWorkspaceFlags) matches this exact
+ * string to derive poaExpired / poaExpiring90d from a real date, and excludes
+ * it from every other per-policy derivation. Keep both copies in sync.
+ */
+export const AGENT_APPOINTMENT_PRODUCT_TYPE = "מינוי סוכן";
+
 export interface ParsedPolicy {
   idNumber: string;
   productType: string;
@@ -722,6 +730,25 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       balance: 0,
       startDate: null,
       endDate: cov.coverageEnd ? cov.coverageEnd.toISOString() : null,
+      status: "active",
+    });
+  }
+  // Agent-appointment ("מינוי סוכן") end date — treated as power-of-attorney
+  // expiry by the trigger engine (poaExpired / poaExpiring90d). Emitted as a
+  // sentinel policy so the engine reads a real date instead of guessing from
+  // notes text. The engine excludes it from all other per-policy derivations.
+  for (const a of Array.from(agg.values())) {
+    if (!a.earliestAppointmentEnd) continue;
+    policies.push({
+      idNumber: a.id,
+      productType: AGENT_APPOINTMENT_PRODUCT_TYPE,
+      company: a.insurer || "",
+      policyNumber: "",
+      monthlyPremium: 0,
+      annualPremium: 0,
+      balance: 0,
+      startDate: null,
+      endDate: a.earliestAppointmentEnd.toISOString(),
       status: "active",
     });
   }

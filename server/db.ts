@@ -1682,8 +1682,15 @@ export async function computeWorkspaceFlags(opts: {
     flaggedClients.add(clientId);
   }
 
+  // Sentinel productType emitted by the parser for the agent-appointment
+  // ("מינוי סוכן") date. Excluded from all derivations except POA. Must match
+  // AGENT_APPOINTMENT_PRODUCT_TYPE in client/src/lib/parseReport.ts.
+  const AGENT_APPOINTMENT = "מינוי סוכן";
+
   for (const r of allClients) {
-    const ps = policiesByClient.get(r.id) ?? [];
+    const allPs = policiesByClient.get(r.id) ?? [];
+    const apptPs = allPs.filter(p => (p.productType ?? "") === AGENT_APPOINTMENT);
+    const ps = allPs.filter(p => (p.productType ?? "") !== AGENT_APPOINTMENT);
     const active = ps.filter(p => p.status === "active");
     const hasPension = active.some(
       p => (p.productType ?? "").toLowerCase().includes("pension") ||
@@ -1782,8 +1789,24 @@ export async function computeWorkspaceFlags(opts: {
       if (allPensionsZero) addFlag(r.id, "selfEmployedNoDeposit");
     }
 
-    // Power of attorney heuristic from notes
-    if (r.notes) {
+    // Power of attorney — the agent appointment ("מינוי סוכן") is treated as
+    // the POA for trigger purposes. Prefer the real appointment end date; fall
+    // back to the notes heuristic only when no appointment date is present.
+    let poaFromDate = false;
+    const apptEndTimes = apptPs
+      .map(p => (p.endDate ? new Date(p.endDate).getTime() : NaN))
+      .filter(t => !Number.isNaN(t));
+    if (apptEndTimes.length > 0) {
+      const earliestEnd = new Date(Math.min(...apptEndTimes));
+      if (earliestEnd < today) {
+        addFlag(r.id, "poaExpired");
+        poaFromDate = true;
+      } else if (earliestEnd <= in90Days) {
+        addFlag(r.id, "poaExpiring90d");
+        poaFromDate = true;
+      }
+    }
+    if (!poaFromDate && r.notes) {
       const n = r.notes.toLowerCase();
       if (n.includes("ייפוי כוח פג") || n.includes("poa expired")) {
         addFlag(r.id, "poaExpired");
