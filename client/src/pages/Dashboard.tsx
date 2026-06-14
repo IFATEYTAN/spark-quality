@@ -244,6 +244,7 @@ export default function Dashboard() {
             }}
             distinctClientsWithAnyTrigger={metricsQuery.data?.distinctClientsWithAnyTrigger ?? 0}
             totalClients={metricsQuery.data?.totalClients ?? 0}
+            agentName={user?.name ?? "סוכן"}
             subtitle="כל לקוח, כל הזדמנות, כל סיכון — מסודרים לפי דחיפות. טאב זו = מסך התראות ברמת עדיפות."
           />
         )}
