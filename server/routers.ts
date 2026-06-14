@@ -988,7 +988,7 @@ export const appRouter = router({
      * Re-derives the 16 priority triggers and writes one row per match into
      * `client_flags`. Tenant-isolated by workspaceId.
      */
-    recompute: workspaceProcedure.mutation(async ({ ctx }) => {
+    recompute: workspaceAdminProcedure.mutation(async ({ ctx }) => {
       const result = await db.computeWorkspaceFlags({
         workspaceId: ctx.user.workspaceId,
       });
