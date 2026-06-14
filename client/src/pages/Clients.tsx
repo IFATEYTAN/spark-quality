@@ -19,8 +19,12 @@ import {
   Shield,
   FileWarning,
   PlayCircle,
+  CheckSquare,
+  Square,
+  Mail as MailIcon,
 } from "lucide-react";
 import { CategoryScenarioModal } from "@/components/CategoryScenarioModal";
+import { BulkEmailModal } from "@/components/BulkEmailModal";
 import { TableToolbar, type ExportColumn } from "@/components/TableToolbar";
 import {
   ClientDetailDrawer,
@@ -107,6 +111,16 @@ export default function Clients() {
 
   const [flowCategory, setFlowCategory] = useState<DashboardCategory | null>(null);
   const [selectedClient, setSelectedClient] = useState<ClientDetailRow | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+
+  const toggleSelected = (id: number) =>
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const exportColumns: ExportColumn<(typeof filtered)[number]>[] = useMemo(
     () => [
@@ -277,6 +291,30 @@ export default function Clients() {
           onClose={() => setSelectedClient(null)}
         />
 
+        {/* Bulk selection bar */}
+        {selectedIds.size > 0 && (
+          <div className="sticky top-2 z-20 mb-4 flex items-center justify-between gap-3 rounded-lg border border-gold/40 bg-[#0E1C35]/95 backdrop-blur px-4 py-3 shadow-lg shadow-gold/10">
+            <span className="text-sm font-bold text-white">
+              נבחרו <span className="text-gold mono-num">{selectedIds.size.toLocaleString("he-IL")}</span> לקוחות
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+                נקה בחירה
+              </Button>
+              <Button size="sm" onClick={() => setBulkOpen(true)}>
+                <MailIcon className="h-4 w-4 ml-1" /> שליחת מייל מרוכז
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <BulkEmailModal
+          open={bulkOpen}
+          onOpenChange={setBulkOpen}
+          clientIds={Array.from(selectedIds)}
+          onSent={() => setSelectedIds(new Set())}
+        />
+
         {/* Body */}
         {clientsQuery.isLoading ? (
           <GlassCard className="p-16 text-center">
@@ -352,6 +390,22 @@ export default function Clients() {
               <GlassCard className="p-4 sm:p-5 hover:bg-white/[0.07] hover:border-gold/30 transition-all">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
                   <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleSelected(client.id);
+                      }}
+                      className="shrink-0 text-white/50 hover:text-gold transition-colors"
+                      aria-label={selectedIds.has(client.id) ? "בטל בחירה" : "בחר לקוח"}
+                      aria-pressed={selectedIds.has(client.id)}
+                    >
+                      {selectedIds.has(client.id) ? (
+                        <CheckSquare className="h-5 w-5 text-gold" />
+                      ) : (
+                        <Square className="h-5 w-5" />
+                      )}
+                    </button>
                     <div
                       className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${
                         client.isVip

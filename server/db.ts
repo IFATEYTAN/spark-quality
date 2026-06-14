@@ -281,6 +281,31 @@ export async function listClients(opts: {
   return db.select().from(clients).where(conditions).orderBy(desc(clients.createdAt));
 }
 
+/**
+ * Fetch a set of clients by id with the same role isolation as listClients.
+ * Agents only get their own clients; ids outside the workspace/role are dropped.
+ */
+export async function getClientsByIds(opts: {
+  workspaceId: number;
+  userId: number;
+  workspaceRole: "owner" | "admin" | "agent";
+  ids: number[];
+}) {
+  const db = await getDb();
+  if (!db || opts.ids.length === 0) return [];
+  const base = and(
+    eq(clients.workspaceId, opts.workspaceId),
+    inArray(clients.id, opts.ids),
+  );
+  const cond = opts.workspaceRole === "agent"
+    ? and(base, eq(clients.ownerUserId, opts.userId))
+    : base;
+  return db
+    .select({ id: clients.id, fullName: clients.fullName, email: clients.email })
+    .from(clients)
+    .where(cond);
+}
+
 export async function getClientById(opts: {
   clientId: number;
   workspaceId: number;
