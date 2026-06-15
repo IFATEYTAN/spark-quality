@@ -617,10 +617,12 @@ function classifyAggregate(a: Aggregate): Customer & { flagStatus: string; isVip
     recommendation = "שיחת ייעוץ — מה לעשות עם הכסף";
     flagStatus = "liquid_fund";
   }
-  // High fees — only when nothing higher priority matched.
+  // High fees — only when nothing higher priority matched. Thresholds aligned
+  // with the trigger engine (calibrated against real data): >1% accumulation
+  // fee or >2% deposit fee.
   if (
     flagStatus === "regular" &&
-    (a.maxDmTzvirah > 0.007 || a.maxDmHafkada > 0.015)
+    (a.maxDmTzvirah > 0.01 || a.maxDmHafkada > 0.02)
   ) {
     status = "תשואה חלשה"; priority = "בינונית";
     flag = `דמי ניהול גבוהים (עד ${(a.maxDmTzvirah * 100).toFixed(2)}% מצבירה)`;
