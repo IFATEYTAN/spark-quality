@@ -18,6 +18,8 @@ import {
   Mail,
   Sparkles,
   CheckCircle2,
+  FileText,
+  Save,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -94,6 +96,26 @@ export function EmailComposerModal({
   const [activeTab, setActiveTab] = useState("v0");
   const [pickedIndex, setPickedIndex] = useState<number | null>(null);
   const [generationId, setGenerationId] = useState<number | null>(null);
+  const [showSave, setShowSave] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+
+  const templatesQuery = trpc.templates.list.useQuery(
+    { channel: "email" },
+    { enabled: open },
+  );
+  const createTpl = trpc.templates.create.useMutation({
+    onSuccess: () => {
+      toast.success("התבנית נשמרה");
+      setShowSave(false);
+      setTemplateName("");
+      utils.templates.list.invalidate();
+    },
+    onError: err => toast.error("שגיאה בשמירת התבנית", { description: err.message }),
+  });
+  const deleteTpl = trpc.templates.delete.useMutation({
+    onSuccess: () => utils.templates.list.invalidate(),
+    onError: err => toast.error("שגיאה במחיקה", { description: err.message }),
+  });
 
   const markSelectedMutation = trpc.reports.markVariantSelected.useMutation();
 
@@ -125,8 +147,23 @@ export function EmailComposerModal({
       setContext("");
       setTone("warm");
       setActiveTab("v0");
+      setShowSave(false);
+      setTemplateName("");
     }
   }, [open]);
+
+  // Load a saved template as a single ready-to-send variant. {{שם}} / {{name}}
+  // is replaced with the client's first name so it's ready immediately.
+  const loadTemplate = (tpl: { subject: string | null; body: string }) => {
+    const name = firstNameOf(client?.fullName);
+    const fill = (s: string) => s.replace(/\{\{\s*(?:name|שם)\s*\}\}/g, name);
+    setVariants([{ subject: fill(tpl.subject ?? ""), body: fill(tpl.body) }]);
+    setGenerationId(null);
+    setPickedIndex(null);
+    setActiveTab("v0");
+  };
+
+  const templates = templatesQuery.data ?? [];
 
   const handleGenerate = () => {
     if (generateMutation.isPending) return;
@@ -275,6 +312,35 @@ export function EmailComposerModal({
           </Button>
         </div>
 
+        {/* ── Saved templates ─────────────────────────────── */}
+        {templates.length > 0 && (
+          <div className="mt-4 border border-border rounded-md p-3">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground mb-2">
+              <FileText className="h-3.5 w-3.5 text-gold" /> תבניות שמורות
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {templates.map(t => (
+                <span
+                  key={t.id}
+                  className="inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-gold/10 transition-colors"
+                >
+                  <button type="button" onClick={() => loadTemplate(t)} className="font-semibold">
+                    {t.name}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteTpl.mutate({ id: t.id })}
+                    aria-label="מחק תבנית"
+                    className="opacity-50 hover:opacity-100 hover:text-red-500"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── Variants ─────────────────────────────────────── */}
         {hasVariants && (
           <div className="mt-6 border-t border-border pt-4">
@@ -333,6 +399,44 @@ export function EmailComposerModal({
                       פתח ב-Mail / Outlook
                     </Button>
                   </div>
+                  {showSave ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={templateName}
+                        onChange={e => setTemplateName(e.target.value)}
+                        placeholder="שם התבנית"
+                        maxLength={120}
+                        className="h-9"
+                      />
+                      <Button
+                        size="sm"
+                        disabled={!templateName.trim() || createTpl.isPending}
+                        onClick={() =>
+                          createTpl.mutate({
+                            name: templateName.trim(),
+                            channel: "email",
+                            subject: variant.subject.trim() || null,
+                            body: variant.body.trim(),
+                            triggerKey: triggerKey ?? null,
+                          })
+                        }
+                      >
+                        {createTpl.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "שמור"}
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowSave(false)}>
+                        ביטול
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowSave(true)}
+                      disabled={!variant.body.trim()}
+                    >
+                      <Save className="h-4 w-4 me-1.5" /> שמור כתבנית
+                    </Button>
+                  )}
                 </TabsContent>
               ))}
             </Tabs>
