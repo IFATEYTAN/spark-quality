@@ -80,10 +80,10 @@ export function filterCustomersByCategory<T extends { status: Customer["status"]
 export const ANALYSIS_CATEGORIES: AnalysisCategoryDef[] = [
   {
     id: "all",
-    name: "תמונת מלאה של התיק",
+    name: "תמונה מלאה של התיק",
     subtitle: "כל הטריגרים במבט אחד",
-    description: "להציג את כל המדדים, הטריגרים וההמלצות הללו בתמונה מלאה — גם אם למעיטה המשמעות המידית נמוכה יותר.",
-    priorityLabel: "תצוגת מוגדרת",
+    description: "להציג את כל המדדים, הטריגרים וההמלצות בתמונה מלאה — גם הטריגרים שהמשמעות המיידית שלהם נמוכה יותר.",
+    priorityLabel: "תצוגה מלאה",
     accent: "text-white",
   },
   {
@@ -98,7 +98,7 @@ export const ANALYSIS_CATEGORIES: AnalysisCategoryDef[] = [
     id: "coverage_gaps",
     name: "ללא פנסיה · חוסר כיסויים",
     subtitle: "P1 · הזדמנות להשלמת תיק",
-    description: "לקוחות עם חסכון אבל ללא מוצר פנסיוני פעיל, או תיק חלקי ללא כיסויים משלימים. ליד ׺סל לקרן פנסיה מקיפה / כיסוי חיים.",
+    description: "לקוחות עם חיסכון אך ללא מוצר פנסיוני פעיל, או תיק חלקי ללא כיסויים משלימים. הזדמנות לקרן פנסיה מקיפה / כיסוי חיים.",
     priorityLabel: "P1 · השלמת תיק",
     accent: "text-amber-300",
   },

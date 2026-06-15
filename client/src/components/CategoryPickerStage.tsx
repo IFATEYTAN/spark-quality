@@ -75,7 +75,7 @@ export function CategoryPickerStage({ onSelect }: CategoryPickerStageProps) {
           </div>
 
           <p className="mt-6 text-xs text-white/50 text-center">
-            ניתן לחזור למסך זה בכל עת ולהחליף ניתוח ֻ הנתונים מתעדכנים בזמן אמת.
+            ניתן לחזור למסך זה בכל עת ולהחליף ניתוח · הנתונים מתעדכנים בזמן אמת.
           </p>
         </div>
       </div>
