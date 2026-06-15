@@ -346,8 +346,6 @@ export default function DemoExperience() {
         {stage === "dashboard" && (
           <DashboardStage
             onAction={() => setStage("actions")}
-            parsed={parsedReport}
-            analysis={analysis}
             category={!isAdmin ? selectedCategory : undefined}
             slide={1}
           />
@@ -355,8 +353,6 @@ export default function DemoExperience() {
         {stage === "dashboard2" && (
           <DashboardStage
             onAction={() => setStage("actions")}
-            parsed={parsedReport}
-            analysis={analysis}
             category={!isAdmin ? selectedCategory : undefined}
             slide={2}
           />
@@ -364,8 +360,6 @@ export default function DemoExperience() {
         {stage === "dashboard3" && (
           <DashboardStage
             onAction={() => setStage("actions")}
-            parsed={parsedReport}
-            analysis={analysis}
             category={!isAdmin ? selectedCategory : undefined}
             slide={3}
           />
@@ -373,16 +367,12 @@ export default function DemoExperience() {
         {stage === "actions" && (
           <ActionsStage
             onComplete={() => setStage("summary")}
-            parsed={parsedReport}
-            analysis={analysis}
             category={!isAdmin ? selectedCategory : undefined}
           />
         )}
         {stage === "summary" && (
           <SummaryStage
             onReset={reset}
-            parsed={parsedReport}
-            analysis={analysis}
             category={!isAdmin ? selectedCategory : undefined}
           />
         )}
