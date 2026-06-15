@@ -400,6 +400,35 @@ export const TRIGGERS = [
   { id: "lowYield", name: "תשואה חלשה", count: 87, color: "destructive", icon: "TrendingDown" },
 ];
 
+/**
+ * Demo trigger cards — the live 16-trigger model (poaExpiring90d excluded, like
+ * the real dashboard) grouped by P0–P4, with representative mock counts. Each
+ * `key` is one of the real TriggerKeys so the cinematic demo opens the same
+ * scenario modal as the authenticated product.
+ */
+export const DEMO_TRIGGER_CARDS: {
+  key: string;
+  name: string;
+  priority: "P0" | "P1" | "P2" | "P3" | "P4";
+  count: number;
+}[] = [
+  { key: "poaExpired", name: "ללא ייפוי כוח פעיל", priority: "P0", count: 12 },
+  { key: "riskTemporary", name: "ריסק זמני", priority: "P1", count: 21 },
+  { key: "coverageEnding", name: "כיסויים פוגים", priority: "P1", count: 17 },
+  { key: "savingsNoInsurance", name: "חיסכון ללא ביטוח", priority: "P2", count: 96 },
+  { key: "noActivePension", name: "ללא פנסיה פעילה", priority: "P2", count: 148 },
+  { key: "age46NoLongTermCare", name: "46+ ללא סיעוד", priority: "P2", count: 73 },
+  { key: "aumFrozen", name: "AUM מוקפא", priority: "P2", count: 28 },
+  { key: "highFees", name: "דמי ניהול גבוהים", priority: "P3", count: 64 },
+  { key: "trackMismatch", name: "מסלול לא תואם לגיל", priority: "P3", count: 19 },
+  { key: "selfEmployedNoDeposit", name: "עצמאי ללא הפקדה", priority: "P3", count: 11 },
+  { key: "concentrationRisk", name: "ריכוז יתר בחברה", priority: "P3", count: 41 },
+  { key: "birthdayMilestone", name: "יום הולדת מפנה", priority: "P4", count: 8 },
+  { key: "birthdayThisMonth", name: "יום הולדת החודש", priority: "P4", count: 34 },
+  { key: "vipGoldPremium", name: "VIP / זהב", priority: "P4", count: 42 },
+  { key: "noEmail", name: "ללא מייל", priority: "P4", count: 23 },
+];
+
 // דוגמאות להתראות אוטומטיות
 export const NOTIFICATIONS = [
   {
