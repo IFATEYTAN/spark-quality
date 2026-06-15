@@ -67,7 +67,7 @@ const TRIGGER_CATALOGUE: Record<
   vipGoldPremium: { label: "VIP / זהב / פרימיום", bucket: "opportunity" },
   highFees: { label: "דמי ניהול גבוהים", bucket: "improvement" },
   age46NoLongTermCare: { label: "46+ ללא סיעודי", bucket: "improvement" },
-  aumFrozen: { label: "AUM מוקפא", bucket: "improvement" },
+  aumFrozen: { label: "קרן ללא הפקדות", bucket: "improvement" },
   trackMismatch: { label: "מסלול לא מתאים לגיל", bucket: "improvement" },
   selfEmployedNoDeposit: { label: "עצמאי שלא הפקיד", bucket: "improvement" },
   concentrationRisk: { label: "ריכוז יתר בחברה", bucket: "improvement" },
