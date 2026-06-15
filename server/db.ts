@@ -1766,7 +1766,10 @@ export async function computeWorkspaceFlags(opts: {
     if (!hasPension) addFlag(r.id, "noActivePension");
     if (hasSavings && !hasInsurance) addFlag(r.id, "savingsNoInsurance");
 
-    // Risk policy ending soon
+    // Temporary risk — primary signal is the Shorens product STATUS
+    // "ריסק זמני" (carried in metadata.riskTemporary); fall back to a risk
+    // product whose end date is within 90 days.
+    const hasRiskZmani = active.some(p => metaOf(p).riskTemporary === true);
     const riskEndingSoon = active.some(p => {
       if (!p.endDate) return false;
       const t = (p.productType ?? "").toLowerCase();
@@ -1775,7 +1778,7 @@ export async function computeWorkspaceFlags(opts: {
       const end = new Date(p.endDate);
       return end >= today && end <= in90Days;
     });
-    if (riskEndingSoon) addFlag(r.id, "riskTemporary");
+    if (hasRiskZmani || riskEndingSoon) addFlag(r.id, "riskTemporary");
 
     // Any active policy ending soon
     const anyEndingSoon = active.some(p => {
