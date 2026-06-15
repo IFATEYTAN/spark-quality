@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**SPARK Quality** (by SPARK AI — Yifat Eitan & Anat Greenberg) is a Hebrew-language, RTL multi-tenant SaaS for Israeli insurance agencies. Agents upload Excel reports (primarily Shorens "products in management" / pension-clearinghouse exports), the app parses and classifies clients into financial categories, surfaces opportunities on a dashboard, and queues AI-drafted outreach.
+**SPARK Quality** (by SPARK AI — Yifat Eitan & Anat Greenberg) is a Hebrew-language, RTL multi-tenant SaaS for Israeli insurance agencies. Agents upload Excel reports (primarily Surense "products in management" / pension-clearinghouse exports), the app parses and classifies clients into financial categories, surfaces opportunities on a dashboard, and queues AI-drafted outreach.
 
 The product is a 2026 MVP / live-demo project — not a generic template. `docs/PRODUCT_SPEC.md` is the canonical spec, `docs/PRESENTATION_GUIDE.md` is the live-demo script, and `todo.md` / `ideas.md` log historical decisions and design rationale ("Editorial Fintech": deep navy + warm gold, Hebrew serif + Heebo).
 
@@ -55,7 +55,7 @@ A modal that drafts personalized email/WhatsApp messages per client based on `fl
 
 Treat these as out-of-scope unless the user explicitly unblocks them — they are documented as blocked, not forgotten:
 
-1. **Live Shorens / pension-clearinghouse API** — blocked on commercial contract. Workaround is the manual Excel upload. Don't fabricate a stub API.
+1. **Live Surense / pension-clearinghouse API** — blocked on commercial contract. Workaround is the manual Excel upload. Don't fabricate a stub API.
 2. **Accurate yield benchmarking** — blocked downstream of (1). Current low-yield detection is the heuristic in `classify()`; do not claim it's market-comparison data.
 3. **Billing (iCount)** — pending; user prefers iCount over Stripe. Pricing page is presentational only — there is no checkout flow.
 4. **External automations (Webhooks for Make/Zapier, CRM sync)** — roadmap only.
@@ -128,7 +128,7 @@ The pattern in `db.ts` uses a conditional `and()` based on `workspaceRole` — c
 
 ### Excel report parsing
 
-`client/src/lib/parseReport.ts` parses Hebrew Shorens reports **on the client** using SheetJS, then sends summary + extracted client rows to `reports.save` for persistence. The classification logic (VIP, Tikun 190, liquid fund, etc.) lives in `classify()` and uses fuzzy Hebrew column-name matching (`COL_HINTS`). Sheet selection is heuristic: insurance vs. savings sheets are merged differently to avoid double-counting AUM. Tests live in `server/parseReport.test.ts` and `server/financial.test.ts` and use SheetJS to fabricate input files.
+`client/src/lib/parseReport.ts` parses Hebrew Surense reports **on the client** using SheetJS, then sends summary + extracted client rows to `reports.save` for persistence. The classification logic (VIP, Tikun 190, liquid fund, etc.) lives in `classify()` and uses fuzzy Hebrew column-name matching (`COL_HINTS`). Sheet selection is heuristic: insurance vs. savings sheets are merged differently to avoid double-counting AUM. Tests live in `server/parseReport.test.ts` and `server/financial.test.ts` and use SheetJS to fabricate input files.
 
 ### Frontend
 

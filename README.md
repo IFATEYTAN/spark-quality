@@ -134,7 +134,7 @@ Develop on the branch specified in the active session. Don't push to `main` or o
 
 ## Known gaps (out of scope until unblocked)
 
-1. **Live Shorens / pension-clearinghouse API** — blocked on commercial contract; manual Excel upload is the workaround.
+1. **Live Surense / pension-clearinghouse API** — blocked on commercial contract; manual Excel upload is the workaround.
 2. **Accurate yield benchmarking** — blocked downstream of (1); current heuristic isn't market data.
 3. **iCount billing** — pricing page is presentational; checkout flow not yet wired.
 4. **External automations (Make/Zapier, CRM sync)** — roadmap only.

@@ -1,7 +1,7 @@
 /**
  * End-to-end smoke test for the upload pipeline.
  *
- * 1. Reads the agent's real Shorens workbook.
+ * 1. Reads the agent's real Surense workbook.
  * 2. Runs the production parser.
  * 3. Builds the same `clientRows` payload that UploadReport.tsx sends to
  *    `reports.save`.
@@ -15,7 +15,7 @@
 
 import { describe, it, expect } from "vitest";
 import { readFileSync, existsSync } from "fs";
-import { parseShorensReport } from "../client/src/lib/parseReport";
+import { parseSurenseReport } from "../client/src/lib/parseReport";
 
 const FIXTURE = "/home/ubuntu/upload/דוח_מוצרים_בניהולשורנס.xlsx";
 
@@ -27,14 +27,14 @@ describe("real-xlsx roundtrip", () => {
     }
 
     const buf = readFileSync(FIXTURE);
-    // parseShorensReport accepts File | Blob | ArrayBuffer; node Buffer works
+    // parseSurenseReport accepts File | Blob | ArrayBuffer; node Buffer works
     // because the underlying xlsx library only needs an array-like.
     const arrayBuf = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
     const file = new File([arrayBuf], "real.xlsx", {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
 
-    const parsed = await parseShorensReport(file);
+    const parsed = await parseSurenseReport(file);
 
     // Sanity: at least 1 customer extracted
     expect(parsed.customers.length).toBeGreaterThan(0);

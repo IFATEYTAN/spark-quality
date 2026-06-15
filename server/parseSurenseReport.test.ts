@@ -1,9 +1,9 @@
-// Round 90 — verify the new parseShorensReport against the real spec.
+// Round 90 — verify the new parseSurenseReport against the real spec.
 // We synthesize an in-memory workbook that follows the surense-analyzer
 // skill column order, then assert on the output stats.
 import { describe, it, expect } from "vitest";
 import * as XLSX from "xlsx";
-import { parseShorensReport } from "../client/src/lib/parseReport";
+import { parseSurenseReport } from "../client/src/lib/parseReport";
 
 function makeFile(buffer: ArrayBuffer, name: string): File {
   // Node 22 has File globally.
@@ -105,10 +105,10 @@ function buildBook() {
   return makeFile(buf, "test-shorens.xlsx");
 }
 
-describe("parseShorensReport (Round 90 — skill spec aligned)", () => {
+describe("parseSurenseReport (Round 90 — skill spec aligned)", () => {
   it("aggregates customers by ת.ז and returns real AUM/premium", async () => {
     const file = buildBook();
-    const r = await parseShorensReport(file);
+    const r = await parseSurenseReport(file);
 
     // 4 distinct customers in our fixture
     expect(r.customerCount).toBe(4);
@@ -121,7 +121,7 @@ describe("parseShorensReport (Round 90 — skill spec aligned)", () => {
 
   it("flags risk_zmani correctly", async () => {
     const file = buildBook();
-    const r = await parseShorensReport(file);
+    const r = await parseSurenseReport(file);
     expect(r.stats.riskFlags).toBe(1);
     const sara = r.customers.find((c) => c.id === "302345678");
     expect(sara?.flagStatus).toBe("risk_ending");
@@ -129,7 +129,7 @@ describe("parseShorensReport (Round 90 — skill spec aligned)", () => {
 
   it("flags VIP based on סיווג זהב + savings", async () => {
     const file = buildBook();
-    const r = await parseShorensReport(file);
+    const r = await parseSurenseReport(file);
     const sara = r.customers.find((c) => c.id === "302345678");
     // Sara has classification זהב — should be VIP regardless of risk_zmani for the badge
     expect(sara?.isVip).toBe(true);
@@ -137,7 +137,7 @@ describe("parseShorensReport (Round 90 — skill spec aligned)", () => {
 
   it("flags high fees (>0.7% from savings or >1.5% from deposit)", async () => {
     const file = buildBook();
-    const r = await parseShorensReport(file);
+    const r = await parseSurenseReport(file);
     expect(r.stats.lowYield).toBeGreaterThanOrEqual(1);
     const yossi = r.customers.find((c) => c.id === "303456789");
     expect(yossi?.flagStatus).toBe("high_fees");
@@ -145,7 +145,7 @@ describe("parseShorensReport (Round 90 — skill spec aligned)", () => {
 
   it("flags inactive product with balance > 30K", async () => {
     const file = buildBook();
-    const r = await parseShorensReport(file);
+    const r = await parseSurenseReport(file);
     expect(r.stats.inactiveWithBalance).toBeGreaterThanOrEqual(1);
     expect(r.stats.inactiveBalanceTotal).toBeGreaterThanOrEqual(60000);
   });
@@ -160,7 +160,7 @@ describe("parseShorensReport (Round 90 — skill spec aligned)", () => {
     XLSX.utils.book_append_sheet(wb, sheet, "מוצרי חיסכון");
     const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
     const f = makeFile(buf, "savings-only.xlsx");
-    const r = await parseShorensReport(f);
+    const r = await parseSurenseReport(f);
     expect(r.customerCount).toBe(1);
     expect(r.stats.monthlyPremium).toBe(0);
   });

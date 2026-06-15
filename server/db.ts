@@ -1791,7 +1791,7 @@ export async function computeWorkspaceFlags(opts: {
     if (!hasPension) addFlag(r.id, "noActivePension");
     if (hasSavings && !hasInsurance) addFlag(r.id, "savingsNoInsurance");
 
-    // Temporary risk — primary signal is the Shorens product STATUS
+    // Temporary risk — primary signal is the Surense product STATUS
     // "ריסק זמני" (carried in metadata.riskTemporary); fall back to a risk
     // product whose end date is within 90 days.
     const hasRiskZmani = active.some(p => metaOf(p).riskTemporary === true);
@@ -1856,7 +1856,7 @@ export async function computeWorkspaceFlags(opts: {
       if (allPensionsZero) addFlag(r.id, "selfEmployedNoDeposit");
     }
 
-    // Power of attorney — the real Shorens report has no POA expiry date, but it
+    // Power of attorney — the real Surense report has no POA expiry date, but it
     // does carry "מיופה כוח אחרון" (the authorized agent) per product. An active
     // product with NO POA holder = no active authorization = legal exposure (P0).
     // Falls back to the notes heuristic only when there is no policy data at all.

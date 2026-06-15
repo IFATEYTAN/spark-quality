@@ -22,7 +22,7 @@ import {
  * - users: Belong to one workspace, with role inside it (admin/agent)
  * - clients: Insurance clients, scoped to workspace + assigned to specific agent
  * - policies: Multiple policies per client (one-to-many)
- * - reports: Uploaded Excel reports (Shorens, etc.)
+ * - reports: Uploaded Excel reports (Surense, etc.)
  * - actionItems: Auto-generated tasks (retention, expired discount, etc.)
  * - invitations: Pending invites for new users to join a workspace
  * 
@@ -203,7 +203,7 @@ export const clients = mysqlTable(
     ownerUserId: int("ownerUserId").references(() => users.id).notNull(),
     /** Israeli ID number (תעודת זהות) - external unique identifier per tenant */
     idNumber: varchar("idNumber", { length: 32 }).notNull(),
-    /** Full name (might be empty for some Shorens entries) */
+    /** Full name (might be empty for some Surense entries) */
     fullName: varchar("fullName", { length: 200 }),
     email: varchar("email", { length: 320 }),
     phone: varchar("phone", { length: 32 }),
