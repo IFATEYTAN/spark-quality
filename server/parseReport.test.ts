@@ -167,19 +167,50 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     expect(new Date(c.birthDate as string).getFullYear()).toBe(1970);
   });
 
-  it("מפיק פוליסת 'מינוי סוכן' עם תאריך תום מינוי (לזיהוי POA)", async () => {
+  it("שומר 'מיופה כוח אחרון' ב-metadata (ריק ⇒ אין POA)", async () => {
     const file = makeSavingsExcel([
-      {
-        ...baseRow("308888888", 90_000, "01/01/2019"),
-        "תאריך תום תוקף מינוי סוכן": "01/01/2030",
-      },
+      { ...baseRow("308888888", 90_000, "01/01/2019"), "מיופה כוח אחרון": "" },
+      { ...baseRow("309999999", 90_000, "01/01/2019"), "מיופה כוח אחרון": "סוכן 123" },
     ]);
     const result = await parseShorensReport(file);
-    const appt = result.policies.find(
-      (p) => p.idNumber === "308888888" && p.productType === "מינוי סוכן",
+    const empty = result.policies.find((p) => p.idNumber === "308888888");
+    const filled = result.policies.find((p) => p.idNumber === "309999999");
+    expect((empty!.metadata as Record<string, unknown>).poaHolder).toBe("");
+    expect((filled!.metadata as Record<string, unknown>).poaHolder).toBe("סוכן 123");
+  });
+
+  it("שומר דמי ניהול ב-metadata של הפוליסה", async () => {
+    const file = makeSavingsExcel([
+      { ...baseRow("310000000", 200_000, "01/01/2019"), "דמי ניהול מצבירה": 0.012 },
+    ]);
+    const result = await parseShorensReport(file);
+    const p = result.policies.find((x) => x.idNumber === "310000000");
+    expect(Number((p!.metadata as Record<string, unknown>).dmTzvirah)).toBeCloseTo(0.012, 5);
+  });
+
+  it("מפיק פוליסת מסלול-השקעה מסומנת equityTrack ממסלול מנייתי", async () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([baseRow("311111111", 300_000, "01/01/2019")]),
+      "מוצרי חיסכון",
     );
-    expect(appt).toBeDefined();
-    expect(appt!.endDate).toBeTruthy();
-    expect(new Date(appt!.endDate as string).getFullYear()).toBe(2030);
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { "מספר ת.ז": "311111111", "שם מסלול": "מניות", "צבירה במסלול": 300_000, "סטטוס מוצר": "פעיל" },
+      ]),
+      "מסלולי השקעה",
+    );
+    const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+    const file = new File([buf], "tracks.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const result = await parseShorensReport(file);
+    const track = result.policies.find(
+      (p) => p.idNumber === "311111111" && p.productType === "מסלול השקעה",
+    );
+    expect(track).toBeDefined();
+    expect((track!.metadata as Record<string, unknown>).equityTrack).toBe(true);
   });
 });
