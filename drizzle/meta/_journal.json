@@ -134,6 +134,13 @@
       "when": 1781471661875,
       "tag": "0018_zippy_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1781525283675,
+      "tag": "0019_spicy_tarot",
+      "breakpoints": true
     }
   ]
 }

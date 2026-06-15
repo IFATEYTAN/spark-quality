@@ -1,6 +1,7 @@
 import {
   bigint,
   boolean,
+  datetime,
   decimal,
   index,
   int,
@@ -199,8 +200,10 @@ export const clients = mysqlTable(
     fullName: varchar("fullName", { length: 200 }),
     email: varchar("email", { length: 320 }),
     phone: varchar("phone", { length: 32 }),
-    /** Date of birth */
-    birthDate: timestamp("birthDate"),
+    /** Date of birth. DATETIME (not TIMESTAMP) so pre-1970 birthdates of older
+     * clients — exactly the tikun-190 / long-term-care / VIP demographic — can
+     * be stored (MySQL TIMESTAMP only covers 1970–2038). */
+    birthDate: datetime("birthDate"),
     /** Notes free text */
     notes: text("notes"),
     /** VIP / strategic client flag */
@@ -253,10 +256,10 @@ export const policies = mysqlTable(
     monthlyPremium: decimal("monthlyPremium", { precision: 12, scale: 2 }),
     /** Accumulated balance / AUM in ILS */
     balance: decimal("balance", { precision: 14, scale: 2 }),
-    /** Policy start date */
-    startDate: timestamp("startDate"),
-    /** Policy end date (for risk policies, discount expiration, etc.) */
-    endDate: timestamp("endDate"),
+    /** Policy start date. DATETIME so long-held policies dated before 1970 are storable. */
+    startDate: datetime("startDate"),
+    /** Policy end date (for risk policies, discount expiration, etc.). DATETIME for range safety. */
+    endDate: datetime("endDate"),
     /** Status: active | inactive | cancelled | expired */
     status: mysqlEnum("status", ["active", "inactive", "cancelled", "expired"]).default("active").notNull(),
     /** Free-form metadata from the source report */
