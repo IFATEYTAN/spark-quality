@@ -418,7 +418,7 @@ export const DEMO_TRIGGER_CARDS: {
   { key: "savingsNoInsurance", name: "חיסכון ללא ביטוח", priority: "P2", count: 96 },
   { key: "noActivePension", name: "ללא פנסיה פעילה", priority: "P2", count: 148 },
   { key: "age46NoLongTermCare", name: "46+ ללא סיעוד", priority: "P2", count: 73 },
-  { key: "aumFrozen", name: "AUM מוקפא", priority: "P2", count: 28 },
+  { key: "aumFrozen", name: "קרן ללא הפקדות", priority: "P2", count: 28 },
   { key: "highFees", name: "דמי ניהול גבוהים", priority: "P3", count: 64 },
   { key: "trackMismatch", name: "מסלול לא תואם לגיל", priority: "P3", count: 19 },
   { key: "selfEmployedNoDeposit", name: "עצמאי ללא הפקדה", priority: "P3", count: 11 },

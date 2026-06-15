@@ -120,8 +120,8 @@ const GROUPS: GroupDef[] = [
       },
       {
         key: "aumFrozen",
-        name: "AUM מוקפא",
-        description: "מוצר לא פעיל + צבירה מעל 30K.",
+        name: "קרן ללא הפקדות",
+        description: "צבירה במוצר פעיל אך ללא הפקדות — כסף תקוע שאפשר להחזיר לפעילות.",
         cta: "שיחת בירור ←",
         emoji: "💰",
       },
