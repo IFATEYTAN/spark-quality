@@ -23,6 +23,11 @@ import {
 } from "../drizzle/schema";
 
 const SUFFIX = `iso${Date.now().toString(36)}`;
+// Unique 9-digit taxIds per run so re-running against the same DB never trips
+// the workspaces.taxId unique constraint.
+const TAX_STAMP = Date.now().toString().slice(-7);
+const TAX_A = `10${TAX_STAMP}`;
+const TAX_B = `20${TAX_STAMP}`;
 
 /** mysql2/drizzle returns either { insertId } or [ResultSetHeader, undefined]. Read either shape. */
 function readId(raw: unknown): number {
@@ -55,7 +60,7 @@ describe.skipIf(SKIP)("workspace isolation (DB-level proof)", () => {
 
     WORKSPACE_A = readId(await drz.insert(workspaces).values({
       name: `iso-A-${SUFFIX}`,
-      taxId: "000000018",
+      taxId: TAX_A,
       taxIdType: "company",
       plan: "basic",
       billingPeriod: "monthly",
@@ -63,7 +68,7 @@ describe.skipIf(SKIP)("workspace isolation (DB-level proof)", () => {
 
     WORKSPACE_B = readId(await drz.insert(workspaces).values({
       name: `iso-B-${SUFFIX}`,
-      taxId: "000000026",
+      taxId: TAX_B,
       taxIdType: "company",
       plan: "basic",
       billingPeriod: "monthly",

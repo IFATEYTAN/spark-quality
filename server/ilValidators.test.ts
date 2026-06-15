@@ -10,7 +10,7 @@ import {
 // Known-valid synthetic IDs that satisfy the official check-digit algorithm.
 // These are NOT real people / companies — they were generated for tests.
 const VALID_ID = "000000018"; // satisfies the algorithm
-const VALID_COMPANY = "513456787"; // 9-digit, passes check-digit
+const VALID_COMPANY = "500000005"; // 9-digit, passes the check-digit algorithm
 
 describe("isValidIsraeliId", () => {
   it("accepts a valid 9-digit ID", () => {
