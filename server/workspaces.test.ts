@@ -57,7 +57,12 @@ describe("workspace data isolation", () => {
     const caller = appRouter.createCaller(ctx);
 
     await expect(
-      caller.workspaces.create({ name: "Second Workspace" })
+      caller.workspaces.create({
+        name: "Second Workspace",
+        taxId: "500000005",
+        taxIdType: "company",
+        contactPhone: "0501234567",
+      })
     ).rejects.toThrow(/already/i);
   });
 });
