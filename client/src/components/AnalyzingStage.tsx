@@ -101,10 +101,10 @@ export function AnalyzingStage({ onComplete, hasRealFile = false, llmStatus = "i
                   aria-live="polite"
                 >
                   {llmStatus === "done"
-                    ? "Claude Sonnet 4 · ניתוח הושלם"
+                    ? "Claude Sonnet 4.6 · ניתוח הושלם"
                     : llmStatus === "error"
-                      ? "Claude Sonnet 4 · שגיאה — מציגים נתונים מקומיים"
-                      : "Claude Sonnet 4 · מנתח את הקובץ שלכם…"}
+                      ? "Claude Sonnet 4.6 · שגיאה — מציגים נתונים מקומיים"
+                      : "Claude Sonnet 4.6 · מנתח את הקובץ שלכם…"}
                 </span>
               )}
             </div>

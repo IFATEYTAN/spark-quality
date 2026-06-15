@@ -7,6 +7,10 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  // LLM model routed through the Forge OpenAI-compatible proxy. Defaults to
+  // Claude Sonnet 4.6 (best quality for the report analysis + AI Composer). Can
+  // be overridden via LLM_MODEL if the proxy expects a different model id.
+  forgeModel: process.env.LLM_MODEL ?? "claude-sonnet-4-6",
   // iCount integration (cloud invoicing + Hosted Checkout). User provides these in Manus Settings -> Secrets.
   // ICOUNT_API_TOKEN replaces the legacy ICOUNT_API_KEY name.
   iCountApiToken: process.env.ICOUNT_API_TOKEN ?? process.env.ICOUNT_API_KEY ?? "",
