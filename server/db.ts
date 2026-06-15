@@ -1855,13 +1855,14 @@ export async function computeWorkspaceFlags(opts: {
       }
     }
 
-    // High fees — data-driven from the real management-fee rates on active
-    // policies (דמי ניהול מצבירה / מהפקדה), falling back to the legacy flagStatus.
+    // High fees — data-driven from real management-fee rates on active policies.
+    // Thresholds calibrated against real data (0.7% over-flagged ~93%): a fee is
+    // "high" at >1% from accumulation (מצבירה) or >2% from deposits (מהפקדה).
     const highFeeByData = active.some(p => {
       const m = metaOf(p);
       const dmT = Number(m.dmTzvirah ?? 0);
       const dmH = Number(m.dmHafkada ?? 0);
-      return dmT > 0.007 || dmH > 0.015;
+      return dmT > 0.01 || dmH > 0.02;
     });
     if (highFeeByData || r.flagStatus === "high_fees") {
       addFlag(r.id, "highFees");

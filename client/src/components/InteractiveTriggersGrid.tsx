@@ -66,15 +66,8 @@ const TRIGGERS: TriggerDef[] = [
     key: "poaExpired",
     countKey: "poaExpired",
     bucket: "urgent",
-    label: "ייפוי כוח פג תוקף",
-    hint: "דחיפות משפטית — כל יום עיכוב פוגע בהסמכה לפעול בתיק.",
-  },
-  {
-    key: "poaExpiring90d",
-    countKey: "poaExpiring90d",
-    bucket: "urgent",
-    label: "ייפוי כוח פג ב-90 ימים",
-    hint: "חידוש מקדים מונע ניתוק שירות וקנסות מיידיים.",
+    label: "ללא ייפוי כוח פעיל",
+    hint: "מוצר פעיל ללא מיופה כוח רשום — חשיפה משפטית, אינך מוסמך לפעול.",
   },
   {
     key: "riskTemporary",
