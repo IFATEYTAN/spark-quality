@@ -179,6 +179,16 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     expect((filled!.metadata as Record<string, unknown>).poaHolder).toBe("סוכן 123");
   });
 
+  it("מסמן ריסק-זמני (סטטוס מוצר) ב-metadata.riskTemporary", async () => {
+    const file = makeSavingsExcel([
+      { ...baseRow("312222222", 50_000, "01/01/2019"), "סטטוס מוצר": "ריסק זמני אוטומטי" },
+    ]);
+    const result = await parseShorensReport(file);
+    const p = result.policies.find((x) => x.idNumber === "312222222");
+    expect((p!.metadata as Record<string, unknown>).riskTemporary).toBe(true);
+    expect(p!.status).toBe("active"); // still counted as active
+  });
+
   it("שומר דמי ניהול ב-metadata של הפוליסה", async () => {
     const file = makeSavingsExcel([
       { ...baseRow("310000000", 200_000, "01/01/2019"), "דמי ניהול מצבירה": 0.012 },

@@ -162,9 +162,15 @@ function mapPolicyStatus(he: string): "active" | "inactive" | "cancelled" | "exp
   const s = HE(he);
   if (!s) return "active";
   if (s.includes("מבוטל")) return "cancelled";
-  if (s.includes("פג") || s.includes("הסתיים") || s.includes("הופסק")) return "expired";
+  if (s.includes("פג") || s.includes("הסתיים") || s.includes("הופסק") || s.includes("תום תקופה")) return "expired";
   if (s.includes("לא פעיל")) return "inactive";
-  return "active";
+  return "active"; // "פעיל", "ריסק זמני", "חסום להפקדות"… still active
+}
+
+// "ריסק זמני" / "ריסק זמני אוטומטי" appear as a product STATUS in Shorens
+// (not a product type) — the temporary-risk trigger keys off this.
+function isRiskZmaniStatus(he: string): boolean {
+  return HE(he).includes("ריסק זמני");
 }
 
 function ageFromBirth(birth: Date | null, fallback: number): number {
@@ -768,6 +774,7 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
         poaHolder: s.poaHolder || "",
         dmTzvirah: s.dmTzvirah,
         dmHafkada: s.dmHafkada,
+        riskTemporary: isRiskZmaniStatus(s.status),
       },
     });
   }
@@ -784,7 +791,10 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       startDate: null,
       endDate: null,
       status: mapPolicyStatus(ins.status),
-      metadata: { poaHolder: ins.poaHolder || "" },
+      metadata: {
+        poaHolder: ins.poaHolder || "",
+        riskTemporary: isRiskZmaniStatus(ins.status),
+      },
     });
   }
   for (const cov of coverages) {
