@@ -560,6 +560,7 @@ export async function bulkReplacePolicies(opts: {
     startDate?: string | null;
     endDate?: string | null;
     status?: "active" | "inactive" | "cancelled" | "expired";
+    metadata?: Record<string, unknown> | null;
   }>;
 }) {
   const db = await getDb();
@@ -606,6 +607,7 @@ export async function bulkReplacePolicies(opts: {
         startDate: parseDate(row.startDate),
         endDate: parseDate(row.endDate),
         status: row.status ?? "active",
+        metadata: row.metadata ?? null,
       };
     })
     .filter((v): v is NonNullable<typeof v> => v !== null);
@@ -1708,15 +1710,18 @@ export async function computeWorkspaceFlags(opts: {
     flaggedClients.add(clientId);
   }
 
-  // Sentinel productType emitted by the parser for the agent-appointment
-  // ("מינוי סוכן") date. Excluded from all derivations except POA. Must match
-  // AGENT_APPOINTMENT_PRODUCT_TYPE in client/src/lib/parseReport.ts.
-  const AGENT_APPOINTMENT = "מינוי סוכן";
+  // Sentinel productType emitted by the parser for investment-track rows
+  // ("מסלול השקעה"). Used only by the track-mismatch trigger and excluded from
+  // every other derivation. Must match INVESTMENT_TRACK_PRODUCT_TYPE in
+  // client/src/lib/parseReport.ts.
+  const INVESTMENT_TRACK = "מסלול השקעה";
+  const metaOf = (p: { metadata?: unknown }): Record<string, unknown> =>
+    (p.metadata && typeof p.metadata === "object" ? (p.metadata as Record<string, unknown>) : {});
 
   for (const r of allClients) {
     const allPs = policiesByClient.get(r.id) ?? [];
-    const apptPs = allPs.filter(p => (p.productType ?? "") === AGENT_APPOINTMENT);
-    const ps = allPs.filter(p => (p.productType ?? "") !== AGENT_APPOINTMENT);
+    const trackPs = allPs.filter(p => (p.productType ?? "") === INVESTMENT_TRACK);
+    const ps = allPs.filter(p => (p.productType ?? "") !== INVESTMENT_TRACK);
     const active = ps.filter(p => p.status === "active");
     const hasPension = active.some(
       p => (p.productType ?? "").toLowerCase().includes("pension") ||
@@ -1788,9 +1793,17 @@ export async function computeWorkspaceFlags(opts: {
       addFlag(r.id, "aumFrozen");
     }
 
-    // Track mismatch
+    // Track mismatch — real signal from the investment-tracks sheet: an older
+    // client (55+) holding an active equity-heavy track. Falls back to the
+    // legacy heuristic (VIP with a single product type) when no track data.
     const productTypes = new Set(active.map(p => p.productType ?? ""));
-    if (r.isVip && productTypes.size === 1 && Number(r.totalBalance ?? 0) > 100_000) {
+    const inEquityTrackOld =
+      age >= 55 &&
+      trackPs.some(p => p.status === "active" && metaOf(p).equityTrack === true);
+    const legacyTrackHeuristic =
+      trackPs.length === 0 &&
+      r.isVip && productTypes.size === 1 && Number(r.totalBalance ?? 0) > 100_000;
+    if (inEquityTrackOld || legacyTrackHeuristic) {
       addFlag(r.id, "trackMismatch");
     }
 
@@ -1815,24 +1828,22 @@ export async function computeWorkspaceFlags(opts: {
       if (allPensionsZero) addFlag(r.id, "selfEmployedNoDeposit");
     }
 
-    // Power of attorney — the agent appointment ("מינוי סוכן") is treated as
-    // the POA for trigger purposes. Prefer the real appointment end date; fall
-    // back to the notes heuristic only when no appointment date is present.
-    let poaFromDate = false;
-    const apptEndTimes = apptPs
-      .map(p => (p.endDate ? new Date(p.endDate).getTime() : NaN))
-      .filter(t => !Number.isNaN(t));
-    if (apptEndTimes.length > 0) {
-      const earliestEnd = new Date(Math.min(...apptEndTimes));
-      if (earliestEnd < today) {
+    // Power of attorney — the real Shorens report has no POA expiry date, but it
+    // does carry "מיופה כוח אחרון" (the authorized agent) per product. An active
+    // product with NO POA holder = no active authorization = legal exposure (P0).
+    // Falls back to the notes heuristic only when there is no policy data at all.
+    let poaResolved = false;
+    if (active.length > 0) {
+      const anyPoaHolder = active.some(p => {
+        const h = metaOf(p).poaHolder;
+        return typeof h === "string" && h.trim().length > 0;
+      });
+      if (!anyPoaHolder) {
         addFlag(r.id, "poaExpired");
-        poaFromDate = true;
-      } else if (earliestEnd <= in90Days) {
-        addFlag(r.id, "poaExpiring90d");
-        poaFromDate = true;
       }
+      poaResolved = true;
     }
-    if (!poaFromDate && r.notes) {
+    if (!poaResolved && r.notes) {
       const n = r.notes.toLowerCase();
       if (n.includes("ייפוי כוח פג") || n.includes("poa expired")) {
         addFlag(r.id, "poaExpired");
@@ -1841,15 +1852,16 @@ export async function computeWorkspaceFlags(opts: {
       }
     }
 
-    // Legacy flagStatus → new triggerKeys (so existing imports stay visible)
-    switch (r.flagStatus) {
-      case "high_fees":
-        addFlag(r.id, "highFees");
-        break;
-      // legacy values kept for backward compatibility — but they are not part
-      // of the 16-trigger surface today
-      default:
-        break;
+    // High fees — data-driven from the real management-fee rates on active
+    // policies (דמי ניהול מצבירה / מהפקדה), falling back to the legacy flagStatus.
+    const highFeeByData = active.some(p => {
+      const m = metaOf(p);
+      const dmT = Number(m.dmTzvirah ?? 0);
+      const dmH = Number(m.dmHafkada ?? 0);
+      return dmT > 0.007 || dmH > 0.015;
+    });
+    if (highFeeByData || r.flagStatus === "high_fees") {
+      addFlag(r.id, "highFees");
     }
   }
 

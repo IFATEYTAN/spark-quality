@@ -13,15 +13,12 @@ import type { Customer } from "./demoData";
  * `idNumber`. Persisted server-side (table `policies`) so the 16-trigger engine
  * (`computeWorkspaceFlags`) has real per-policy data to work with — without it,
  * coverage/risk/concentration/frozen triggers run on empty input.
+ *
+ * `metadata` carries signals that have no dedicated column:
+ *  - poaHolder: name in "מיופה כוח אחרון" (empty ⇒ no active power-of-attorney → P0)
+ *  - dmTzvirah / dmHafkada: management-fee rates (for the high-fees trigger)
+ *  - trackName / equityTrack: investment-track info (for the track-mismatch trigger)
  */
-/**
- * Sentinel productType for the synthetic "agent appointment" policy. The
- * trigger engine (server/db.ts · computeWorkspaceFlags) matches this exact
- * string to derive poaExpired / poaExpiring90d from a real date, and excludes
- * it from every other per-policy derivation. Keep both copies in sync.
- */
-export const AGENT_APPOINTMENT_PRODUCT_TYPE = "מינוי סוכן";
-
 export interface ParsedPolicy {
   idNumber: string;
   productType: string;
@@ -33,7 +30,16 @@ export interface ParsedPolicy {
   startDate: string | null; // ISO
   endDate: string | null; // ISO
   status: "active" | "inactive" | "cancelled" | "expired";
+  metadata?: Record<string, unknown> | null;
 }
+
+/**
+ * Sentinel productType for synthetic "investment track" policy rows (parsed
+ * from the "מסלולי השקעה" sheet). The trigger engine matches this exact string
+ * to derive the track-mismatch trigger and excludes it from every other
+ * per-policy derivation. Keep in sync with server/db.ts.
+ */
+export const INVESTMENT_TRACK_PRODUCT_TYPE = "מסלול השקעה";
 
 export interface ParsedReport {
   customers: Customer[];
@@ -205,6 +211,7 @@ interface SavingsRow {
   dmTzvirah: number;        // דמי ניהול מצבירה
   agentNumber: string;
   appointmentEnd: Date | null; // תאריך תום תוקף מינוי סוכן
+  poaHolder: string;        // מיופה כוח אחרון (empty ⇒ no active POA)
 }
 
 interface InsuranceRow {
@@ -213,6 +220,7 @@ interface InsuranceRow {
   premium: number;          // סה"כ פרמיה
   status: string;
   appointmentEnd: Date | null;
+  poaHolder: string;        // מיופה כוח אחרון
 }
 
 interface CoverageRow {
@@ -220,6 +228,20 @@ interface CoverageRow {
   policyNumber: string;
   coverageType: string;     // סוג כיסוי
   coverageEnd: Date | null; // תאריך תום כיסוי
+}
+
+interface TrackRow {
+  id: string;               // מספר ת.ז
+  trackName: string;        // שם מסלול
+  balance: number;          // צבירה במסלול
+  status: string;           // סטטוס מוצר
+}
+
+// An investment track is "equity-heavy" (risky for an older client) when its
+// name points at equities / index funds. Heuristic — tune against real names.
+function isEquityTrack(name: string): boolean {
+  const s = HE(name);
+  return /מני|מנייתי|מניות|מדד|s&p|נאסד|nasdaq|עוקב/i.test(s);
 }
 
 // ---- sheet parsers --------------------------------------------------------
@@ -259,6 +281,7 @@ function parseSavingsSheet(sheet: XLSX.WorkSheet): SavingsRow[] {
       "תאריך תום תוקף מינוי סוכן",
       "תום תוקף מינוי",
     ]),
+    poaHolder: findCol(headers, ["מיופה כוח אחרון", "מיופה כוח"]),
   };
 
   const out: SavingsRow[] = [];
@@ -294,6 +317,7 @@ function parseSavingsSheet(sheet: XLSX.WorkSheet): SavingsRow[] {
       dmTzvirah: idx.dmTzvirah !== -1 ? toNumber(row[idx.dmTzvirah]) : 0,
       agentNumber: idx.agentNumber !== -1 ? HE(row[idx.agentNumber]) : "",
       appointmentEnd: idx.appointmentEnd !== -1 ? toDate(row[idx.appointmentEnd]) : null,
+      poaHolder: idx.poaHolder !== -1 ? HE(row[idx.poaHolder]) : "",
     });
   }
   return out;
@@ -316,6 +340,7 @@ function parseInsuranceSheet(sheet: XLSX.WorkSheet): InsuranceRow[] {
       "תאריך תום תוקף מינוי סוכן",
       "תום תוקף מינוי",
     ]),
+    poaHolder: findCol(headers, ["מיופה כוח אחרון", "מיופה כוח"]),
   };
   const out: InsuranceRow[] = [];
   for (let r = 1; r < rows.length; r++) {
@@ -329,6 +354,37 @@ function parseInsuranceSheet(sheet: XLSX.WorkSheet): InsuranceRow[] {
       premium: idx.premium !== -1 ? toNumber(row[idx.premium]) : 0,
       status: idx.status !== -1 ? HE(row[idx.status]) : "",
       appointmentEnd: idx.appointmentEnd !== -1 ? toDate(row[idx.appointmentEnd]) : null,
+      poaHolder: idx.poaHolder !== -1 ? HE(row[idx.poaHolder]) : "",
+    });
+  }
+  return out;
+}
+
+function parseTracksSheet(sheet: XLSX.WorkSheet): TrackRow[] {
+  const rows: any[][] = XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    raw: false,
+    defval: "",
+  });
+  if (rows.length < 2) return [];
+  const headers = rows[0].map(HE);
+  const idx = {
+    id: findCol(headers, ["מספר ת.ז", "ת.ז"]),
+    trackName: findCol(headers, ["שם מסלול"]),
+    balance: findCol(headers, ["צבירה במסלול", "צבירה"]),
+    status: findCol(headers, ["סטטוס מוצר", "סטטוס"]),
+  };
+  const out: TrackRow[] = [];
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row || row.every((c) => HE(c) === "")) continue;
+    const id = idx.id !== -1 ? HE(row[idx.id]) : "";
+    if (!id) continue;
+    out.push({
+      id,
+      trackName: idx.trackName !== -1 ? HE(row[idx.trackName]) : "",
+      balance: idx.balance !== -1 ? toNumber(row[idx.balance]) : 0,
+      status: idx.status !== -1 ? HE(row[idx.status]) : "",
     });
   }
   return out;
@@ -370,9 +426,15 @@ function detectSheets(wb: XLSX.WorkBook) {
   let savingsName: string | null = null;
   let insuranceName: string | null = null;
   let coverageName: string | null = null;
+  let tracksName: string | null = null;
 
   for (const name of wb.SheetNames) {
-    if (name.includes("מסכם") || name.includes("מסלול")) continue;
+    if (name.includes("מסכם")) continue;
+    // Investment-tracks sheet ("מסלולי השקעה") — drives the track-mismatch trigger.
+    if (name.includes("מסלול")) {
+      if (!tracksName) tracksName = name;
+      continue;
+    }
     const isCoverage = name.includes("כיסוי");
     const isInsurance = !isCoverage && name.includes("ביטוח");
     const isSavings =
@@ -388,7 +450,7 @@ function detectSheets(wb: XLSX.WorkBook) {
     if (isInsurance && !insuranceName) insuranceName = name;
     if (isCoverage && !coverageName) coverageName = name;
   }
-  return { savingsName, insuranceName, coverageName };
+  return { savingsName, insuranceName, coverageName, tracksName };
 }
 
 // ---- aggregation + classification ----------------------------------------
@@ -648,7 +710,7 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
 
-  const { savingsName, insuranceName, coverageName } = detectSheets(wb);
+  const { savingsName, insuranceName, coverageName, tracksName } = detectSheets(wb);
 
   if (!savingsName) {
     throw new Error(
@@ -659,6 +721,7 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
   const savings = parseSavingsSheet(wb.Sheets[savingsName]);
   const insurance = insuranceName ? parseInsuranceSheet(wb.Sheets[insuranceName]) : [];
   const coverages = coverageName ? parseCoverageSheet(wb.Sheets[coverageName]) : [];
+  const tracks = tracksName ? parseTracksSheet(wb.Sheets[tracksName]) : [];
 
   // Aggregate per customer (id)
   const agg = new Map<string, Aggregate>();
@@ -701,6 +764,11 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       startDate: s.joinDate ? s.joinDate.toISOString() : null,
       endDate: null,
       status: mapPolicyStatus(s.status),
+      metadata: {
+        poaHolder: s.poaHolder || "",
+        dmTzvirah: s.dmTzvirah,
+        dmHafkada: s.dmHafkada,
+      },
     });
   }
   for (const ins of insurance) {
@@ -716,6 +784,7 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       startDate: null,
       endDate: null,
       status: mapPolicyStatus(ins.status),
+      metadata: { poaHolder: ins.poaHolder || "" },
     });
   }
   for (const cov of coverages) {
@@ -733,23 +802,23 @@ export async function parseShorensReport(file: File): Promise<ParsedReport> {
       status: "active",
     });
   }
-  // Agent-appointment ("מינוי סוכן") end date — treated as power-of-attorney
-  // expiry by the trigger engine (poaExpired / poaExpiring90d). Emitted as a
-  // sentinel policy so the engine reads a real date instead of guessing from
-  // notes text. The engine excludes it from all other per-policy derivations.
-  for (const a of Array.from(agg.values())) {
-    if (!a.earliestAppointmentEnd) continue;
+  // Investment-track rows ("מסלולי השקעה") — sentinel policies used only by the
+  // track-mismatch trigger (older client in an equity-heavy track). The engine
+  // excludes them from every other per-policy derivation.
+  for (const t of tracks) {
+    if (!agg.has(t.id) || !t.trackName) continue;
     policies.push({
-      idNumber: a.id,
-      productType: AGENT_APPOINTMENT_PRODUCT_TYPE,
-      company: a.insurer || "",
+      idNumber: t.id,
+      productType: INVESTMENT_TRACK_PRODUCT_TYPE,
+      company: "",
       policyNumber: "",
       monthlyPremium: 0,
       annualPremium: 0,
-      balance: 0,
+      balance: Math.round(t.balance),
       startDate: null,
-      endDate: a.earliestAppointmentEnd.toISOString(),
-      status: "active",
+      endDate: null,
+      status: mapPolicyStatus(t.status),
+      metadata: { trackName: t.trackName, equityTrack: isEquityTrack(t.trackName) },
     });
   }
 

@@ -621,6 +621,7 @@ export const appRouter = router({
                 startDate: z.string().nullable().optional(),
                 endDate: z.string().nullable().optional(),
                 status: z.enum(["active", "inactive", "cancelled", "expired"]).optional(),
+                metadata: z.record(z.string(), z.any()).nullable().optional(),
               })
             )
             .optional(),
