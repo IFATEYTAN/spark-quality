@@ -24,8 +24,6 @@ import type { TriggerKey } from "@/lib/triggerScenarios";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CategoryScenarioModal } from "./CategoryScenarioModal";
 import { AIComposerModal } from "./AIComposerModal";
-import { AIBriefingModal } from "./AIBriefingModal";
-import { AIQaModal } from "./AIQaModal";
 import { exportDashboardPDF } from "@/lib/exportPdf";
 import type { ParsedReport } from "@/lib/parseReport";
 
@@ -45,32 +43,6 @@ interface DashboardStageProps {
   slide?: 1 | 2 | 3;
 }
 
-/**
- * If LLM analysis is present AND the user did NOT upload a real file, allow
- * its KPIs to fill in canned demo numbers. When a real file is parsed, the
- * authoritative source is `parsed.stats` and we never let the LLM override
- * counts — the LLM may hallucinate large round numbers (487M, 1247) which
- * is exactly what was happening before this fix.
- */
-function mergeStatsWithAnalysis(
-  stats: typeof STATS,
-  analysis: unknown,
-  hasParsedFile: boolean,
-): typeof STATS {
-  if (hasParsedFile) return stats;
-  if (!analysis || typeof analysis !== "object") return stats;
-  const k = (analysis as { kpis?: Record<string, number> }).kpis;
-  if (!k) return stats;
-  return {
-    ...stats,
-    totalCustomers: k.total_clients ?? stats.totalCustomers,
-    totalAUM: k.total_aum ?? stats.totalAUM,
-    riskFlags: k.risk_zmani ?? stats.riskFlags,
-    noPension: k.no_pension ?? stats.noPension,
-    vipCustomers: (k.vip_count as number | undefined) ?? (stats as { vipCustomers?: number }).vipCustomers,
-  } as typeof STATS;
-}
-
 // Per-priority tone for the demo trigger cards (gold + white palette only).
 const PRIORITY_TONE: Record<string, { pill: string; bg: string; border: string; accent: string }> = {
   P0: { pill: "bg-gold/20 text-gold border-gold/50", bg: "bg-gold/15", border: "border-gold/50", accent: "text-gold" },
@@ -82,30 +54,21 @@ const PRIORITY_TONE: Record<string, { pill: string; bg: string; border: string; 
 
 export function DashboardStage({
   onAction,
-  parsed,
-  analysis,
   category,
   slide = 1,
 }: DashboardStageProps) {
   const [activeScenario, setActiveScenario] = useState<string | null>(null);
-  // Use parsed data if a real file was uploaded, otherwise fall back to demo data.
-  // For guests, filter the customer list down to only the bucket they picked
-  // on the CategoryPickerStage so the dashboard tells one focused story.
-  const allCustomers: Customer[] = parsed?.customers ?? CUSTOMERS;
+  // Privacy (Approach A): the public/cinematic demo ALWAYS renders the
+  // fictional sample data — it never displays a real uploaded report's clients
+  // or figures. Real data is only ever shown in the authenticated /dashboard.
   const customers: Customer[] = useMemo(
-    () => (category ? filterCustomersByCategory(allCustomers, category) : allCustomers),
-    [allCustomers, category],
+    () => (category ? filterCustomersByCategory(CUSTOMERS, category) : CUSTOMERS),
+    [category],
   );
-  const stats = mergeStatsWithAnalysis(
-    parsed?.stats ?? STATS,
-    analysis,
-    Boolean(parsed),
-  );
-  const insurerData = (parsed?.insurerBreakdown ?? INSURER_BREAKDOWN).map((d: { name: string; customers: number }) => ({ name: d.name, customers: d.customers }));
+  const stats = STATS;
+  const insurerData = INSURER_BREAKDOWN.map((d: { name: string; customers: number }) => ({ name: d.name, customers: d.customers }));
   const [composerCustomer, setComposerCustomer] = useState<Customer | null>(null);
   const [composerChannel, setComposerChannel] = useState<"email" | "whatsapp" | null>(null);
-  const [briefingOpen, setBriefingOpen] = useState(false);
-  const [qaOpen, setQaOpen] = useState(false);
 
   const openComposer = (customer: Customer, channel: "email" | "whatsapp") => {
     setComposerCustomer(customer);
@@ -154,27 +117,6 @@ export function DashboardStage({
             </h1>
           </div>
           <div className="flex items-center gap-2">
-            {/* AI panels — only when LLM analysis is present (admin uploaded a real file) */}
-            {Boolean(analysis) && (
-              <>
-                <button
-                  onClick={() => setBriefingOpen(true)}
-                  className="flex items-center gap-2 rounded-sm border border-gold/40 bg-gold/10 px-3 py-2 text-xs font-semibold text-gold transition-all hover:bg-gold/20"
-                  title="תדריך בוקר אישי מבוסס AI"
-                >
-                  <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
-                  תדריך AI
-                </button>
-                <button
-                  onClick={() => setQaOpen(true)}
-                  className="flex items-center gap-2 rounded-sm border border-blue-400/40 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-600 transition-all hover:bg-blue-500/20"
-                  title="שאל שאלות על הדוח"
-                >
-                  <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
-                  שאל את ה-AI
-                </button>
-              </>
-            )}
             <button
               onClick={async () => {
                 const t = toast.loading("מכין דוח PDF…");
@@ -215,14 +157,7 @@ export function DashboardStage({
           <div className="glass-card relative overflow-hidden rounded-sm p-6 lg:p-8 w-full flex flex-col">
             <div className="label-tag text-gold mb-3">סך נכסים בניהול (AUM)</div>
             <div className="display-number text-6xl lg:text-7xl font-bold text-navy-deep">
-              <AnimatedNumber
-                value={
-                  parsed
-                    ? Math.max(1, Math.round((stats.totalAUM ?? 0) / 1_000_000))
-                    : 487
-                }
-                duration={1800}
-              />
+              <AnimatedNumber value={487} duration={1800} />
               <span className="text-3xl font-semibold text-gold mr-2">M ₪</span>
             </div>
             <div className="mt-auto pt-6 grid grid-cols-2 gap-6 border-t border-border/40">
@@ -252,11 +187,6 @@ export function DashboardStage({
                 <div className="display-number text-5xl lg:text-6xl font-bold text-navy-deep">
                   {formatCurrency(stats.potentialRevenue)}
                 </div>
-                {parsed && (
-                  <div className="mt-1 text-[10px] uppercase tracking-wider text-gold/80">
-                    מבוסס על הקובץ שהעלית: {parsed.fileName}
-                  </div>
-                )}
               </div>
               <div className="text-left">
                 <div className="label-tag text-[10px] text-muted-foreground">חיסכון בזמן</div>
@@ -537,22 +467,11 @@ export function DashboardStage({
       />
       <CategoryScenarioModal
         triggerKey={activeScenario as TriggerKey | null}
-        analysis={analysis}
         onClose={() => setActiveScenario(null)}
         onActivate={() => {
           setActiveScenario(null);
           onAction();
         }}
-      />
-      <AIBriefingModal
-        isOpen={briefingOpen}
-        onClose={() => setBriefingOpen(false)}
-        analysisContext={analysis}
-      />
-      <AIQaModal
-        isOpen={qaOpen}
-        onClose={() => setQaOpen(false)}
-        analysisContext={analysis}
       />
     </div>
   );
