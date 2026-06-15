@@ -88,6 +88,13 @@ export const workspaces = mysqlTable("workspaces", {
   iCountLastInvoiceId: varchar("iCountLastInvoiceId", { length: 64 }),
   quotaWarningSentAt: timestamp("quotaWarningSentAt"),
   /**
+   * Data-retention policy (privacy / right-to-erasure). NULL = off (keep
+   * indefinitely — the default). When set to a positive number of months,
+   * the daily retention sweep deletes clients whose `createdAt` is older than
+   * `now - retentionMonths`, after a 14-day warning email to the owner.
+   */
+  retentionMonths: int("retentionMonths"),
+  /**
    * Round 114 — מזהה את היוזר שיצר את ה-workspace (זה שעתיד לקבל תפקיד "owner"
    * מיד עם אישור התשלום ראשון). מוגדר כ-רכה ל֠-undefined ל-rows קיימים. לא FK ל-users.id
    * כי אם מסירים את המשתמש מ-DB תפקיד "owner" לא אמור לה֠תפגן.
@@ -206,6 +213,12 @@ export const clients = mysqlTable(
     birthDate: datetime("birthDate"),
     /** Notes free text */
     notes: text("notes"),
+    /**
+     * Retention: timestamp the 14-day pre-deletion warning email was sent for
+     * this client. NULL = not yet warned. Prevents the daily sweep from
+     * re-emailing the same client every day during its warning window.
+     */
+    retentionWarnedAt: timestamp("retentionWarnedAt"),
     /** VIP / strategic client flag */
     isVip: boolean("isVip").default(false).notNull(),
     /**

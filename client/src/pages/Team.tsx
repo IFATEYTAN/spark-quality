@@ -296,10 +296,78 @@ export default function Team() {
           </GlassCard>
         )}
 
-        {/* Owner-only: permanent erasure of all client data (privacy / GDPR) */}
+        {/* Owner-only: data-retention policy + permanent erasure (privacy/GDPR) */}
+        {userRole === "owner" && <RetentionPolicyCard />}
         {userRole === "owner" && <OwnerDangerZone />}
       </div>
     </CinematicShell>
+  );
+}
+
+/**
+ * Owner-only data-retention policy. OFF by default (keep indefinitely); the
+ * owner can pick 12/24/36 months. When enabled, the daily retention sweep
+ * deletes clients older than the chosen window — measured from when they were
+ * added — after a 14-day warning email. Backend: workspaces.setRetention.
+ */
+const RETENTION_OPTIONS: { value: number | null; label: string }[] = [
+  { value: null, label: "כבוי — שמירה ללא הגבלת זמן" },
+  { value: 12, label: "12 חודשים" },
+  { value: 24, label: "24 חודשים" },
+  { value: 36, label: "36 חודשים" },
+];
+
+function RetentionPolicyCard() {
+  const utils = trpc.useUtils();
+  const wsQuery = trpc.workspaces.current.useQuery(undefined, { retry: false });
+  const current = wsQuery.data?.retentionMonths ?? null;
+
+  const setRetention = trpc.workspaces.setRetention.useMutation({
+    onSuccess: async (res) => {
+      toast.success(
+        res.retentionMonths === null
+          ? "מדיניות השמירה כובתה — המידע יישמר ללא הגבלת זמן"
+          : `מדיניות השמירה הוגדרה ל-${res.retentionMonths} חודשים`,
+      );
+      await utils.workspaces.current.invalidate();
+    },
+    onError: (err: { message?: string } | null) => {
+      toast.error(err?.message ?? "שגיאה בעדכון המדיניות");
+    },
+  });
+
+  return (
+    <GlassCard className="p-5 sm:p-7">
+      <h2 className="font-display text-xl font-bold text-white tracking-tight mb-2">
+        מדיניות שמירת מידע
+      </h2>
+      <p className="text-xs text-white/55 leading-relaxed mb-5">
+        מחיקה אוטומטית של לקוחות שנוספו לפני יותר מהתקופה שנבחרה, יחד עם כל הנתונים המשויכים —
+        לעמידה בדרישות הגנת הפרטיות. 14 יום לפני המחיקה יישלח אליך מייל עם רשימת הלקוחות, ותוכלי
+        לבטל (כל עדכון של לקוח מאפס את השעון). ברירת המחדל: כבוי.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl">
+        {RETENTION_OPTIONS.map((opt) => {
+          const active = current === opt.value;
+          return (
+            <button
+              key={String(opt.value)}
+              type="button"
+              disabled={setRetention.isPending}
+              onClick={() => setRetention.mutate({ retentionMonths: opt.value })}
+              className={`py-2.5 px-3 rounded-md border text-xs font-bold transition text-right disabled:opacity-50 ${
+                active
+                  ? "bg-gold/15 text-gold border-gold/50"
+                  : "bg-white/[0.03] text-white/70 border-white/15 hover:border-gold/40 hover:text-gold"
+              }`}
+            >
+              {active && <span className="ml-1.5">✓</span>}
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </GlassCard>
   );
 }
 

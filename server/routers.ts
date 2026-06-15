@@ -471,6 +471,35 @@ export const appRouter = router({
         return { ok: true as const, removed };
       }),
 
+    /**
+     * Set the data-retention policy (months) for this workspace, or turn it off
+     * (null). OWNER-only. When enabled, the daily retention sweep deletes
+     * clients older than `retentionMonths` after a 14-day warning email.
+     */
+    setRetention: workspaceAdminProcedure
+      .input(z.object({ retentionMonths: z.number().int().min(1).max(120).nullable() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.workspaceRole !== "owner") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "רק בעל/ת הסוכנות יכול/ה לשנות את מדיניות שמירת המידע.",
+          });
+        }
+        await db.updateWorkspaceRetention(ctx.user.workspaceId, input.retentionMonths);
+        await db.writeAudit({
+          actorUserId: ctx.user.id,
+          workspaceId: ctx.user.workspaceId,
+          action: "workspace.setRetention",
+          entityType: "workspace",
+          entityId: ctx.user.workspaceId,
+          detail:
+            input.retentionMonths === null
+              ? "כיבוי מדיניות שמירת מידע"
+              : `הגדרת מדיניות שמירת מידע ל-${input.retentionMonths} חודשים`,
+        });
+        return { ok: true as const, retentionMonths: input.retentionMonths };
+      }),
+
     /** Dashboard metrics: real numbers from DB (VIP count, liquid funds, etc.) */
     metrics: workspaceProcedure.query(async ({ ctx }) => {
       return db.getWorkspaceMetrics({

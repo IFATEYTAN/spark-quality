@@ -657,6 +657,31 @@ export async function updateWorkspaceVipThreshold(
 }
 
 /**
+ * Set (or clear) the data-retention policy for a workspace. Pass a positive
+ * number of months to enable auto-deletion, or null to turn it off. Clearing
+ * the policy also resets every client's `retentionWarnedAt` so a future
+ * re-enable starts the 14-day warning window fresh rather than deleting
+ * immediately.
+ */
+export async function updateWorkspaceRetention(
+  workspaceId: number,
+  retentionMonths: number | null
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(workspaces)
+    .set({ retentionMonths })
+    .where(eq(workspaces.id, workspaceId));
+  if (retentionMonths === null) {
+    await db
+      .update(clients)
+      .set({ retentionWarnedAt: null })
+      .where(eq(clients.workspaceId, workspaceId));
+  }
+}
+
+/**
  * Re-classify all clients in a workspace based on the new VIP threshold.
  * Sets isVip=true where totalBalance >= threshold; isVip=false otherwise.
  */
