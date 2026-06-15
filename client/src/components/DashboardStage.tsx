@@ -1,16 +1,11 @@
 // Editorial Fintech | דשבורד תוצאות (Slide-Mode, 3 sub-slides: 3א/3ב/3ג)
 import { useState, useMemo } from "react";
 import {
-  AlertTriangle,
-  TrendingUp,
-  Calendar,
   Sparkles,
   ArrowLeft,
   Download,
   Mail as MailIcon,
   MessageSquare,
-  Briefcase,
-  AlertOctagon,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, PieChart, Pie, Tooltip, LabelList } from "recharts";
 import { toast } from "sonner";
@@ -20,10 +15,12 @@ import {
   STATS,
   INSURER_BREAKDOWN,
   AGE_GROUPS_NO_PENSION,
+  DEMO_TRIGGER_CARDS,
   formatCurrency,
   filterCustomersByCategory,
 } from "@/lib/demoData";
 import type { Customer, AnalysisCategory } from "@/lib/demoData";
+import type { TriggerKey } from "@/lib/triggerScenarios";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { CategoryScenarioModal } from "./CategoryScenarioModal";
 import { AIComposerModal } from "./AIComposerModal";
@@ -74,77 +71,14 @@ function mergeStatsWithAnalysis(
   } as typeof STATS;
 }
 
-function buildTriggerCards(stats: typeof STATS) {
-  // 6 representative cards aligned with the new P0–P4 priority model.
-  // Each card carries its priority bucket label so the demo story matches the
-  // live dashboard's 16-trigger / 5-tab structure. Palette: gold + white only.
-  return [
-    // P1 · Critical safety net
-    {
-      id: "risk",
-      name: "ריסק זמני ֻ דורש טיפול מיידי",
-      value: stats.riskFlags,
-      sub: "P1 · כיסוי מסתיים / סיכון נטישה",
-      icon: AlertTriangle,
-      accent: "text-gold",
-      bg: "bg-gold/15",
-      border: "border-gold/45",
-    },
-    {
-      id: "coverageGaps",
-      name: "חוסרים בכיסויים ֻ חסכון ללא ביטוח",
-      value: (stats as any).coverageGaps ?? stats.noPension,
-      sub: "P1 · הזדמנות להשלמת תיק",
-      icon: AlertOctagon,
-      accent: "text-gold",
-      bg: "bg-gold/10",
-      border: "border-gold/35",
-    },
-    // P1/P2 · Discount expiry / strategic placement
-    {
-      id: "discount",
-      name: "תום הנחה ֻ התראת התייקרות",
-      value: stats.endingDiscount,
-      sub: "P1 · סיכון נטישה בטווח קצר",
-      icon: Calendar,
-      accent: "text-gold",
-      bg: "bg-gold/10",
-      border: "border-gold/35",
-    },
-    {
-      id: "190",
-      name: "תיקון 190 / עצמאי",
-      value: (stats as { amendment190?: number }).amendment190 ?? 0,
-      sub: "P2 · פטור ממס רווחי הון / ללא הפקדה",
-      icon: Briefcase,
-      accent: "text-white",
-      bg: "bg-white/[0.05]",
-      border: "border-white/15",
-    },
-    // P3 · Optimisation
-    {
-      id: "lowYield",
-      name: "תשואות נמוכות ֻ דמי ניהול גבוהים",
-      value: stats.lowYield,
-      sub: "P3 · סטיית מסלול ההשקעה",
-      icon: TrendingUp,
-      accent: "text-white",
-      bg: "bg-white/[0.04]",
-      border: "border-white/12",
-    },
-    // P4 · Relationship
-    {
-      id: "vip",
-      name: "לקוחות VIP / זהב ׻ מגע אישי",
-      value: (stats as { vipCustomers?: number }).vipCustomers ?? 0,
-      sub: "P4 · צבירה מעל 1M ₪",
-      icon: Sparkles,
-      accent: "text-gold",
-      bg: "bg-gold/10",
-      border: "border-gold/30",
-    },
-  ];
-}
+// Per-priority tone for the demo trigger cards (gold + white palette only).
+const PRIORITY_TONE: Record<string, { pill: string; bg: string; border: string; accent: string }> = {
+  P0: { pill: "bg-gold/20 text-gold border-gold/50", bg: "bg-gold/15", border: "border-gold/50", accent: "text-gold" },
+  P1: { pill: "bg-gold/15 text-gold border-gold/40", bg: "bg-gold/10", border: "border-gold/40", accent: "text-gold" },
+  P2: { pill: "bg-white/[0.06] text-white/85 border-white/20", bg: "bg-white/[0.05]", border: "border-white/15", accent: "text-navy-deep" },
+  P3: { pill: "bg-white/[0.05] text-white/75 border-white/15", bg: "bg-white/[0.04]", border: "border-white/12", accent: "text-navy-deep" },
+  P4: { pill: "bg-white/[0.05] text-white/70 border-white/12", bg: "bg-white/[0.03]", border: "border-white/10", accent: "text-navy-deep" },
+};
 
 export function DashboardStage({
   onAction,
@@ -167,7 +101,6 @@ export function DashboardStage({
     analysis,
     Boolean(parsed),
   );
-  const TRIGGER_CARDS = buildTriggerCards(stats);
   const insurerData = (parsed?.insurerBreakdown ?? INSURER_BREAKDOWN).map((d: { name: string; customers: number }) => ({ name: d.name, customers: d.customers }));
   const [composerCustomer, setComposerCustomer] = useState<Customer | null>(null);
   const [composerChannel, setComposerChannel] = useState<"email" | "whatsapp" | null>(null);
@@ -360,30 +293,36 @@ export function DashboardStage({
   /* ───────── Slide 2: 6 trigger flags + 2 charts ───────── */
   const Slide2 = (
     <div className="flex-1 min-h-0 lg:overflow-hidden container py-4 lg:py-6 flex flex-col gap-4">
-      {/* Trigger cards - 6 in a row */}
+      {/* Trigger cards — full 16-trigger model (15 shown), grouped P0–P4 */}
       <div className="flex-shrink-0">
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="font-display text-lg lg:text-xl font-bold text-navy-deep">טריגרים שזוהו · המודל החדש P0–P4</h2>
+          <h2 className="font-display text-lg lg:text-xl font-bold text-navy-deep">16 הטריגרים שזוהו · מודל P0–P4</h2>
           <div className="gold-divider flex-1 mx-4" />
-          <span className="label-tag text-[10px] text-muted-foreground">סה״כ {(TRIGGER_CARDS.reduce((s, c) => s + (c.value ?? 0), 0)).toLocaleString("he-IL")} התראות</span>
+          <span className="label-tag text-[10px] text-muted-foreground">סה״כ {(DEMO_TRIGGER_CARDS.reduce((s, c) => s + c.count, 0)).toLocaleString("he-IL")} התראות</span>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
-          {TRIGGER_CARDS.map((card, i) => (
-            <button
-              key={card.id}
-              type="button"
-              onClick={() => setActiveScenario(card.id)}
-              className={`group relative overflow-hidden rounded-sm border ${card.border} ${card.bg} p-3 lg:p-4 text-right transition-all hover:-translate-y-1 hover:shadow-lg cursor-pointer animate-fade-up focus:outline-none focus-visible:ring-2 focus-visible:ring-gold`}
-              style={{ animationDelay: `${0.05 * i + 0.2}s` }}
-            >
-              <card.icon className={`h-4 w-4 ${card.accent} mb-2`} strokeWidth={1.5} />
-              <div className="display-number text-2xl lg:text-3xl font-bold text-navy-deep">
-                <AnimatedNumber value={card.value} duration={1200 + i * 100} />
-              </div>
-              <div className="mt-1 text-xs font-semibold text-navy-deep">{card.name}</div>
-              <div className="mt-0.5 text-[10px] text-muted-foreground line-clamp-2">{card.sub}</div>
-            </button>
-          ))}
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-5">
+          {DEMO_TRIGGER_CARDS.map((card, i) => {
+            const tone = PRIORITY_TONE[card.priority];
+            return (
+              <button
+                key={card.key}
+                type="button"
+                onClick={() => setActiveScenario(card.key)}
+                className={`group relative overflow-hidden rounded-sm border ${tone.border} ${tone.bg} p-2.5 lg:p-3 text-right transition-all hover:-translate-y-0.5 hover:shadow-lg cursor-pointer animate-fade-up focus:outline-none focus-visible:ring-2 focus-visible:ring-gold`}
+                style={{ animationDelay: `${0.03 * i + 0.15}s` }}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-[9px] font-bold tracking-[0.1em] px-1.5 py-0.5 rounded border ${tone.pill}`}>
+                    {card.priority}
+                  </span>
+                  <div className="display-number text-xl lg:text-2xl font-bold text-navy-deep">
+                    <AnimatedNumber value={card.count} duration={1000 + i * 60} />
+                  </div>
+                </div>
+                <div className="text-[11px] font-semibold text-navy-deep leading-tight">{card.name}</div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -597,7 +536,8 @@ export function DashboardStage({
         onClose={closeComposer}
       />
       <CategoryScenarioModal
-        categoryId={activeScenario}
+        triggerKey={activeScenario as TriggerKey | null}
+        analysis={analysis}
         onClose={() => setActiveScenario(null)}
         onActivate={() => {
           setActiveScenario(null);
