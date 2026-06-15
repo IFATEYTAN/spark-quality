@@ -2441,6 +2441,71 @@ export async function deleteMessageTemplate(opts: {
 }
 
 // ============================================================
+// DATA DELETION (privacy / right-to-erasure)
+// Every business table that references a client is purged FK-safe (children
+// first), and every statement is workspace-scoped so a delete can never cross
+// tenants. Agents may only delete clients they own.
+// ============================================================
+
+/**
+ * Permanently delete one client and ALL related rows: policies, flags,
+ * trigger-handled marks, activities, reminders, and message-generation history.
+ * Returns false when the client is not visible to the caller (wrong workspace,
+ * or an agent targeting someone else's client).
+ */
+export async function deleteClientCascade(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+}): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Authorize through the same visibility rule used for reads.
+  const owned = await getClientById(opts);
+  if (!owned) return false;
+
+  const cid = opts.clientId;
+  const ws = opts.workspaceId;
+  await db.delete(messageGenerations).where(and(eq(messageGenerations.clientId, cid), eq(messageGenerations.workspaceId, ws)));
+  await db.delete(clientReminders).where(and(eq(clientReminders.clientId, cid), eq(clientReminders.workspaceId, ws)));
+  await db.delete(clientActivities).where(and(eq(clientActivities.clientId, cid), eq(clientActivities.workspaceId, ws)));
+  await db.delete(triggerHandled).where(and(eq(triggerHandled.clientId, cid), eq(triggerHandled.workspaceId, ws)));
+  await db.delete(clientFlags).where(and(eq(clientFlags.clientId, cid), eq(clientFlags.workspaceId, ws)));
+  await db.delete(policies).where(and(eq(policies.clientId, cid), eq(policies.workspaceId, ws)));
+  await db.delete(clients).where(and(eq(clients.id, cid), eq(clients.workspaceId, ws)));
+  return true;
+}
+
+/**
+ * Purge ALL client data for a workspace: clients, policies, flags, trigger
+ * marks, activities, reminders, message-generation history, and the report
+ * records. Owner-only ("delete my whole book" / erasure after a demo). Leaves
+ * the workspace, its users, and message templates intact. Returns the number of
+ * clients removed.
+ */
+export async function purgeWorkspaceData(workspaceId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const countRows = (await db
+    .select({ c: sql<number>`count(*)` })
+    .from(clients)
+    .where(eq(clients.workspaceId, workspaceId))) as Array<{ c: number }>;
+  const removed = Number(countRows[0]?.c ?? 0);
+
+  await db.delete(messageGenerations).where(eq(messageGenerations.workspaceId, workspaceId));
+  await db.delete(clientReminders).where(eq(clientReminders.workspaceId, workspaceId));
+  await db.delete(clientActivities).where(eq(clientActivities.workspaceId, workspaceId));
+  await db.delete(triggerHandled).where(eq(triggerHandled.workspaceId, workspaceId));
+  await db.delete(clientFlags).where(eq(clientFlags.workspaceId, workspaceId));
+  await db.delete(policies).where(eq(policies.workspaceId, workspaceId));
+  await db.delete(clients).where(eq(clients.workspaceId, workspaceId));
+  await db.delete(reports).where(eq(reports.workspaceId, workspaceId));
+  return removed;
+}
+
+// ============================================================
 // ANALYTICS (Round 136) — honest aggregates from data already collected:
 // the activity journal, reminders. Trigger totals/handled come from the
 // existing metrics + countHandledByTrigger helpers on the caller side.

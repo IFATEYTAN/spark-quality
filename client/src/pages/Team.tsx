@@ -295,8 +295,106 @@ export default function Team() {
             </div>
           </GlassCard>
         )}
+
+        {/* Owner-only: permanent erasure of all client data (privacy / GDPR) */}
+        {userRole === "owner" && <OwnerDangerZone />}
       </div>
     </CinematicShell>
+  );
+}
+
+/**
+ * Owner-only "danger zone": permanently purge ALL client data for the workspace
+ * (clients, policies, flags, journal, reminders, report records). Requires
+ * typing the exact workspace name to confirm. The workspace, members, and
+ * templates are kept. Backend: workspaces.purgeAllData (owner-gated, audited).
+ */
+function OwnerDangerZone() {
+  const utils = trpc.useUtils();
+  const wsQuery = trpc.workspaces.current.useQuery(undefined, { retry: false });
+  const [open, setOpen] = useState(false);
+  const [confirmName, setConfirmName] = useState("");
+  const wsName = wsQuery.data?.name ?? "";
+
+  const purge = trpc.workspaces.purgeAllData.useMutation({
+    onSuccess: async (res) => {
+      toast.success(`נמחקו ${res.removed} לקוחות וכל הנתונים המשויכים`);
+      setOpen(false);
+      setConfirmName("");
+      await Promise.all([
+        utils.clients.list.invalidate(),
+        utils.workspaces.metrics.invalidate(),
+        utils.reports.list.invalidate(),
+      ]);
+    },
+    onError: (err: { message?: string } | null) => {
+      toast.error(err?.message ?? "שגיאה במחיקה");
+    },
+  });
+
+  return (
+    <GlassCard className="p-5 sm:p-7 border-rose-500/30">
+      <h2 className="font-display text-xl font-bold text-rose-200 tracking-tight mb-2">
+        <Trash2 className="h-4 w-4 inline ml-2" />
+        מחיקת כל נתוני התיק
+      </h2>
+      <p className="text-xs text-white/55 leading-relaxed mb-5">
+        מחיקה לצמיתות של כל הלקוחות, הפוליסות, ההתראות, היומן, התזכורות ורשומות הדוחות בסוכנות —
+        ללא אפשרות שחזור. הסוכנות, חברי הצוות והתבניות יישארו. שימושי למחיקת נתונים לאחר הדגמה או
+        לבקשת לקוח (זכות למחיקה).
+      </p>
+      {!open ? (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setOpen(true)}
+          className="border-rose-400/40 bg-rose-500/10 text-rose-200 hover:bg-rose-500/20 hover:border-rose-400/60"
+        >
+          <Trash2 className="h-4 w-4 ml-2" />
+          מחיקת כל הנתונים…
+        </Button>
+      ) : (
+        <div className="space-y-3 max-w-md">
+          <Label className="text-rose-200/90 text-xs">
+            להמשך, הקלידו את שם הסוכנות: <span className="font-bold">{wsName || "…"}</span>
+          </Label>
+          <Input
+            value={confirmName}
+            onChange={(e) => setConfirmName(e.target.value)}
+            placeholder={wsName}
+            dir="rtl"
+            className="bg-white/[0.04] border-white/15 text-white"
+          />
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setOpen(false);
+                setConfirmName("");
+              }}
+              disabled={purge.isPending}
+              className="flex-1 border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.08]"
+            >
+              ביטול
+            </Button>
+            <Button
+              type="button"
+              onClick={() => purge.mutate({ confirmName })}
+              disabled={purge.isPending || !confirmName || confirmName.trim() !== wsName.trim()}
+              className="flex-1 bg-rose-500/80 text-white font-bold hover:bg-rose-500 disabled:opacity-50"
+            >
+              {purge.isPending ? (
+                <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+              ) : (
+                <Trash2 className="h-4 w-4 ml-2" />
+              )}
+              מחק הכל לצמיתות
+            </Button>
+          </div>
+        </div>
+      )}
+    </GlassCard>
   );
 }
 
