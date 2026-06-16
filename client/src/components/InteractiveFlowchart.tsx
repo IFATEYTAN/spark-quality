@@ -698,6 +698,28 @@ export const FLOWCHART_DATA: Record<string, FlowchartData> = {
     ],
   },
 
+  liquidFund: {
+    nodes: [
+      { id: "n1", type: "trigger",  label: "זיהוי קרן נזילה",          detail: "קרן השתלמות בוותק ≥ 6 שנים — הכסף נזיל וזמין למשיכה",        icon: AlertTriangle },
+      { id: "n2", type: "process",  label: "שליפת נתוני קופה",         detail: "ותק, צבירה, מסלול ותשואה היסטורית מהמסלקה",                  icon: Database },
+      { id: "n3", type: "ai",       label: "בחינת חלופות",             detail: "השוואה: השארה / ניוד למסלול רווחי / מינוף לחיסכון או השקעה",  icon: Brain, metric: "מותאם ללקוח" },
+      { id: "n4", type: "decision", label: "יש הזדמנות מובהקת?",        detail: "אם החלופה לא עדיפה מהותית — לא מטרידים את הלקוח",             icon: Filter },
+      { id: "n5", type: "action",   label: "מייל הצעת ייעוץ",          detail: "מייל יזום: 'יש לך כסף נזיל — בוא נתכנן יחד מה לעשות איתו'",   icon: Mail, metric: "מותאם אישית" },
+      { id: "n6", type: "approval", label: "אישור הסוכן/ת",             detail: "הסוכן/ת בוחנים את ההמלצה, יכולים לערוך ולשלוח",               icon: UserCheck },
+      { id: "n7", type: "action",   label: "שיחת ייעוץ + פעולה",        detail: "תיאום פגישה, החלטה משותפת, ביצוע ניוד / מינוף הכסף",          icon: MessageSquare },
+      { id: "n8", type: "result",   label: "כסף נשאר בניהול",           detail: "הזדמנות מומשה · נמנעה משיכה לא מתוכננת · עמלה נמשכת",         icon: Target, metric: "58% פגישות" },
+    ],
+    edges: [
+      { from: "n1", to: "n2" },
+      { from: "n2", to: "n3" },
+      { from: "n3", to: "n4" },
+      { from: "n4", to: "n5", label: "כן" },
+      { from: "n5", to: "n6" },
+      { from: "n6", to: "n7" },
+      { from: "n7", to: "n8" },
+    ],
+  },
+
   "190": {
     nodes: [
       { id: "n1", type: "trigger",  label: "זיהוי גיל ≥ 60",            detail: "סריקת בסיס לקוחות - גיל מעל 60 + צבירה פנויה ≥ 300K ₪",          icon: AlertTriangle },

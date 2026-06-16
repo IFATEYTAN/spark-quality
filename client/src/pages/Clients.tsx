@@ -46,12 +46,12 @@ const FLAG_META: Record<
   coverage_gaps: { label: "חוסרי כיסוי", icon: FileWarning, color: "orange" },
 };
 
-type DashboardCategory = "vip" | "lowYield" | "190" | "discount" | "risk" | "coverageGaps";
+type DashboardCategory = "vip" | "liquidFund" | "190" | "highFees" | "risk" | "coverageGaps";
 const FLAG_TO_CATEGORY: Record<Exclude<FlagKind, "all">, DashboardCategory> = {
   vip: "vip",
-  liquid_fund: "lowYield",
+  liquid_fund: "liquidFund",
   tikun_190: "190",
-  high_fees: "discount",
+  high_fees: "highFees",
   risk_ending: "risk",
   coverage_gaps: "coverageGaps",
 };
