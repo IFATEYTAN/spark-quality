@@ -1889,7 +1889,12 @@ export async function computeWorkspaceFlags(opts: {
       const dmH = Number(m.dmHafkada ?? 0);
       return dmT > 0.01 || dmH > 0.02;
     });
-    if (highFeeByData || r.flagStatus === "high_fees") {
+    // Data-driven only: a client belongs in the high-fees bucket because their
+    // actual management-fee rates are high — not because the legacy parser tagged
+    // them "high_fees" for a secondary reason (self-employed-no-deposit, inactive
+    // fund). Those cases have their own dedicated triggers (selfEmployedNoDeposit,
+    // aumFrozen) and must not pollute this bucket.
+    if (highFeeByData) {
       addFlag(r.id, "highFees");
     }
   }
