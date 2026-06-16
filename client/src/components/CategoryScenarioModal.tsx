@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { InteractiveFlowchart, FLOWCHART_DATA } from "./InteractiveFlowchart";
+import { InteractiveFlowchart, FLOWCHART_DATA, type FlowNodeType } from "./InteractiveFlowchart";
 import {
   TRIGGER_SCENARIOS,
   mergeOutcomeWithAnalysis,
@@ -201,6 +201,44 @@ const SCENARIOS: Record<string, CategoryScenario> = {
   },
 };
 
+// Map a flowchart node type to a scenario-step variant, so we can synthesize a
+// scenario for trigger keys whose flowchartKey has no hand-written SCENARIOS entry.
+const NODE_TYPE_TO_VARIANT: Record<FlowNodeType, ScenarioStep["variant"]> = {
+  trigger: "trigger",
+  process: "action",
+  ai: "ai",
+  decision: "ai",
+  action: "action",
+  approval: "approval",
+  result: "result",
+};
+
+/**
+ * Build a minimal scenario (steps + id) straight from a flowchart definition.
+ * Used as a fallback when a trigger's `flowchartKey` has no entry in SCENARIOS
+ * (the 7 flows added later: poa / coverageRenewal / feeReduction / selfEmployed /
+ * concentration / birthday / noContact). The trigger registry supplies
+ * title/pain/trigger/outcome/example, so only `steps` and a stable `id` are needed.
+ */
+function scenarioFromFlowchart(flowchartKey: string): CategoryScenario | null {
+  const fc = FLOWCHART_DATA[flowchartKey];
+  if (!fc) return null;
+  return {
+    id: flowchartKey,
+    title: "",
+    pain: "",
+    trigger: "",
+    steps: fc.nodes.map((n) => ({
+      icon: n.icon ?? Sparkles,
+      label: n.label,
+      detail: n.detail,
+      variant: NODE_TYPE_TO_VARIANT[n.type] ?? "action",
+    })),
+    outcome: [],
+    exampleCustomer: { name: "", flag: "", channel: "" },
+  };
+}
+
 // All step variants use the SPARK system palette (navy / gold / cream).
 const VARIANT_STYLES: Record<ScenarioStep["variant"], { ring: string; bg: string; text: string; label: string }> = {
   trigger:  { ring: "ring-gold/30",   bg: "bg-gold/15",       text: "text-navy-deep", label: "טריגר" },
@@ -239,7 +277,8 @@ export function CategoryScenarioModal({
   // rest of the modal can render unchanged.
   const triggerScenario = triggerKey ? TRIGGER_SCENARIOS[triggerKey] : null;
   const baseScenario = triggerScenario
-    ? SCENARIOS[triggerScenario.flowchartKey]
+    ? SCENARIOS[triggerScenario.flowchartKey] ??
+      scenarioFromFlowchart(triggerScenario.flowchartKey)
     : categoryId
     ? SCENARIOS[categoryId]
     : null;
