@@ -1980,11 +1980,65 @@ export async function listClientsForTriggerV2(opts: {
       .where(and(...whereClauses))
       .orderBy(desc(clients.totalBalance))
       .limit(limit);
-    return clientRows.map(c => ({ ...c, handled: handledSet.has(c.id) }));
+    const base = clientRows.map(c => ({ ...c, handled: handledSet.has(c.id) }));
+    return withMgmtFees(opts.triggerKey, opts.workspaceId, base);
   }
 
   // Fallback: legacy filter when no flags have been computed yet
-  return listClientsForTrigger(opts);
+  const fallback = await listClientsForTrigger(opts);
+  return withMgmtFees(opts.triggerKey, opts.workspaceId, fallback);
+}
+
+/**
+ * Enrich trigger-list rows with the client's highest management-fee rates,
+ * read from active-policy metadata (dmTzvirah / dmHafkada). Only runs the
+ * extra query for the `highFees` trigger — every other trigger gets the
+ * fields as `null` so the row shape stays uniform for the client.
+ */
+async function withMgmtFees<T extends { id: number }>(
+  triggerKey: string,
+  workspaceId: number,
+  rows: T[],
+): Promise<(T & { mgmtFeeFromBalance: number | null; mgmtFeeFromDeposit: number | null })[]> {
+  const nullify = () =>
+    rows.map(r => ({ ...r, mgmtFeeFromBalance: null, mgmtFeeFromDeposit: null }));
+  if (triggerKey !== "highFees" || rows.length === 0) return nullify();
+  const db = await getDb();
+  if (!db) return nullify();
+
+  const ids = rows.map(r => r.id);
+  const ps = await db
+    .select({
+      clientId: policies.clientId,
+      status: policies.status,
+      metadata: policies.metadata,
+    })
+    .from(policies)
+    .where(and(eq(policies.workspaceId, workspaceId), inArray(policies.clientId, ids)));
+
+  const feeByClient = new Map<number, { fromBalance: number; fromDeposit: number }>();
+  for (const p of ps) {
+    if (p.status !== "active") continue;
+    const m =
+      p.metadata && typeof p.metadata === "object"
+        ? (p.metadata as Record<string, unknown>)
+        : {};
+    const dmT = Number(m.dmTzvirah ?? 0);
+    const dmH = Number(m.dmHafkada ?? 0);
+    const cur = feeByClient.get(p.clientId) ?? { fromBalance: 0, fromDeposit: 0 };
+    if (Number.isFinite(dmT) && dmT > cur.fromBalance) cur.fromBalance = dmT;
+    if (Number.isFinite(dmH) && dmH > cur.fromDeposit) cur.fromDeposit = dmH;
+    feeByClient.set(p.clientId, cur);
+  }
+
+  return rows.map(r => {
+    const f = feeByClient.get(r.id);
+    return {
+      ...r,
+      mgmtFeeFromBalance: f && f.fromBalance > 0 ? f.fromBalance : null,
+      mgmtFeeFromDeposit: f && f.fromDeposit > 0 ? f.fromDeposit : null,
+    };
+  });
 }
 
 /** Helper for tests / admin tools */
