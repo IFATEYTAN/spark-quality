@@ -198,7 +198,7 @@ const mutation = trpc.triggers.markHandled.useMutation({
 
 ### 5.2 פיענוח דוחות
 
-ה-engine ב-`server/parseReport.ts` (ו-`parseShorensReport.ts` ספציפית לפורמט שורנס) פותח קבצי xlsx באמצעות הספרייה `xlsx`, מזהה את ה-tab הרלוונטי, מנקה רשומות, ומפיק שני אובייקטים: רשימת לקוחות מנורמלת (ת.ז → מטא־נתונים) ו-payload של פוליסות. הקובץ נשמר ב-S3 (Manus Storage proxy) עם המפתח `report-<workspaceId>-<reportId>.xlsx`, וה-row של `reports` שומר רק את ה-key+url.
+ה-engine ב-`server/parseReport.ts` (ו-`parseSurenseReport.ts` ספציפית לפורמט שורנס) פותח קבצי xlsx באמצעות הספרייה `xlsx`, מזהה את ה-tab הרלוונטי, מנקה רשומות, ומפיק שני אובייקטים: רשימת לקוחות מנורמלת (ת.ז → מטא־נתונים) ו-payload של פוליסות. הקובץ נשמר ב-S3 (Manus Storage proxy) עם המפתח `report-<workspaceId>-<reportId>.xlsx`, וה-row של `reports` שומר רק את ה-key+url.
 
 ### 5.3 בידוד דיירים (Multi-Tenant Isolation)
 

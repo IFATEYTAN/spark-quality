@@ -16,6 +16,7 @@ import {
   Shield,
   FileWarning,
   Calendar,
+  Trash2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -114,6 +115,24 @@ export function ClientDetailDrawer({
   });
 
   const [journeyOpen, setJourneyOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const deleteMutation = trpc.clients.delete.useMutation({
+    onSuccess: async () => {
+      toast.success("הלקוח וכל הנתונים המשויכים נמחקו לצמיתות");
+      await utils.clients.list.invalidate();
+      onSaved?.();
+      onClose();
+    },
+    onError: (err: { message?: string } | null) => {
+      toast.error(err?.message ?? "שגיאה במחיקה");
+    },
+  });
+
+  // Reset the two-step confirm whenever a different client is opened.
+  useEffect(() => {
+    setConfirmDelete(false);
+  }, [client?.id]);
 
   // Fetch active triggers for the badges panel.
   const detailQuery = trpc.clientJourney.getDetail.useQuery(
@@ -317,6 +336,53 @@ export function ClientDetailDrawer({
               dir="rtl"
             />
           </div>
+        </section>
+
+        {/* Danger zone — permanent deletion (right-to-erasure) */}
+        <section className="p-5 border-t border-rose-500/20">
+          <label className="text-[11px] font-bold text-rose-300/90 tracking-wider uppercase mb-2 block">
+            <Trash2 className="h-3 w-3 inline ml-1.5" />
+            אזור מחיקה
+          </label>
+          {!confirmDelete ? (
+            <button
+              type="button"
+              onClick={() => setConfirmDelete(true)}
+              className="w-full py-2.5 rounded-md border border-rose-400/40 bg-rose-500/10 text-rose-200 text-xs font-bold hover:bg-rose-500/20 transition flex items-center justify-center gap-2"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              מחיקת לקוח לצמיתות
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-[11px] text-rose-200/90 leading-relaxed">
+                פעולה זו תמחק את הלקוח, הפוליסות, ההתראות, היומן והתזכורות — ללא אפשרות שחזור. להמשיך?
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleteMutation.isPending}
+                  className="flex-1 py-2.5 rounded-md border border-white/15 bg-white/[0.03] text-white/80 text-xs font-bold hover:bg-white/[0.08] transition"
+                >
+                  ביטול
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteMutation.mutate({ clientId: client.id })}
+                  disabled={deleteMutation.isPending}
+                  className="flex-1 py-2.5 rounded-md border border-rose-400/60 bg-rose-500/80 text-white text-xs font-bold hover:bg-rose-500 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {deleteMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-3.5 w-3.5" />
+                  )}
+                  כן, מחק לצמיתות
+                </button>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Footer actions */}

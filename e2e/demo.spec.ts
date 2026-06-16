@@ -11,7 +11,7 @@ import { test, expect, type Page } from "@playwright/test";
  * Navigation: ArrowLeft = next (RTL). We advance until the trigger grid shows.
  */
 
-const TRIGGER_GRID_HEADING = "16 הטריגרים שזוהו";
+const TRIGGER_GRID_HEADING = "16 טריגרים במודל";
 
 // The 15 displayed trigger labels (poaExpiring90d intentionally hidden).
 const TRIGGER_LABELS = [

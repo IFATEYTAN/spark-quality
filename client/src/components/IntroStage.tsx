@@ -183,8 +183,8 @@ export function IntroStage({ onContinue }: IntroStageProps) {
                   },
                   {
                     icon: Target,
-                    title: "97.4% דיוק",
-                    desc: "בזיהוי לקוחות בסיכון והזדמנויות",
+                    title: "דיוק גבוה",
+                    desc: "בזיהוי לקוחות בסיכון והזדמנויות עסקיות",
                   },
                   {
                     icon: Sparkles,

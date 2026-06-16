@@ -1,11 +1,11 @@
-// Round 90 — these tests use the official Shorens column names that the
-// rewritten parseShorensReport now expects. Older fixtures were dropped
+// Round 90 — these tests use the official Surense column names that the
+// rewritten parseSurenseReport now expects. Older fixtures were dropped
 // because the parser is now strictly aligned to the skill spec.
 import { describe, expect, it } from "vitest";
-import { parseShorensReport } from "../client/src/lib/parseReport";
+import { parseSurenseReport } from "../client/src/lib/parseReport";
 import * as XLSX from "xlsx";
 
-// Build a single-sheet "מוצרי חיסכון" workbook with the canonical Shorens
+// Build a single-sheet "מוצרי חיסכון" workbook with the canonical Surense
 // column names. Caller passes raw row objects keyed by those names.
 function makeSavingsExcel(rows: Record<string, unknown>[]): File {
   const ws = XLSX.utils.json_to_sheet(rows);
@@ -42,7 +42,7 @@ describe("parseReport · קטגוריות פיננסיות (skill spec column na
     const file = makeSavingsExcel([
       { ...baseRow("301111111", 1_500_000, "01/01/2020"), "תאריך לידה": "01/01/1975" },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     expect(result.customers).toHaveLength(1);
     expect(result.customers[0].status).toBe("VIP");
     expect(result.stats.vipCustomers).toBe(1);
@@ -57,7 +57,7 @@ describe("parseReport · קטגוריות פיננסיות (skill spec column na
         "תיאור מוצר": "אקסלנס השתלמות",
       },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     expect(result.customers[0].status).toBe("השתלמות נזילה");
     expect(result.stats.liquidFunds).toBe(1);
   });
@@ -70,7 +70,7 @@ describe("parseReport · קטגוריות פיננסיות (skill spec column na
         "סוג מוצר": "קופת גמל להשקעה",
       },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     expect(result.customers[0].status).toBe("תיקון 190");
     expect(result.stats.amendment190).toBe(1);
   });
@@ -83,7 +83,7 @@ describe("parseReport · קטגוריות פיננסיות (skill spec column na
         "סוג מוצר": "ביטוח מנהלים", // יש פנסיה כדי לא ליפול ל-coverage_gaps
       },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     expect(result.customers[0].status).toBe("תשואה חלשה");
   });
 });
@@ -118,7 +118,7 @@ describe("parseReport · רגרסיה: merge בין sheet ביטוח וsheet ח�
   }
 
   it("שומר flagStatus=vip גם כשהלקוח הופיע קודם ב-sheet ביטוח", async () => {
-    const result = await parseShorensReport(makeMixedExcel(1_500_000, 65));
+    const result = await parseSurenseReport(makeMixedExcel(1_500_000, 65));
     expect(result.customers).toHaveLength(1);
     const c = result.customers[0] as { flagStatus?: string; isVip?: boolean; accumulation: number };
     expect(c.flagStatus).toBe("vip");
@@ -127,7 +127,7 @@ describe("parseReport · רגרסיה: merge בין sheet ביטוח וsheet ח�
   });
 
   it("דירוג חזק יותר מנצח: tikun_190 גובר על coverage_gaps", async () => {
-    const result = await parseShorensReport(makeMixedExcel(400_000, 67));
+    const result = await parseSurenseReport(makeMixedExcel(400_000, 67));
     const c = result.customers[0] as { flagStatus?: string };
     expect(c.flagStatus).toBe("tikun_190");
   });
@@ -138,7 +138,7 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     const file = makeSavingsExcel([
       { ...baseRow("305555555", 250_000, "01/01/2019"), "סוג מוצר": "קרן פנסיה חדשה מקיפה" },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     expect(result.policies.length).toBeGreaterThan(0);
     const p = result.policies.find((x) => x.idNumber === "305555555");
     expect(p).toBeDefined();
@@ -151,7 +151,7 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     const file = makeSavingsExcel([
       { ...baseRow("306666666", 80_000, "01/01/2017"), "סטטוס מוצר": "לא פעיל" },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     const p = result.policies.find((x) => x.idNumber === "306666666");
     expect(p).toBeDefined();
     expect(p!.status).toBe("inactive");
@@ -161,7 +161,7 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     const file = makeSavingsExcel([
       { ...baseRow("307777777", 120_000, "01/01/2019"), "תאריך לידה": "15/06/1970" },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     const c = result.customers[0] as { birthDate?: string | null };
     expect(c.birthDate).toBeTruthy();
     expect(new Date(c.birthDate as string).getFullYear()).toBe(1970);
@@ -172,7 +172,7 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
       { ...baseRow("308888888", 90_000, "01/01/2019"), "מיופה כוח אחרון": "" },
       { ...baseRow("309999999", 90_000, "01/01/2019"), "מיופה כוח אחרון": "סוכן 123" },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     const empty = result.policies.find((p) => p.idNumber === "308888888");
     const filled = result.policies.find((p) => p.idNumber === "309999999");
     expect((empty!.metadata as Record<string, unknown>).poaHolder).toBe("");
@@ -183,7 +183,7 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     const file = makeSavingsExcel([
       { ...baseRow("312222222", 50_000, "01/01/2019"), "סטטוס מוצר": "ריסק זמני אוטומטי" },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     const p = result.policies.find((x) => x.idNumber === "312222222");
     expect((p!.metadata as Record<string, unknown>).riskTemporary).toBe(true);
     expect(p!.status).toBe("active"); // still counted as active
@@ -193,7 +193,7 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     const file = makeSavingsExcel([
       { ...baseRow("310000000", 200_000, "01/01/2019"), "דמי ניהול מצבירה": 0.012 },
     ]);
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     const p = result.policies.find((x) => x.idNumber === "310000000");
     expect(Number((p!.metadata as Record<string, unknown>).dmTzvirah)).toBeCloseTo(0.012, 5);
   });
@@ -216,7 +216,7 @@ describe("parseReport · פוליסות לשמירה (קלט למנוע הטרי
     const file = new File([buf], "tracks.xlsx", {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    const result = await parseShorensReport(file);
+    const result = await parseSurenseReport(file);
     const track = result.policies.find(
       (p) => p.idNumber === "311111111" && p.productType === "מסלול השקעה",
     );

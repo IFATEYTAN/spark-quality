@@ -226,7 +226,7 @@ export function DashboardStage({
       {/* Trigger cards — full 16-trigger model (15 shown), grouped P0–P4 */}
       <div className="flex-shrink-0">
         <div className="mb-3 flex items-baseline justify-between">
-          <h2 className="font-display text-lg lg:text-xl font-bold text-navy-deep">16 הטריגרים שזוהו · מודל P0–P4</h2>
+          <h2 className="font-display text-lg lg:text-xl font-bold text-navy-deep">16 טריגרים במודל · 15 בתצוגה · P0–P4</h2>
           <div className="gold-divider flex-1 mx-4" />
           <span className="label-tag text-[10px] text-muted-foreground">סה״כ {(DEMO_TRIGGER_CARDS.reduce((s, c) => s + c.count, 0)).toLocaleString("he-IL")} התראות</span>
         </div>

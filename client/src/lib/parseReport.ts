@@ -1,4 +1,4 @@
-// Editorial Fintech | Parse Shorens "Products in Management" report
+// Editorial Fintech | Parse Surense "Products in Management" report
 // Aligned with the official surense-analyzer skill spec (v2.0).
 // Covers the three real sheets that contain customer-level data:
 //   • גיליון 3 — מוצרי חיסכון (41 columns) — primary AUM source
@@ -167,7 +167,7 @@ function mapPolicyStatus(he: string): "active" | "inactive" | "cancelled" | "exp
   return "active"; // "פעיל", "ריסק זמני", "חסום להפקדות"… still active
 }
 
-// "ריסק זמני" / "ריסק זמני אוטומטי" appear as a product STATUS in Shorens
+// "ריסק זמני" / "ריסק זמני אוטומטי" appear as a product STATUS in Surense
 // (not a product type) — the temporary-risk trigger keys off this.
 function isRiskZmaniStatus(he: string): boolean {
   return HE(he).includes("ריסק זמני");
@@ -714,7 +714,7 @@ function classifyAggregate(a: Aggregate): Customer & { flagStatus: string; isVip
 
 // ---- public entry ---------------------------------------------------------
 
-export async function parseShorensReport(file: File): Promise<ParsedReport> {
+export async function parseSurenseReport(file: File): Promise<ParsedReport> {
   const buf = await file.arrayBuffer();
   const wb = XLSX.read(buf, { type: "array", cellDates: true });
 

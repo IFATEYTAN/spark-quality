@@ -436,6 +436,70 @@ export const appRouter = router({
         return { ok: true, reclassified: updated };
       }),
 
+    /**
+     * Purge ALL client data for this workspace (clients, policies, flags,
+     * activities, reminders, message history, report records). OWNER-only —
+     * right-to-erasure / "delete my whole book". Requires the owner to type the
+     * workspace name as a confirmation phrase to prevent accidental wipes.
+     * Audited. Does NOT delete the workspace, its members, or templates.
+     */
+    purgeAllData: workspaceAdminProcedure
+      .input(z.object({ confirmName: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.workspaceRole !== "owner") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "רק בעל/ת הסוכנות יכול/ה למחוק את כל נתוני התיק.",
+          });
+        }
+        const ws = await db.getWorkspaceById(ctx.user.workspaceId);
+        if (!ws || input.confirmName.trim() !== ws.name.trim()) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "שם הסוכנות לאישור אינו תואם. המחיקה בוטלה.",
+          });
+        }
+        const removed = await db.purgeWorkspaceData(ctx.user.workspaceId);
+        await db.writeAudit({
+          actorUserId: ctx.user.id,
+          workspaceId: ctx.user.workspaceId,
+          action: "workspace.purgeData",
+          entityType: "workspace",
+          entityId: ctx.user.workspaceId,
+          detail: `מחיקת כל נתוני התיק (${removed} לקוחות) ע"י בעל/ת הסוכנות`,
+        });
+        return { ok: true as const, removed };
+      }),
+
+    /**
+     * Set the data-retention policy (months) for this workspace, or turn it off
+     * (null). OWNER-only. When enabled, the daily retention sweep deletes
+     * clients older than `retentionMonths` after a 14-day warning email.
+     */
+    setRetention: workspaceAdminProcedure
+      .input(z.object({ retentionMonths: z.number().int().min(1).max(120).nullable() }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.workspaceRole !== "owner") {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "רק בעל/ת הסוכנות יכול/ה לשנות את מדיניות שמירת המידע.",
+          });
+        }
+        await db.updateWorkspaceRetention(ctx.user.workspaceId, input.retentionMonths);
+        await db.writeAudit({
+          actorUserId: ctx.user.id,
+          workspaceId: ctx.user.workspaceId,
+          action: "workspace.setRetention",
+          entityType: "workspace",
+          entityId: ctx.user.workspaceId,
+          detail:
+            input.retentionMonths === null
+              ? "כיבוי מדיניות שמירת מידע"
+              : `הגדרת מדיניות שמירת מידע ל-${input.retentionMonths} חודשים`,
+        });
+        return { ok: true as const, retentionMonths: input.retentionMonths };
+      }),
+
     /** Dashboard metrics: real numbers from DB (VIP count, liquid funds, etc.) */
     metrics: workspaceProcedure.query(async ({ ctx }) => {
       return db.getWorkspaceMetrics({
@@ -564,6 +628,42 @@ export const appRouter = router({
           isVip: input.isVip,
           notes: input.notes,
           flagStatus: input.flagStatus,
+        });
+        return { ok: true as const };
+      }),
+
+    // Permanently delete one client and all related rows (policies, flags,
+    // activities, reminders, message history). Right-to-erasure control —
+    // agents may only delete their own clients; the cascade + workspace scoping
+    // live in db.deleteClientCascade. Audited.
+    delete: workspaceProcedure
+      .input(z.object({ clientId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const target = await db.getClientById({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+        if (!target) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "הלקוח לא נמצא או לא שייך לסוכנות שלך.",
+          });
+        }
+        await db.deleteClientCascade({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+        await db.writeAudit({
+          actorUserId: ctx.user.id,
+          workspaceId: ctx.user.workspaceId,
+          action: "client.delete",
+          entityType: "client",
+          entityId: input.clientId,
+          detail: `מחיקת לקוח ${target.fullName ?? target.idNumber} וכל הנתונים המשויכים`,
         });
         return { ok: true as const };
       }),

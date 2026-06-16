@@ -3,7 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { CinematicShell, GlassCard, GoldEyebrow } from "@/components/CinematicShell";
 import { ActionCenter } from "@/components/ActionCenter";
-import { parseShorensReport, type ParsedReport } from "@/lib/parseReport";
+import { parseSurenseReport, type ParsedReport } from "@/lib/parseReport";
 import { trpc } from "@/lib/trpc";
 import {
   CheckCircle2,
@@ -47,7 +47,7 @@ export default function UploadReport() {
   const handleFile = async (file: File) => {
     setState("parsing");
     try {
-      const result = await parseShorensReport(file);
+      const result = await parseSurenseReport(file);
       setParsed(result);
       setState("saving");
 

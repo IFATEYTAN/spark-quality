@@ -22,7 +22,7 @@ import {
  * - users: Belong to one workspace, with role inside it (admin/agent)
  * - clients: Insurance clients, scoped to workspace + assigned to specific agent
  * - policies: Multiple policies per client (one-to-many)
- * - reports: Uploaded Excel reports (Shorens, etc.)
+ * - reports: Uploaded Excel reports (Surense, etc.)
  * - actionItems: Auto-generated tasks (retention, expired discount, etc.)
  * - invitations: Pending invites for new users to join a workspace
  * 
@@ -87,6 +87,13 @@ export const workspaces = mysqlTable("workspaces", {
   /** Last iCount document (chashbonit) ID issued for this workspace. */
   iCountLastInvoiceId: varchar("iCountLastInvoiceId", { length: 64 }),
   quotaWarningSentAt: timestamp("quotaWarningSentAt"),
+  /**
+   * Data-retention policy (privacy / right-to-erasure). NULL = off (keep
+   * indefinitely — the default). When set to a positive number of months,
+   * the daily retention sweep deletes clients whose `createdAt` is older than
+   * `now - retentionMonths`, after a 14-day warning email to the owner.
+   */
+  retentionMonths: int("retentionMonths"),
   /**
    * Round 114 — מזהה את היוזר שיצר את ה-workspace (זה שעתיד לקבל תפקיד "owner"
    * מיד עם אישור התשלום ראשון). מוגדר כ-רכה ל֠-undefined ל-rows קיימים. לא FK ל-users.id
@@ -196,7 +203,7 @@ export const clients = mysqlTable(
     ownerUserId: int("ownerUserId").references(() => users.id).notNull(),
     /** Israeli ID number (תעודת זהות) - external unique identifier per tenant */
     idNumber: varchar("idNumber", { length: 32 }).notNull(),
-    /** Full name (might be empty for some Shorens entries) */
+    /** Full name (might be empty for some Surense entries) */
     fullName: varchar("fullName", { length: 200 }),
     email: varchar("email", { length: 320 }),
     phone: varchar("phone", { length: 32 }),
@@ -206,6 +213,12 @@ export const clients = mysqlTable(
     birthDate: datetime("birthDate"),
     /** Notes free text */
     notes: text("notes"),
+    /**
+     * Retention: timestamp the 14-day pre-deletion warning email was sent for
+     * this client. NULL = not yet warned. Prevents the daily sweep from
+     * re-emailing the same client every day during its warning window.
+     */
+    retentionWarnedAt: timestamp("retentionWarnedAt"),
     /** VIP / strategic client flag */
     isVip: boolean("isVip").default(false).notNull(),
     /**

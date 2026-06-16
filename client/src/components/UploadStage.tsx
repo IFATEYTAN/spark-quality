@@ -3,7 +3,7 @@ import { useRef, useState } from "react";
 import { Upload, FileSpreadsheet, ArrowLeft, Sparkles, FileCheck2, AlertCircle } from "lucide-react";
 import { ASSETS } from "@/lib/demoData";
 import type { ParsedReport } from "@/lib/parseReport";
-import { parseShorensReport } from "@/lib/parseReport";
+import { parseSurenseReport } from "@/lib/parseReport";
 import { toast } from "sonner";
 
 interface UploadStageProps {
@@ -22,7 +22,7 @@ export function UploadStage({ onUpload }: UploadStageProps) {
 
     const t = toast.loading(`קורא את ${file.name}…`);
     try {
-      const parsed = await parseShorensReport(file);
+      const parsed = await parseSurenseReport(file);
       toast.success(
         `זוהו ${parsed.customerCount} לקוחות · ${parsed.productCount} מוצרים`,
         { id: t },

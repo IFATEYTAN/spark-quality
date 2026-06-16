@@ -657,6 +657,31 @@ export async function updateWorkspaceVipThreshold(
 }
 
 /**
+ * Set (or clear) the data-retention policy for a workspace. Pass a positive
+ * number of months to enable auto-deletion, or null to turn it off. Clearing
+ * the policy also resets every client's `retentionWarnedAt` so a future
+ * re-enable starts the 14-day warning window fresh rather than deleting
+ * immediately.
+ */
+export async function updateWorkspaceRetention(
+  workspaceId: number,
+  retentionMonths: number | null
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db
+    .update(workspaces)
+    .set({ retentionMonths })
+    .where(eq(workspaces.id, workspaceId));
+  if (retentionMonths === null) {
+    await db
+      .update(clients)
+      .set({ retentionWarnedAt: null })
+      .where(eq(clients.workspaceId, workspaceId));
+  }
+}
+
+/**
  * Re-classify all clients in a workspace based on the new VIP threshold.
  * Sets isVip=true where totalBalance >= threshold; isVip=false otherwise.
  */
@@ -1766,7 +1791,7 @@ export async function computeWorkspaceFlags(opts: {
     if (!hasPension) addFlag(r.id, "noActivePension");
     if (hasSavings && !hasInsurance) addFlag(r.id, "savingsNoInsurance");
 
-    // Temporary risk — primary signal is the Shorens product STATUS
+    // Temporary risk — primary signal is the Surense product STATUS
     // "ריסק זמני" (carried in metadata.riskTemporary); fall back to a risk
     // product whose end date is within 90 days.
     const hasRiskZmani = active.some(p => metaOf(p).riskTemporary === true);
@@ -1831,7 +1856,7 @@ export async function computeWorkspaceFlags(opts: {
       if (allPensionsZero) addFlag(r.id, "selfEmployedNoDeposit");
     }
 
-    // Power of attorney — the real Shorens report has no POA expiry date, but it
+    // Power of attorney — the real Surense report has no POA expiry date, but it
     // does carry "מיופה כוח אחרון" (the authorized agent) per product. An active
     // product with NO POA holder = no active authorization = legal exposure (P0).
     // Falls back to the notes heuristic only when there is no policy data at all.
@@ -2438,6 +2463,71 @@ export async function deleteMessageTemplate(opts: {
   await db
     .delete(messageTemplates)
     .where(and(eq(messageTemplates.id, opts.id), eq(messageTemplates.workspaceId, opts.workspaceId)));
+}
+
+// ============================================================
+// DATA DELETION (privacy / right-to-erasure)
+// Every business table that references a client is purged FK-safe (children
+// first), and every statement is workspace-scoped so a delete can never cross
+// tenants. Agents may only delete clients they own.
+// ============================================================
+
+/**
+ * Permanently delete one client and ALL related rows: policies, flags,
+ * trigger-handled marks, activities, reminders, and message-generation history.
+ * Returns false when the client is not visible to the caller (wrong workspace,
+ * or an agent targeting someone else's client).
+ */
+export async function deleteClientCascade(opts: {
+  clientId: number;
+  workspaceId: number;
+  userId: number;
+  workspaceRole: WorkspaceRole;
+}): Promise<boolean> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Authorize through the same visibility rule used for reads.
+  const owned = await getClientById(opts);
+  if (!owned) return false;
+
+  const cid = opts.clientId;
+  const ws = opts.workspaceId;
+  await db.delete(messageGenerations).where(and(eq(messageGenerations.clientId, cid), eq(messageGenerations.workspaceId, ws)));
+  await db.delete(clientReminders).where(and(eq(clientReminders.clientId, cid), eq(clientReminders.workspaceId, ws)));
+  await db.delete(clientActivities).where(and(eq(clientActivities.clientId, cid), eq(clientActivities.workspaceId, ws)));
+  await db.delete(triggerHandled).where(and(eq(triggerHandled.clientId, cid), eq(triggerHandled.workspaceId, ws)));
+  await db.delete(clientFlags).where(and(eq(clientFlags.clientId, cid), eq(clientFlags.workspaceId, ws)));
+  await db.delete(policies).where(and(eq(policies.clientId, cid), eq(policies.workspaceId, ws)));
+  await db.delete(clients).where(and(eq(clients.id, cid), eq(clients.workspaceId, ws)));
+  return true;
+}
+
+/**
+ * Purge ALL client data for a workspace: clients, policies, flags, trigger
+ * marks, activities, reminders, message-generation history, and the report
+ * records. Owner-only ("delete my whole book" / erasure after a demo). Leaves
+ * the workspace, its users, and message templates intact. Returns the number of
+ * clients removed.
+ */
+export async function purgeWorkspaceData(workspaceId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const countRows = (await db
+    .select({ c: sql<number>`count(*)` })
+    .from(clients)
+    .where(eq(clients.workspaceId, workspaceId))) as Array<{ c: number }>;
+  const removed = Number(countRows[0]?.c ?? 0);
+
+  await db.delete(messageGenerations).where(eq(messageGenerations.workspaceId, workspaceId));
+  await db.delete(clientReminders).where(eq(clientReminders.workspaceId, workspaceId));
+  await db.delete(clientActivities).where(eq(clientActivities.workspaceId, workspaceId));
+  await db.delete(triggerHandled).where(eq(triggerHandled.workspaceId, workspaceId));
+  await db.delete(clientFlags).where(eq(clientFlags.workspaceId, workspaceId));
+  await db.delete(policies).where(eq(policies.workspaceId, workspaceId));
+  await db.delete(clients).where(eq(clients.workspaceId, workspaceId));
+  await db.delete(reports).where(eq(reports.workspaceId, workspaceId));
+  return removed;
 }
 
 // ============================================================

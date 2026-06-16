@@ -9,6 +9,7 @@ import { registerICountRoutes } from "./iCountRoutes";
 import { registerMakeRoutes } from "./makeRoutes";
 import { abandonedCartsHandler } from "../jobs/abandonedCarts";
 import { quotaWatchHandler } from "../quotaWatch";
+import { retentionSweepHandler } from "../retentionSweep";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
@@ -45,6 +46,7 @@ async function startServer() {
   // Heartbeat scheduled callbacks (cron-only).
   app.post("/api/scheduled/abandonedCarts", abandonedCartsHandler);
   app.post("/api/scheduled/quotaWatch", quotaWatchHandler);
+  app.post("/api/scheduled/retentionSweep", retentionSweepHandler);
   // tRPC API
   app.use(
     "/api/trpc",
