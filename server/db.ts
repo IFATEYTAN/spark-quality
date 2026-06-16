@@ -717,6 +717,26 @@ export async function reclassifyClientVipStatus(
 }
 
 /**
+ * Coerce a policy's `metadata` JSON column into a plain record. Shared by
+ * `getWorkspaceMetrics` and `computeWorkspaceFlags` so both read fee/track
+ * metadata the same way.
+ */
+export const parsePolicyMeta = (p: { metadata?: unknown }): Record<string, unknown> =>
+  p.metadata && typeof p.metadata === "object"
+    ? (p.metadata as Record<string, unknown>)
+    : {};
+
+/**
+ * Single source of truth for the "high management fee" rule. A fee is high at
+ * >1% from accumulation (מצבירה) or >2% from deposits (מהפקדה). Used both when
+ * persisting the `highFees` flag (computeWorkspaceFlags) and when counting the
+ * dashboard KPI (getWorkspaceMetrics), so the card count always matches the
+ * modal list.
+ */
+export const policyHasHighFee = (meta: Record<string, unknown>): boolean =>
+  Number(meta.dmTzvirah ?? 0) > 0.01 || Number(meta.dmHafkada ?? 0) > 0.02;
+
+/**
  * Aggregate metrics for the dashboard, scoped by role.
  */
 /**
@@ -775,7 +795,12 @@ export async function getWorkspaceMetrics(opts: {
   const vipClients = rows.filter(r => r.isVip).length;
   const tikun190Candidates = rows.filter(r => r.flagStatus === "tikun_190").length;
   const liquidFunds = rows.filter(r => r.flagStatus === "liquid_fund").length;
-  const highFees = rows.filter(r => r.flagStatus === "high_fees").length;
+  // High fees is data-driven (actual management-fee rates on active policies),
+  // matching computeWorkspaceFlags so the KPI card equals the modal list.
+  // Counted in the policy loop below; the legacy `flagStatus === "high_fees"`
+  // column is intentionally no longer used (it also tagged self-employed /
+  // inactive clients that now have their own dedicated triggers).
+  let highFees = 0;
   const riskEnding = rows.filter(r => r.flagStatus === "risk_ending").length;
   const coverageGaps = rows.filter(r => r.flagStatus === "coverage_gaps").length;
   const totalAum = rows.reduce(
@@ -858,6 +883,9 @@ export async function getWorkspaceMetrics(opts: {
 
     if (!hasPension) noActivePension++;
     if (hasSavings && !hasInsurance) savingsNoInsurance++;
+
+    // High management fees — same data-driven rule as computeWorkspaceFlags.
+    if (active.some(p => policyHasHighFee(parsePolicyMeta(p)))) highFees++;
 
     // Risk policies expiring within 90 days
     const riskEndingSoon = active.some(p => {
@@ -1740,8 +1768,7 @@ export async function computeWorkspaceFlags(opts: {
   // every other derivation. Must match INVESTMENT_TRACK_PRODUCT_TYPE in
   // client/src/lib/parseReport.ts.
   const INVESTMENT_TRACK = "מסלול השקעה";
-  const metaOf = (p: { metadata?: unknown }): Record<string, unknown> =>
-    (p.metadata && typeof p.metadata === "object" ? (p.metadata as Record<string, unknown>) : {});
+  const metaOf = parsePolicyMeta;
 
   for (const r of allClients) {
     const allPs = policiesByClient.get(r.id) ?? [];
@@ -1883,12 +1910,7 @@ export async function computeWorkspaceFlags(opts: {
     // High fees — data-driven from real management-fee rates on active policies.
     // Thresholds calibrated against real data (0.7% over-flagged ~93%): a fee is
     // "high" at >1% from accumulation (מצבירה) or >2% from deposits (מהפקדה).
-    const highFeeByData = active.some(p => {
-      const m = metaOf(p);
-      const dmT = Number(m.dmTzvirah ?? 0);
-      const dmH = Number(m.dmHafkada ?? 0);
-      return dmT > 0.01 || dmH > 0.02;
-    });
+    const highFeeByData = active.some(p => policyHasHighFee(metaOf(p)));
     // Data-driven only: a client belongs in the high-fees bucket because their
     // actual management-fee rates are high — not because the legacy parser tagged
     // them "high_fees" for a secondary reason (self-employed-no-deposit, inactive
