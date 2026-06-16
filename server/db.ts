@@ -815,8 +815,8 @@ export async function getWorkspaceMetrics(opts: {
   in90Days.setDate(in90Days.getDate() + 90);
 
   // P4 · Soft signals derivable directly from the client row
-  const noEmail = rows.filter(r => !r.email || r.email.trim() === "").length;
-  const vipGoldPremium = vipClients;
+  let noEmail = rows.filter(r => !r.email || r.email.trim() === "").length;
+  let vipGoldPremium = vipClients;
 
   let birthdayMilestone = 0;
   let birthdayThisMonth = 0;
@@ -986,6 +986,57 @@ export async function getWorkspaceMetrics(opts: {
       (hasSavings && !hasInsurance) ||
       (age >= 46 && age < 60);
     if (hasAnyTrigger) distinctClientsWithAnyTrigger++;
+  }
+
+  // ----- Single source of truth: prefer persisted client_flags --------------
+  // computeWorkspaceFlags writes one row per (client, trigger) to client_flags,
+  // and the modal lists (listClientsForTriggerV2) read from that same table.
+  // Once a workspace has been backfilled, the dashboard KPI/trigger counts MUST
+  // come from client_flags so the cards equal the lists they open. The in-memory
+  // derivation above is kept only as a non-breaking fallback for workspaces that
+  // have not been backfilled yet (no flags persisted).
+  const flagRows =
+    opts.workspaceRole === "agent"
+      ? await db
+          .select({ triggerKey: clientFlags.triggerKey, clientId: clientFlags.clientId })
+          .from(clientFlags)
+          .innerJoin(clients, eq(clientFlags.clientId, clients.id))
+          .where(
+            and(
+              eq(clientFlags.workspaceId, opts.workspaceId),
+              eq(clients.ownerUserId, opts.userId),
+            ),
+          )
+      : await db
+          .select({ triggerKey: clientFlags.triggerKey, clientId: clientFlags.clientId })
+          .from(clientFlags)
+          .where(eq(clientFlags.workspaceId, opts.workspaceId));
+
+  if (flagRows.length > 0) {
+    const byKey = new Map<string, number>();
+    const distinct = new Set<number>();
+    for (const f of flagRows) {
+      byKey.set(f.triggerKey, (byKey.get(f.triggerKey) ?? 0) + 1);
+      distinct.add(f.clientId);
+    }
+    const n = (k: string) => byKey.get(k) ?? 0;
+    poaExpired = n("poaExpired");
+    poaExpiring90d = n("poaExpiring90d");
+    riskTemporary = n("riskTemporary");
+    coverageEnding = n("coverageEnding");
+    savingsNoInsurance = n("savingsNoInsurance");
+    noActivePension = n("noActivePension");
+    age46NoLongTermCare = n("age46NoLongTermCare");
+    aumFrozen = n("aumFrozen");
+    trackMismatch = n("trackMismatch");
+    selfEmployedNoDeposit = n("selfEmployedNoDeposit");
+    concentrationRisk = n("concentrationRisk");
+    birthdayMilestone = n("birthdayMilestone");
+    birthdayThisMonth = n("birthdayThisMonth");
+    vipGoldPremium = n("vipGoldPremium");
+    noEmail = n("noEmail");
+    highFees = n("highFees");
+    distinctClientsWithAnyTrigger = distinct.size;
   }
 
   return {

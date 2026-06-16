@@ -183,4 +183,19 @@ describe.skipIf(SKIP)("16-trigger engine · real DB integration", () => {
       expect(ids.length).toBeGreaterThan(0);
     }
   });
+
+  // The dashboard KPI/trigger counts (getWorkspaceMetrics) and the modal lists
+  // (listClientsForTriggerV2) must read from the same source — client_flags —
+  // so a card never shows a number that disagrees with the list it opens.
+  it("dashboard metric counts equal the modal list lengths", async () => {
+    const metrics = (await db.getWorkspaceMetrics({
+      workspaceId: WS,
+      userId: USER,
+      workspaceRole: "owner",
+    })) as Record<string, number>;
+    for (const t of TRIGGERS) {
+      const listLen = (await clientIdsFor(t)).length;
+      expect(metrics[t], `metric "${t}" must equal its list length`).toBe(listLen);
+    }
+  });
 });
