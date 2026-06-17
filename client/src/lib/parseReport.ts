@@ -933,11 +933,13 @@ export async function parseSurenseReport(file: File): Promise<ParsedReport> {
       liquidAUM,
       amendment190,
       lowYield,
-      coverageGaps: aggArr.filter(
-        (a) =>
-          !Array.from(a.productTypes).some((t) => PENSION_PRODUCT_TYPES.includes(t)) &&
-          !a.hasInsurancePolicy,
-      ).length,
+      // Count the rows actually tagged `coverage_gaps` by classifyAggregate so
+      // this summary number always equals the coverage-gaps client list (broad
+      // definition: no active pension / savings-without-insurance / 46+ no LTC,
+      // respecting severity precedence). Previously this used a narrower
+      // no-pension-AND-no-insurance rule that drifted from the flag, producing
+      // a card count that didn't match its own list.
+      coverageGaps: customers.filter((c) => c.flagStatus === "coverage_gaps").length,
       appointmentExpired,
       appointmentExpiring90d,
       inactiveWithBalance,
