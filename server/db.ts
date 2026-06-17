@@ -2436,11 +2436,27 @@ export async function getClientDetail(opts: {
     .orderBy(desc(clientReminders.createdAt))
     .limit(50);
 
+  // Full policy list for this client — used by the per-client AI analysis
+  // (needs every product, balance, premium and status) and available to the
+  // client card. The parent client was already workspace + role isolated by
+  // getClientById above, so scoping policies by clientId + workspaceId is safe.
+  const policyRows = await db
+    .select()
+    .from(policies)
+    .where(
+      and(
+        eq(policies.workspaceId, opts.workspaceId),
+        eq(policies.clientId, opts.clientId),
+      ),
+    )
+    .orderBy(desc(policies.balance));
+
   return {
     client,
     triggers: flagsRows.map(f => f.triggerKey),
     activities,
     reminders,
+    policies: policyRows,
   };
 }
 

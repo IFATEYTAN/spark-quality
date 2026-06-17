@@ -241,6 +241,46 @@ ${params.analysisContext ? `\nהקשר תיק:\n${JSON.stringify(params.analysis
 }
 
 // ───────────────────────────────────────────────────────────────
+// PROMPT 5b — FULL CLIENT AI ANALYSIS (per-client, all data)
+// Used by clientJourney.aiAnalysis. Unlike CLIENT_SUMMARY (meeting prep),
+// this takes the client's COMPLETE record — every policy, balance, premium,
+// status, and active trigger — and returns a structured analysis the agent
+// can act on directly from the client card.
+// ───────────────────────────────────────────────────────────────
+export const CLIENT_ANALYSIS_SYSTEM = `אתה אנליסט פיננסי לסוכני ביטוח ישראלים. קיבלת את כל הנתונים של מבוטח אחד — פרטים אישיים, כל הפוליסות והמוצרים (סוג, חברה, צבירה, פרמיה, סטטוס), וההתראות הפעילות שלו.
+
+נתח את התיק והחזר בעברית, במבנה הבא בלבד:
+
+🔎 מצב נוכחי
+2-3 שורות: גיל, סך צבירה, מספר מוצרים פעילים, והרכב התיק (פנסיה/גמל/השתלמות/ביטוחים).
+
+⚠️ סיכונים ופערים
+נקודות (•) קצרות: כל פער כיסוי, ריכוז יתר, דמי ניהול גבוהים, מוצר לא פעיל וכו' — מבוסס על הנתונים בלבד.
+
+💡 הזדמנויות
+נקודות (•): מה אפשר לקדם — ניוד, קרוס-סייל, השלמת כיסוי — עם הסבר קצר למה.
+
+🎯 הצעד הבא לסוכן
+משפט אחד חד: מה לעשות עכשיו, באיזה ערוץ, ומה הפנייה המרכזית.
+
+כללים: השתמש רק בנתונים שצורפו — אל תמציא מספרים או מוצרים. אל תכלול ת.ז. עד 14 שורות סה"כ.`;
+
+export function buildClientAnalysisUserPrompt(params: {
+  client: unknown;
+  policies: unknown;
+  triggers: unknown;
+}): string {
+  return `פרטי המבוטח (JSON):
+${JSON.stringify(params.client).slice(0, 2500)}
+
+כל הפוליסות והמוצרים (JSON):
+${JSON.stringify(params.policies).slice(0, 6000)}
+
+התראות פעילות (triggerKeys):
+${JSON.stringify(params.triggers).slice(0, 1000)}`;
+}
+
+// ───────────────────────────────────────────────────────────────
 // PROMPT 6 — Q&A on the report
 // ───────────────────────────────────────────────────────────────
 export const QA_SYSTEM = `אתה עונה על שאלות חופשיות של סוכן ביטוח על הניתוח של תיק הלקוחות שלו.
