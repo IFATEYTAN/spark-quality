@@ -62,6 +62,20 @@ function fmtIls(n: number | string | null | undefined): string {
   return `₪${num.toLocaleString("he-IL")}`;
 }
 
+/**
+ * Render a management-fee rate (stored as a fraction, e.g. 0.012 → 1.20%).
+ * Returns null when there is no fee so the row simply omits it. Highlighted
+ * because for the high-fees trigger this is the deciding metric.
+ */
+function fmtFee(rate: number | null | undefined, suffix: string) {
+  if (rate == null || !(rate > 0)) return null;
+  return (
+    <span className="font-medium text-amber-600 dark:text-amber-400">
+      דמי ניהול: {(rate * 100).toFixed(2)}% {suffix}
+    </span>
+  );
+}
+
 function ageFromBirthDate(birthDate: Date | string | null | undefined): number | null {
   if (!birthDate) return null;
   const d = typeof birthDate === "string" ? new Date(birthDate) : birthDate;
@@ -190,6 +204,8 @@ export function TriggerClientsModal({
                         {row.phone ? <span dir="ltr">{row.phone}</span> : null}
                         <span>צבירה: {fmtIls(row.totalBalance)}</span>
                         {row.idNumber ? <span>ת״ז: {row.idNumber}</span> : null}
+                        {fmtFee(row.mgmtFeeFromBalance, "מצבירה")}
+                        {fmtFee(row.mgmtFeeFromDeposit, "מהפקדה")}
                       </div>
                     </div>
                     <div className="flex gap-1 shrink-0">

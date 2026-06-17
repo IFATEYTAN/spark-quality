@@ -55,7 +55,7 @@ function buildBook() {
       "1/1/1975",50,"זכר","ירושלים","","פעיל",
       "8/31/2025","1/1/2015","שכיר","","",
       120000,15000,"","","",1200,"12/1/2025",
-      "2.000%","1.000%","","","33541","","","","12/31/2025","",
+      "2.500%","1.200%","","","33541","","","","12/31/2025","",
     ],
     // Row 4 — Inactive product with balance
     [
@@ -135,7 +135,7 @@ describe("parseSurenseReport (Round 90 — skill spec aligned)", () => {
     expect(sara?.isVip).toBe(true);
   });
 
-  it("flags high fees (>0.7% from savings or >1.5% from deposit)", async () => {
+  it("flags high fees (>1% from savings or >2% from deposit)", async () => {
     const file = buildBook();
     const r = await parseSurenseReport(file);
     expect(r.stats.lowYield).toBeGreaterThanOrEqual(1);

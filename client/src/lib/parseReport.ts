@@ -130,8 +130,15 @@ function normalizePhone(raw: any): string {
 function toNumber(v: any): number {
   if (v == null || v === "") return 0;
   if (typeof v === "number") return v;
-  const n = parseFloat(String(v).replace(/[,₪\s%]/g, ""));
-  return isNaN(n) ? 0 : n;
+  const s = String(v);
+  // Surense exports management-fee columns as percentage-formatted cells, so
+  // sheet_to_json({ raw: false }) hands us strings like "0.150%". Stripping the
+  // "%" alone would read 0.15% as 0.15 (a 100× inflation that mis-flags almost
+  // every client as "high fees"). Divide by 100 whenever a percent sign is present.
+  const isPercent = s.includes("%");
+  const n = parseFloat(s.replace(/[,₪\s%]/g, ""));
+  if (isNaN(n)) return 0;
+  return isPercent ? n / 100 : n;
 }
 
 function toDate(v: any): Date | null {
@@ -650,19 +657,21 @@ function classifyAggregate(a: Aggregate): Customer & { flagStatus: string; isVip
     recommendation = "הצעה לרכישת סיעודי — לפני 60 הפרמיה נגישה";
     flagStatus = "coverage_gaps";
   }
-  // Self-employed no deposit
+  // Self-employed no deposit — its own concern, NOT high fees. The high-fees
+  // bucket is reserved for genuinely high management-fee rates; these clients are
+  // surfaced separately by the trigger engine (selfEmployedNoDeposit) and must not
+  // inflate the high-fees count. Keep the descriptive flag for the client card.
   if (isSelfEmployed && a.hasZeroDeposits && flagStatus === "regular") {
     status = "תשואה חלשה"; priority = "בינונית";
     flag = `${a.employment} ללא הפקדה אחרונה`;
     recommendation = "פגישה — חשיפת מס + השלמה לפרישה";
-    flagStatus = "high_fees"; // surfaced in same admin bucket
   }
-  // Inactive with balance
+  // Inactive product with balance — its own concern (frozen AUM), NOT high fees.
+  // Surfaced separately by the trigger engine (aumFrozen).
   if (a.hasInactiveProduct && a.inactiveBalance > 30_000 && flagStatus === "regular") {
     status = "תשואה חלשה"; priority = "בינונית";
     flag = `מוצר לא פעיל עם צבירה ₪${Math.round(a.inactiveBalance).toLocaleString("he-IL")}`;
     recommendation = "האם עזב מעסיק? שכח? מעוניין לאחד?";
-    flagStatus = "high_fees";
   }
   // Appointment expired / expiring (overrides everything except VIP for badge — but is most important operationally)
   const apptDays = daysFromToday(a.earliestAppointmentEnd);
@@ -924,11 +933,13 @@ export async function parseSurenseReport(file: File): Promise<ParsedReport> {
       liquidAUM,
       amendment190,
       lowYield,
-      coverageGaps: aggArr.filter(
-        (a) =>
-          !Array.from(a.productTypes).some((t) => PENSION_PRODUCT_TYPES.includes(t)) &&
-          !a.hasInsurancePolicy,
-      ).length,
+      // Count the rows actually tagged `coverage_gaps` by classifyAggregate so
+      // this summary number always equals the coverage-gaps client list (broad
+      // definition: no active pension / savings-without-insurance / 46+ no LTC,
+      // respecting severity precedence). Previously this used a narrower
+      // no-pension-AND-no-insurance rule that drifted from the flag, producing
+      // a card count that didn't match its own list.
+      coverageGaps: customers.filter((c) => c.flagStatus === "coverage_gaps").length,
       appointmentExpired,
       appointmentExpiring90d,
       inactiveWithBalance,

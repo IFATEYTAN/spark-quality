@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { InteractiveFlowchart, FLOWCHART_DATA } from "./InteractiveFlowchart";
+import { InteractiveFlowchart, FLOWCHART_DATA, type FlowNodeType } from "./InteractiveFlowchart";
 import {
   TRIGGER_SCENARIOS,
   mergeOutcomeWithAnalysis,
@@ -84,6 +84,44 @@ const SCENARIOS: Record<string, CategoryScenario> = {
       { label: "עמלות שימור", value: "₪220K" },
     ],
     exampleCustomer: { name: "מיכל דוד · ותק 8 שנים · צבירה 650K ₪", flag: "תשואה חלשה", channel: "מייל + שיחת טלפון" },
+  },
+  liquidFund: {
+    id: "liquidFund",
+    title: "קרן השתלמות נזילה - מימוש הזדמנות",
+    pain: "ללקוח יש קרן השתלמות שכבר נזילה (ותק 6+ שנים) - כסף פנוי שיושב ללא תכנון. הזדמנות לייעוץ, ניוד או מינוף לפני שהלקוח מושך לבד וחושף אותך לאובדן הניהול.",
+    trigger: "זוהתה קרן השתלמות בוותק ≥ 6 שנים (נזילה)",
+    steps: [
+      { icon: FileSpreadsheet, label: "טריגר", detail: "זוהתה קרן השתלמות נזילה בתיק הלקוח - הכסף זמין למשיכה", variant: "trigger" },
+      { icon: Brain, label: "ניתוח AI", detail: "בחינת חלופות · השארה / ניוד למסלול רווחי / מינוף לחיסכון או השקעה", variant: "ai" },
+      { icon: Mail, label: "פעולה אוטומטית", detail: "מייל יזום עם הצעת שיחת ייעוץ - מה כדאי לעשות עם הכסף הנזיל", variant: "action" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת רואים את ההמלצה ומאשרת לשליחה", variant: "approval" },
+      { icon: Target, label: "תוצאה", detail: "פגישת ייעוץ · שימור הכסף בניהול · הזדמנות מכירה חדשה", variant: "result" },
+    ],
+    outcome: [
+      { label: "קרנות נזילות", value: "—" },
+      { label: "אחוז קביעת פגישה", value: "58%" },
+      { label: "AUM בסיכון משיכה", value: "₪3.2M" },
+    ],
+    exampleCustomer: { name: "מאיה שדה · השתלמות נזילה · ותק 7 שנים", flag: "השתלמות נזילה", channel: "מייל יזום + שיחת ייעוץ" },
+  },
+  highFees: {
+    id: "feeReduction",
+    title: "דמי ניהול גבוהים - שימור והוזלת עלויות",
+    pain: "הלקוח משלם דמי ניהול מעל הממוצע על קופה ותיקה - שחיקת חיסכון מתמשכת, וסיכון שיעבור למתחרה ברגע שיגלה. משא ומתן יזום מציל את התיק.",
+    trigger: "דמי ניהול גבוהים מהממוצע (>1% מצבירה או >2% מהפקדה)",
+    steps: [
+      { icon: FileSpreadsheet, label: "טריגר", detail: "דמי ניהול גבוהים מהממוצע על קופה ותיקה", variant: "trigger" },
+      { icon: Brain, label: "ניתוח AI", detail: "השוואת דמי ניהול זמינים אצל היצרן · חישוב חיסכון מצטבר עד פרישה", variant: "ai" },
+      { icon: Mail, label: "פעולה אוטומטית", detail: "בקשת הוזלה ליצרן + מייל שימור ללקוח עם פירוט החיסכון הצפוי", variant: "action" },
+      { icon: UserCheck, label: "אישור הסוכן/ת", detail: "הסוכן/ת בוחנים את הבקשה ומאשרת לשליחה", variant: "approval" },
+      { icon: Target, label: "תוצאה", detail: "הוזלת דמי ניהול · שימור הלקוח · המשך עמלה חודשית", variant: "result" },
+    ],
+    outcome: [
+      { label: "לקוחות מעל הממוצע", value: "—" },
+      { label: "אחוז שימור צפוי", value: "73%" },
+      { label: "עמלות שימור", value: "₪220K" },
+    ],
+    exampleCustomer: { name: "מיכל דוד · דמי ניהול 1.4% · ותק 8 שנים", flag: "דמי ניהול גבוהים", channel: "מייל השוואה + שיחת שימור" },
   },
   "190": {
     id: "190",
@@ -163,6 +201,44 @@ const SCENARIOS: Record<string, CategoryScenario> = {
   },
 };
 
+// Map a flowchart node type to a scenario-step variant, so we can synthesize a
+// scenario for trigger keys whose flowchartKey has no hand-written SCENARIOS entry.
+const NODE_TYPE_TO_VARIANT: Record<FlowNodeType, ScenarioStep["variant"]> = {
+  trigger: "trigger",
+  process: "action",
+  ai: "ai",
+  decision: "ai",
+  action: "action",
+  approval: "approval",
+  result: "result",
+};
+
+/**
+ * Build a minimal scenario (steps + id) straight from a flowchart definition.
+ * Used as a fallback when a trigger's `flowchartKey` has no entry in SCENARIOS
+ * (the 7 flows added later: poa / coverageRenewal / feeReduction / selfEmployed /
+ * concentration / birthday / noContact). The trigger registry supplies
+ * title/pain/trigger/outcome/example, so only `steps` and a stable `id` are needed.
+ */
+function scenarioFromFlowchart(flowchartKey: string): CategoryScenario | null {
+  const fc = FLOWCHART_DATA[flowchartKey];
+  if (!fc) return null;
+  return {
+    id: flowchartKey,
+    title: "",
+    pain: "",
+    trigger: "",
+    steps: fc.nodes.map((n) => ({
+      icon: n.icon ?? Sparkles,
+      label: n.label,
+      detail: n.detail,
+      variant: NODE_TYPE_TO_VARIANT[n.type] ?? "action",
+    })),
+    outcome: [],
+    exampleCustomer: { name: "", flag: "", channel: "" },
+  };
+}
+
 // All step variants use the SPARK system palette (navy / gold / cream).
 const VARIANT_STYLES: Record<ScenarioStep["variant"], { ring: string; bg: string; text: string; label: string }> = {
   trigger:  { ring: "ring-gold/30",   bg: "bg-gold/15",       text: "text-navy-deep", label: "טריגר" },
@@ -201,7 +277,8 @@ export function CategoryScenarioModal({
   // rest of the modal can render unchanged.
   const triggerScenario = triggerKey ? TRIGGER_SCENARIOS[triggerKey] : null;
   const baseScenario = triggerScenario
-    ? SCENARIOS[triggerScenario.flowchartKey]
+    ? SCENARIOS[triggerScenario.flowchartKey] ??
+      scenarioFromFlowchart(triggerScenario.flowchartKey)
     : categoryId
     ? SCENARIOS[categoryId]
     : null;

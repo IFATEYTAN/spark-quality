@@ -14,7 +14,7 @@ export interface ActionCenterCounts {
   coverageGaps: number;
 }
 
-type ScenarioKey = "vip" | "lowYield" | "190" | "discount" | "risk" | "coverageGaps";
+type ScenarioKey = "vip" | "liquidFund" | "190" | "highFees" | "risk" | "coverageGaps";
 
 interface CategoryDef {
   key: keyof ActionCenterCounts;
@@ -38,10 +38,10 @@ const CATEGORY_DEFS: CategoryDef[] = [
   },
   {
     key: "liquidFunds",
-    scenarioKey: "lowYield",
+    scenarioKey: "liquidFund",
     label: "השתלמות נזילה",
-    shortPain: "מסלולים לא רווחיים — סכנת נטישה",
-    nextStep: "להציע ניוד / שינוי מסלול",
+    shortPain: "קרן השתלמות נזילה — כסף פנוי להזדמנות",
+    nextStep: "שיחת ייעוץ — מה לעשות עם הכסף",
     icon: Sparkles,
     accent: "text-emerald-300",
   },
@@ -56,10 +56,10 @@ const CATEGORY_DEFS: CategoryDef[] = [
   },
   {
     key: "highFees",
-    scenarioKey: "discount",
+    scenarioKey: "highFees",
     label: "דמי ניהול גבוהים",
-    shortPain: "תום הנחה — קפיצת פרמיה צפויה",
-    nextStep: "מו״מ הוזלה לפני שיתקשרו",
+    shortPain: "דמי ניהול מעל הממוצע — שחיקת חיסכון וסיכון נטישה",
+    nextStep: "פגישת שימור — הוזלת דמי ניהול",
     icon: TrendingUp,
     accent: "text-amber-300",
   },

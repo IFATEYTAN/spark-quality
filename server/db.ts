@@ -717,6 +717,26 @@ export async function reclassifyClientVipStatus(
 }
 
 /**
+ * Coerce a policy's `metadata` JSON column into a plain record. Shared by
+ * `getWorkspaceMetrics` and `computeWorkspaceFlags` so both read fee/track
+ * metadata the same way.
+ */
+export const parsePolicyMeta = (p: { metadata?: unknown }): Record<string, unknown> =>
+  p.metadata && typeof p.metadata === "object"
+    ? (p.metadata as Record<string, unknown>)
+    : {};
+
+/**
+ * Single source of truth for the "high management fee" rule. A fee is high at
+ * >1% from accumulation (מצבירה) or >2% from deposits (מהפקדה). Used both when
+ * persisting the `highFees` flag (computeWorkspaceFlags) and when counting the
+ * dashboard KPI (getWorkspaceMetrics), so the card count always matches the
+ * modal list.
+ */
+export const policyHasHighFee = (meta: Record<string, unknown>): boolean =>
+  Number(meta.dmTzvirah ?? 0) > 0.01 || Number(meta.dmHafkada ?? 0) > 0.02;
+
+/**
  * Aggregate metrics for the dashboard, scoped by role.
  */
 /**
@@ -775,7 +795,12 @@ export async function getWorkspaceMetrics(opts: {
   const vipClients = rows.filter(r => r.isVip).length;
   const tikun190Candidates = rows.filter(r => r.flagStatus === "tikun_190").length;
   const liquidFunds = rows.filter(r => r.flagStatus === "liquid_fund").length;
-  const highFees = rows.filter(r => r.flagStatus === "high_fees").length;
+  // High fees is data-driven (actual management-fee rates on active policies),
+  // matching computeWorkspaceFlags so the KPI card equals the modal list.
+  // Counted in the policy loop below; the legacy `flagStatus === "high_fees"`
+  // column is intentionally no longer used (it also tagged self-employed /
+  // inactive clients that now have their own dedicated triggers).
+  let highFees = 0;
   const riskEnding = rows.filter(r => r.flagStatus === "risk_ending").length;
   const coverageGaps = rows.filter(r => r.flagStatus === "coverage_gaps").length;
   const totalAum = rows.reduce(
@@ -790,8 +815,8 @@ export async function getWorkspaceMetrics(opts: {
   in90Days.setDate(in90Days.getDate() + 90);
 
   // P4 · Soft signals derivable directly from the client row
-  const noEmail = rows.filter(r => !r.email || r.email.trim() === "").length;
-  const vipGoldPremium = vipClients;
+  let noEmail = rows.filter(r => !r.email || r.email.trim() === "").length;
+  let vipGoldPremium = vipClients;
 
   let birthdayMilestone = 0;
   let birthdayThisMonth = 0;
@@ -858,6 +883,9 @@ export async function getWorkspaceMetrics(opts: {
 
     if (!hasPension) noActivePension++;
     if (hasSavings && !hasInsurance) savingsNoInsurance++;
+
+    // High management fees — same data-driven rule as computeWorkspaceFlags.
+    if (active.some(p => policyHasHighFee(parsePolicyMeta(p)))) highFees++;
 
     // Risk policies expiring within 90 days
     const riskEndingSoon = active.some(p => {
@@ -958,6 +986,57 @@ export async function getWorkspaceMetrics(opts: {
       (hasSavings && !hasInsurance) ||
       (age >= 46 && age < 60);
     if (hasAnyTrigger) distinctClientsWithAnyTrigger++;
+  }
+
+  // ----- Single source of truth: prefer persisted client_flags --------------
+  // computeWorkspaceFlags writes one row per (client, trigger) to client_flags,
+  // and the modal lists (listClientsForTriggerV2) read from that same table.
+  // Once a workspace has been backfilled, the dashboard KPI/trigger counts MUST
+  // come from client_flags so the cards equal the lists they open. The in-memory
+  // derivation above is kept only as a non-breaking fallback for workspaces that
+  // have not been backfilled yet (no flags persisted).
+  const flagRows =
+    opts.workspaceRole === "agent"
+      ? await db
+          .select({ triggerKey: clientFlags.triggerKey, clientId: clientFlags.clientId })
+          .from(clientFlags)
+          .innerJoin(clients, eq(clientFlags.clientId, clients.id))
+          .where(
+            and(
+              eq(clientFlags.workspaceId, opts.workspaceId),
+              eq(clients.ownerUserId, opts.userId),
+            ),
+          )
+      : await db
+          .select({ triggerKey: clientFlags.triggerKey, clientId: clientFlags.clientId })
+          .from(clientFlags)
+          .where(eq(clientFlags.workspaceId, opts.workspaceId));
+
+  if (flagRows.length > 0) {
+    const byKey = new Map<string, number>();
+    const distinct = new Set<number>();
+    for (const f of flagRows) {
+      byKey.set(f.triggerKey, (byKey.get(f.triggerKey) ?? 0) + 1);
+      distinct.add(f.clientId);
+    }
+    const n = (k: string) => byKey.get(k) ?? 0;
+    poaExpired = n("poaExpired");
+    poaExpiring90d = n("poaExpiring90d");
+    riskTemporary = n("riskTemporary");
+    coverageEnding = n("coverageEnding");
+    savingsNoInsurance = n("savingsNoInsurance");
+    noActivePension = n("noActivePension");
+    age46NoLongTermCare = n("age46NoLongTermCare");
+    aumFrozen = n("aumFrozen");
+    trackMismatch = n("trackMismatch");
+    selfEmployedNoDeposit = n("selfEmployedNoDeposit");
+    concentrationRisk = n("concentrationRisk");
+    birthdayMilestone = n("birthdayMilestone");
+    birthdayThisMonth = n("birthdayThisMonth");
+    vipGoldPremium = n("vipGoldPremium");
+    noEmail = n("noEmail");
+    highFees = n("highFees");
+    distinctClientsWithAnyTrigger = distinct.size;
   }
 
   return {
@@ -1740,8 +1819,7 @@ export async function computeWorkspaceFlags(opts: {
   // every other derivation. Must match INVESTMENT_TRACK_PRODUCT_TYPE in
   // client/src/lib/parseReport.ts.
   const INVESTMENT_TRACK = "מסלול השקעה";
-  const metaOf = (p: { metadata?: unknown }): Record<string, unknown> =>
-    (p.metadata && typeof p.metadata === "object" ? (p.metadata as Record<string, unknown>) : {});
+  const metaOf = parsePolicyMeta;
 
   for (const r of allClients) {
     const allPs = policiesByClient.get(r.id) ?? [];
@@ -1883,13 +1961,13 @@ export async function computeWorkspaceFlags(opts: {
     // High fees — data-driven from real management-fee rates on active policies.
     // Thresholds calibrated against real data (0.7% over-flagged ~93%): a fee is
     // "high" at >1% from accumulation (מצבירה) or >2% from deposits (מהפקדה).
-    const highFeeByData = active.some(p => {
-      const m = metaOf(p);
-      const dmT = Number(m.dmTzvirah ?? 0);
-      const dmH = Number(m.dmHafkada ?? 0);
-      return dmT > 0.01 || dmH > 0.02;
-    });
-    if (highFeeByData || r.flagStatus === "high_fees") {
+    const highFeeByData = active.some(p => policyHasHighFee(metaOf(p)));
+    // Data-driven only: a client belongs in the high-fees bucket because their
+    // actual management-fee rates are high — not because the legacy parser tagged
+    // them "high_fees" for a secondary reason (self-employed-no-deposit, inactive
+    // fund). Those cases have their own dedicated triggers (selfEmployedNoDeposit,
+    // aumFrozen) and must not pollute this bucket.
+    if (highFeeByData) {
       addFlag(r.id, "highFees");
     }
   }
@@ -1980,11 +2058,65 @@ export async function listClientsForTriggerV2(opts: {
       .where(and(...whereClauses))
       .orderBy(desc(clients.totalBalance))
       .limit(limit);
-    return clientRows.map(c => ({ ...c, handled: handledSet.has(c.id) }));
+    const base = clientRows.map(c => ({ ...c, handled: handledSet.has(c.id) }));
+    return withMgmtFees(opts.triggerKey, opts.workspaceId, base);
   }
 
   // Fallback: legacy filter when no flags have been computed yet
-  return listClientsForTrigger(opts);
+  const fallback = await listClientsForTrigger(opts);
+  return withMgmtFees(opts.triggerKey, opts.workspaceId, fallback);
+}
+
+/**
+ * Enrich trigger-list rows with the client's highest management-fee rates,
+ * read from active-policy metadata (dmTzvirah / dmHafkada). Only runs the
+ * extra query for the `highFees` trigger — every other trigger gets the
+ * fields as `null` so the row shape stays uniform for the client.
+ */
+async function withMgmtFees<T extends { id: number }>(
+  triggerKey: string,
+  workspaceId: number,
+  rows: T[],
+): Promise<(T & { mgmtFeeFromBalance: number | null; mgmtFeeFromDeposit: number | null })[]> {
+  const nullify = () =>
+    rows.map(r => ({ ...r, mgmtFeeFromBalance: null, mgmtFeeFromDeposit: null }));
+  if (triggerKey !== "highFees" || rows.length === 0) return nullify();
+  const db = await getDb();
+  if (!db) return nullify();
+
+  const ids = rows.map(r => r.id);
+  const ps = await db
+    .select({
+      clientId: policies.clientId,
+      status: policies.status,
+      metadata: policies.metadata,
+    })
+    .from(policies)
+    .where(and(eq(policies.workspaceId, workspaceId), inArray(policies.clientId, ids)));
+
+  const feeByClient = new Map<number, { fromBalance: number; fromDeposit: number }>();
+  for (const p of ps) {
+    if (p.status !== "active") continue;
+    const m =
+      p.metadata && typeof p.metadata === "object"
+        ? (p.metadata as Record<string, unknown>)
+        : {};
+    const dmT = Number(m.dmTzvirah ?? 0);
+    const dmH = Number(m.dmHafkada ?? 0);
+    const cur = feeByClient.get(p.clientId) ?? { fromBalance: 0, fromDeposit: 0 };
+    if (Number.isFinite(dmT) && dmT > cur.fromBalance) cur.fromBalance = dmT;
+    if (Number.isFinite(dmH) && dmH > cur.fromDeposit) cur.fromDeposit = dmH;
+    feeByClient.set(p.clientId, cur);
+  }
+
+  return rows.map(r => {
+    const f = feeByClient.get(r.id);
+    return {
+      ...r,
+      mgmtFeeFromBalance: f && f.fromBalance > 0 ? f.fromBalance : null,
+      mgmtFeeFromDeposit: f && f.fromDeposit > 0 ? f.fromDeposit : null,
+    };
+  });
 }
 
 /** Helper for tests / admin tools */

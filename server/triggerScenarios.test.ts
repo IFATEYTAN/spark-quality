@@ -4,6 +4,7 @@ import {
   mergeOutcomeWithAnalysis,
   type TriggerKey,
 } from "../client/src/lib/triggerScenarios";
+import { FLOWCHART_DATA } from "../client/src/components/InteractiveFlowchart";
 
 const TRIGGER_KEYS: TriggerKey[] = [
   "poaExpired",
@@ -44,6 +45,15 @@ describe("triggerScenarios registry", () => {
     // 16-trigger model, so assert presence rather than a brittle fixed list.
     expect(typeof s.flowchartKey).toBe("string");
     expect(s.flowchartKey.length).toBeGreaterThan(0);
+  });
+
+  // Regression guard: every trigger's flowchartKey must resolve to a real
+  // flowchart with nodes. Otherwise CategoryScenarioModal renders a blank modal
+  // (the bug that hid the explainer for 9 of the 16 production triggers).
+  it.each(TRIGGER_KEYS)("%s resolves to a flowchart with nodes", (key) => {
+    const fc = FLOWCHART_DATA[TRIGGER_SCENARIOS[key].flowchartKey];
+    expect(fc, `flowchart "${TRIGGER_SCENARIOS[key].flowchartKey}" is missing`).toBeTruthy();
+    expect(fc.nodes.length).toBeGreaterThan(0);
   });
 
   it("titles are unique across all 16 scenarios", () => {
