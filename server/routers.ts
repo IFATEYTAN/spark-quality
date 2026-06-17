@@ -23,6 +23,8 @@ import {
   buildBriefingUserPrompt,
   CLIENT_SUMMARY_SYSTEM,
   buildClientSummaryUserPrompt,
+  CLIENT_ANALYSIS_SYSTEM,
+  buildClientAnalysisUserPrompt,
   QA_SYSTEM,
   buildQaUserPrompt,
   VARIANTS_3_SYSTEM,
@@ -1233,6 +1235,41 @@ export const appRouter = router({
           userId: ctx.user.id,
           workspaceRole: ctx.user.workspaceRole,
         });
+      }),
+    /**
+     * Per-client AI analysis — feeds the client's COMPLETE record (profile,
+     * every policy/balance/premium/status, and all active triggers) to the LLM
+     * and returns a structured analysis: current state, gaps, opportunities,
+     * and the recommended next step for the agent.
+     */
+    aiAnalysis: workspaceProcedure
+      .input(z.object({ clientId: z.number().int().positive() }))
+      .mutation(async ({ ctx, input }) => {
+        await requireFeature(ctx, "ai.briefing");
+        const detail = await db.getClientDetail({
+          clientId: input.clientId,
+          workspaceId: ctx.user.workspaceId,
+          userId: ctx.user.id,
+          workspaceRole: ctx.user.workspaceRole,
+        });
+        if (!detail) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "הלקוח לא נמצא" });
+        }
+        const completion = await invokeLLM({
+          messages: [
+            { role: "system", content: CLIENT_ANALYSIS_SYSTEM },
+            {
+              role: "user",
+              content: buildClientAnalysisUserPrompt({
+                client: detail.client,
+                policies: detail.policies,
+                triggers: detail.triggers,
+              }),
+            },
+          ],
+        });
+        const content = completion?.choices?.[0]?.message?.content;
+        return { analysis: typeof content === "string" ? content : "" };
       }),
     /** Append an activity (call/whatsapp/email/meeting/note/sms). */
     logActivity: workspaceProcedure

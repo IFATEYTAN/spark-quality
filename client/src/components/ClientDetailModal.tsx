@@ -13,7 +13,7 @@
  * agent isolation server-side. The reassign dropdown is only visible when
  * `useAuth().user.workspaceRole` is "admin" or "owner".
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Phone,
   MessageSquare,
@@ -26,6 +26,7 @@ import {
   X,
   Loader2,
   Send,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -200,17 +201,40 @@ export function ClientDetailModal({
   const [reassignOpen, setReassignOpen] = useState(false);
   const [reassignTarget, setReassignTarget] = useState<string>("");
 
+  // AI analysis state
+  const [aiOpen, setAiOpen] = useState(false);
+
+  // Stable callback ref: scroll a just-opened inline panel into view so it's
+  // never left below the fold on mobile (the root cause of "I tapped הערה /
+  // תזכורת and nothing happened"). useCallback keeps the identity stable so it
+  // only fires on mount/unmount, not on every keystroke inside the panel.
+  const scrollPanelIntoView = useCallback((el: HTMLDivElement | null) => {
+    if (el) {
+      requestAnimationFrame(() =>
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" }),
+      );
+    }
+  }, []);
+
   // Reset transient state every time the modal closes / opens for a new client
   useEffect(() => {
     if (!open) {
       setNoteOpen(false);
       setSnoozeOpen(false);
       setReassignOpen(false);
+      setAiOpen(false);
       setNoteContent("");
       setSnoozeNote("");
       setReassignTarget("");
     }
   }, [open, clientId]);
+
+  // Clear any previous client's AI analysis when switching clients
+  useEffect(() => {
+    setAiOpen(false);
+    aiAnalysisMutation.reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientId]);
 
   // Members list — only fetched if user can reassign
   const membersQuery = trpc.workspaces.listMembers.useQuery(undefined, {
@@ -245,6 +269,10 @@ export function ClientDetailModal({
       setReassignOpen(false);
     },
     onError: e => toast.error("הקצאה נכשלה", { description: e.message }),
+  });
+
+  const aiAnalysisMutation = trpc.clientJourney.aiAnalysis.useMutation({
+    onError: e => toast.error("ניתוח AI נכשל", { description: e.message }),
   });
 
   const markHandledMutation = trpc.triggers.markHandled.useMutation({
@@ -378,6 +406,12 @@ export function ClientDetailModal({
     );
   };
 
+  const handleAiAnalysis = () => {
+    if (!clientId) return;
+    setAiOpen(true);
+    aiAnalysisMutation.mutate({ clientId });
+  };
+
   const handleReassignSubmit = () => {
     if (!clientId) return;
     const targetId = Number(reassignTarget);
@@ -395,7 +429,7 @@ export function ClientDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         dir="rtl"
-        className="max-w-3xl max-h-[calc(100vh-1rem)] overflow-y-auto bg-card text-card-foreground"
+        className="max-w-3xl max-h-[calc(100dvh-1rem)] overflow-y-auto bg-card text-card-foreground"
       >
         <DialogHeader className="text-right">
           <DialogTitle className="text-xl flex items-center justify-between gap-2">
@@ -471,6 +505,19 @@ export function ClientDetailModal({
 
             {/* Action buttons row */}
             <div className="flex flex-wrap gap-2 mt-4">
+              <Button
+                size="sm"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={handleAiAnalysis}
+                disabled={aiAnalysisMutation.isPending}
+              >
+                {aiAnalysisMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 me-1 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 me-1" />
+                )}
+                ניתוח AI
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -553,9 +600,56 @@ export function ClientDetailModal({
               ) : null}
             </div>
 
+            {/* AI analysis panel */}
+            {aiOpen ? (
+              <div
+                ref={scrollPanelIntoView}
+                className="mt-4 rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-medium flex items-center gap-1.5">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    ניתוח AI — תיק מלא של הלקוח
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {!aiAnalysisMutation.isPending ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => aiAnalysisMutation.mutate({ clientId: clientId! })}
+                        disabled={!clientId}
+                      >
+                        רענון
+                      </Button>
+                    ) : null}
+                    <Button size="sm" variant="ghost" onClick={() => setAiOpen(false)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {aiAnalysisMutation.isPending ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    מנתח את כל הפוליסות, היתרות וההתראות של הלקוח…
+                  </div>
+                ) : aiAnalysisMutation.data?.analysis ? (
+                  <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                    {aiAnalysisMutation.data.analysis}
+                  </div>
+                ) : aiAnalysisMutation.isError ? (
+                  <div className="text-sm text-destructive">
+                    הניתוח נכשל. נסה שוב.
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             {/* Inline note composer */}
             {noteOpen ? (
-              <div className="mt-4 rounded-lg border border-border bg-background p-3 space-y-2">
+              <div
+                ref={scrollPanelIntoView}
+                className="mt-4 rounded-lg border border-border bg-background p-3 space-y-2"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-medium">
                     {ACTIVITY_ICON[noteType]} רישום: {ACTIVITY_LABEL[noteType]}
@@ -617,7 +711,10 @@ export function ClientDetailModal({
 
             {/* Snooze panel */}
             {snoozeOpen ? (
-              <div className="mt-4 rounded-lg border border-border bg-background p-3 space-y-2">
+              <div
+                ref={scrollPanelIntoView}
+                className="mt-4 rounded-lg border border-border bg-background p-3 space-y-2"
+              >
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-medium">⏰ קביעת תזכורת</div>
                   <Button size="sm" variant="ghost" onClick={() => setSnoozeOpen(false)}>

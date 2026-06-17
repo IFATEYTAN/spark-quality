@@ -354,7 +354,7 @@ export function CategoryScenarioModal({
 
       {/* Panel - max-h so it never exceeds viewport, but can shrink to content; internal scroll on body */}
       <div
-        className="relative w-full max-w-6xl my-auto max-h-[calc(100vh-1rem)] sm:max-h-[92vh] flex flex-col bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up overflow-hidden"
+        className="relative w-full max-w-6xl my-auto max-h-[calc(100dvh-1rem)] sm:max-h-[92dvh] flex flex-col bg-cream rounded-md shadow-2xl shadow-navy/40 animate-fade-up overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         data-testid="simulations-modal-panel"
       >
