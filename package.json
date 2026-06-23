@@ -10,6 +10,7 @@
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
+    "test:ci": "vitest run server/parseReport.test.ts server/parseReport.fixture.test.ts server/parseReport.edgecases.test.ts server/financial.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install chromium",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"

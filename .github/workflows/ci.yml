@@ -1,0 +1,42 @@
+# CI — regression gate for the Surense parser + financial logic.
+#
+# Runs on every push to main and every pull request. Its job is to make the
+# parser regression suite (incl. the locked 04/2026 fixture snapshot and the
+# dirty-input edge-case matrix) a hard merge gate, so a future mapping change
+# can't silently regress a KPI — e.g. revert trackAgeMismatch back to 0 — without
+# a red check.
+#
+# Scope note: `pnpm test:ci` runs the deterministic suites only. The full
+# `pnpm test` also includes smoke/integration tests (billing, contact, email,
+# Anthropic/Resend) that require live API-key secrets and are intentionally not
+# run here. Wire those in later via repo secrets if the team wants them gated.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Version is read from package.json#packageManager (don't also set `version`
+      # here — pnpm/action-setup errors on a double-specified version).
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm check
+
+      - name: Parser + financial regression suite
+        run: pnpm test:ci
