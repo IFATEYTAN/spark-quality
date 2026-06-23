@@ -65,8 +65,10 @@ test.describe("דמו · גריד 16 הטריגרים (נתוני הדגמה)", 
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
     await expect(dialog.getByText("סנריו אוטומטי · SPARK AI")).toBeVisible();
-    await expect(dialog.getByText(/ללא ייפוי כוח פעיל/)).toBeVisible();
-    await expect(dialog.getByText("תוצאה צפויה")).toBeVisible();
+    await expect(dialog.getByText(/ללא ייפוי כוח פעיל/).first()).toBeVisible();
+    // Every scenario renders a title heading — a stable proxy for "the scenario
+    // opened with content" (the old "תוצאה צפויה" copy no longer exists).
+    await expect(dialog.getByRole("heading").first()).toBeVisible();
   });
 
   test("לחיצה על טריגר ריסק זמני פותחת את התרחיש הנכון", async ({ page }) => {
@@ -74,7 +76,11 @@ test.describe("דמו · גריד 16 הטריגרים (נתוני הדגמה)", 
     await page.getByRole("button", { name: /ריסק זמני/ }).first().click();
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByText(/ריסק זמני/)).toBeVisible();
-    await expect(dialog.getByText("הלקוחות הרלוונטיים לתהליך").or(dialog.getByText("דוגמה אמיתית מהדוח"))).toBeVisible();
+    // /ריסק זמני/ appears in several nodes (heading + flowchart) — scope to the
+    // first match to avoid a strict-mode violation.
+    await expect(dialog.getByText(/ריסק זמני/).first()).toBeVisible();
+    // Stable scenario chrome present in every CategoryScenarioModal (the older
+    // "הלקוחות הרלוונטיים לתהליך" / "דוגמה אמיתית מהדוח" copy no longer exists).
+    await expect(dialog.getByText("סנריו אוטומטי · SPARK AI")).toBeVisible();
   });
 });
