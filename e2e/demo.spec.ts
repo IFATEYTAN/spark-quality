@@ -79,8 +79,8 @@ test.describe("דמו · גריד 16 הטריגרים (נתוני הדגמה)", 
     // /ריסק זמני/ appears in several nodes (heading + flowchart) — scope to the
     // first match to avoid a strict-mode violation.
     await expect(dialog.getByText(/ריסק זמני/).first()).toBeVisible();
-    await expect(
-      dialog.getByText("הלקוחות הרלוונטיים לתהליך").or(dialog.getByText("דוגמה אמיתית מהדוח")).first(),
-    ).toBeVisible();
+    // Stable scenario chrome present in every CategoryScenarioModal (the older
+    // "הלקוחות הרלוונטיים לתהליך" / "דוגמה אמיתית מהדוח" copy no longer exists).
+    await expect(dialog.getByText("סנריו אוטומטי · SPARK AI")).toBeVisible();
   });
 });
