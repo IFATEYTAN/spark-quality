@@ -1,0 +1,34 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseSurenseReport — full 04/2026 structural fixture > matches the locked stats snapshot (regression guard) 1`] = `
+{
+  "activeProducts": 537,
+  "amendment190": 3,
+  "appointmentExpired": 47,
+  "appointmentExpiring90d": 33,
+  "coverageGaps": 19,
+  "crossSellOpps": 39,
+  "endingDiscount": 0,
+  "highFeesAnnualCost": 321819,
+  "inactiveBalanceTotal": 17790000,
+  "inactiveWithBalance": 50,
+  "insuranceClients": 111,
+  "liquidAUM": 7601000,
+  "liquidFunds": 13,
+  "lowYield": 35,
+  "monthlyPremium": 1840,
+  "noEmail": 9,
+  "noEmailPercent": 6,
+  "noNursing46plus": 56,
+  "noPension": 42,
+  "potentialRevenue": 6493920,
+  "riskFlags": 59,
+  "selfEmployedNoDeposit": 9,
+  "timesSaved": 30,
+  "totalAUM": 114903000,
+  "totalCustomers": 150,
+  "trackAgeMismatch": 40,
+  "upcomingBirthdays": 31,
+  "vipCustomers": 35,
+}
+`;

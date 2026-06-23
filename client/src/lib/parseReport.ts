@@ -86,6 +86,13 @@ export interface ParsedReport {
 
 const HE = (s: any) => String(s ?? "").trim();
 
+// Normalize the "מעמד" (employment) field to the canonical Surense enum so the
+// self-employed trigger (T11) matches regardless of gendered export variants:
+// "עצמאית" → "עצמאי", "שכירה" → "שכיר". Real exports are usually non-gendered,
+// but older / re-exported files sometimes carry the feminine forms.
+const normalizeEmployment = (raw: any): string =>
+  HE(raw).replace(/^שכירה$/, "שכיר").replace(/^עצמאית$/, "עצמאי");
+
 // Pension product types per skill spec
 const PENSION_PRODUCT_TYPES = [
   "קרן פנסיה חדשה מקיפה",
@@ -143,7 +150,19 @@ function toNumber(v: any): number {
 
 function toDate(v: any): Date | null {
   if (!v) return null;
-  if (v instanceof Date) return v;
+  if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+  // Excel serial date: when a date cell carries no date number-format, the
+  // value arrives as a bare number — or, under { raw: false }, as an all-digits
+  // string. toDate is only ever called on date columns, so a pure integer in
+  // the Excel date range is unambiguously a serial (not a policy number).
+  if (typeof v === "number" || /^\d{4,6}$/.test(String(v).trim())) {
+    const serial = Number(String(v).trim());
+    if (serial >= 20000 && serial <= 60000) {
+      // 1899-12-30 epoch; range ≈ 1954..2064
+      const d = new Date(Date.UTC(1899, 11, 30) + serial * 86_400_000);
+      if (!isNaN(d.getTime())) return d;
+    }
+  }
   // Excel sometimes returns a string like "2023-05-30" or "30/05/2023"
   const s = String(v).trim();
   if (!s) return null;
@@ -323,7 +342,7 @@ function parseSavingsSheet(sheet: XLSX.WorkSheet): SavingsRow[] {
       classification: idx.classification !== -1 ? HE(row[idx.classification]) : "",
       status: idx.status !== -1 ? HE(row[idx.status]) : "",
       joinDate: idx.joinDate !== -1 ? toDate(row[idx.joinDate]) : null,
-      employment: idx.employment !== -1 ? HE(row[idx.employment]) : "",
+      employment: idx.employment !== -1 ? normalizeEmployment(row[idx.employment]) : "",
       savings: idx.savings !== -1 ? toNumber(row[idx.savings]) : 0,
       lastDeposit: idx.lastDeposit !== -1 ? toNumber(row[idx.lastDeposit]) : 0,
       dmHafkada: idx.dmHafkada !== -1 ? toNumber(row[idx.dmHafkada]) : 0,
@@ -878,6 +897,22 @@ export async function parseSurenseReport(file: File): Promise<ParsedReport> {
   const selfEmployedNoDeposit = aggArr.filter(
     (a) => SELF_EMPLOYED_STATUSES.includes(a.employment) && a.hasZeroDeposits,
   ).length;
+  // Track/age mismatch (T10): customer aged 55+ holding an equity-heavy
+  // investment track. The track data is already in `policies` as sentinel rows
+  // (productType === INVESTMENT_TRACK_PRODUCT_TYPE, metadata.equityTrack), so we
+  // count distinct clients who own at least one such track.
+  const equityTrackIds = new Set(
+    policies
+      .filter(
+        (p) =>
+          p.productType === INVESTMENT_TRACK_PRODUCT_TYPE &&
+          (p.metadata as { equityTrack?: boolean } | null | undefined)?.equityTrack === true,
+      )
+      .map((p) => p.idNumber),
+  );
+  const trackAgeMismatch = Array.from(agg.entries()).filter(
+    ([id, a]) => a.age >= 55 && equityTrackIds.has(id),
+  ).length;
   const vipCustomers = customers.filter((c) => (c as any).isVip).length;
   const noEmail = customers.filter((c) => !c.email).length;
   const liquidFundsArr = customers.filter((c) => c.status === "השתלמות נזילה");
@@ -947,7 +982,7 @@ export async function parseSurenseReport(file: File): Promise<ParsedReport> {
       highFeesAnnualCost,
       noNursing46plus,
       selfEmployedNoDeposit,
-      trackAgeMismatch: 0, // requires sheet 4 (investment tracks) — out of scope for v1
+      trackAgeMismatch,
       insuranceClients,
     },
   };
