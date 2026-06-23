@@ -8,16 +8,24 @@ export const getLoginUrl = () => buildAuthUrl("signIn");
 export const getSignupUrl = () => buildAuthUrl("signUp");
 
 function buildAuthUrl(type: "signIn" | "signUp") {
-  const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
-  const appId = import.meta.env.VITE_APP_ID;
-  const redirectUri = `${window.location.origin}/api/oauth/callback`;
-  const state = btoa(redirectUri);
+  try {
+    const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;
+    const appId = import.meta.env.VITE_APP_ID;
+    const redirectUri = `${window.location.origin}/api/oauth/callback`;
+    const state = btoa(redirectUri);
 
-  const url = new URL(`${oauthPortalUrl}/app-auth`);
-  url.searchParams.set("appId", appId);
-  url.searchParams.set("redirectUri", redirectUri);
-  url.searchParams.set("state", state);
-  url.searchParams.set("type", type);
+    const url = new URL(`${oauthPortalUrl}/app-auth`);
+    url.searchParams.set("appId", appId);
+    url.searchParams.set("redirectUri", redirectUri);
+    url.searchParams.set("state", state);
+    url.searchParams.set("type", type);
 
-  return url.toString();
+    return url.toString();
+  } catch {
+    // OAuth portal not configured (e.g. missing/invalid VITE_OAUTH_PORTAL_URL in
+    // a preview / CI / misconfigured build). Degrade to an inert link instead of
+    // throwing: a bad login URL must never crash the public marketing & demo
+    // pages (every page renders the header, which builds this URL eagerly).
+    return "#";
+  }
 }
