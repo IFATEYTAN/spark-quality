@@ -190,6 +190,12 @@ router.post('/qa', async (req, res) => {
   prompts.ts                    ← כל הפרומפטים (Composer, Briefing...)
   routers.ts                    ← endpoints
   parseReport.ts                ← parser (קרוא skills רק בשרת)
+  parseReport.test.ts           ← טסטי יחידה לפרסר
+  parseReport.fixture.test.ts   ← טסט רגרסיה מול fixture מלא (snapshot)
+  __fixtures__/
+    surense-demo-04-2026.xlsx   ← דוח דמו סינתטי, תאום-מבנה (41/32/28/30), כל טריגר נדלק
+  __snapshots__/
+    parseReport.fixture.test.ts.snap  ← KPIs נעולים — שובר build אם מספר משתנה
 
 /client/src/
   lib/
@@ -232,3 +238,16 @@ router.post('/qa', async (req, res) => {
 | **סה"כ עם כל on-demand** | | | **~$0.09** |
 
 P2 רץ פעם אחת — כל השאר קוראים מה-DB.
+
+---
+
+## שער רגרסיה — בקרת איכות לפרסר
+
+לפני כל merge ל-main, `pnpm test` חייב לעבור. שתי שכבות הגנה:
+
+1. **טסטי יחידה** (`parseReport.test.ts`) — בודקים פונקציות בודדות: `toDate` (כולל Excel serial), נרמול מעמד/סטטוס, חישוב `appointmentDaysRemaining`.
+2. **טסט fixture + snapshot** (`parseReport.fixture.test.ts`) — מריץ את הפרסר על דוח דמו מלא (150 לקוחות, תאום-מבנה לדוח אמיתי 04/2026) ונועל את ערכי ה-KPIs ב-snapshot. כל שינוי קוד עתידי שמשנה תוצאה עסקית — שובר את ה-build ומחייב סקירה.
+
+הדמו סינתטי לחלוטין (ת.ז 2000000xx, מיילים demo-data.co.il) ומהונדס כך שכל 16 הטריגרים נדלקים — כך אפשר לאמת ש-`parseReport` מזין כל טריגר בלי לגעת בנתוני לקוח אמיתיים. **לעדכון ה-snapshot במכוון:** `pnpm test -u` (ורק אחרי אימות שהשינוי בערכים מכוון).
+
+עיקרון כללי (חוצה-תעשיות): fixture מהונדס + snapshot הוא שער איכות שמתאים לכל מנוע חוקים מבוסס-נתונים — מ-"תוקן" ל-"חי" בלי רגרסיה שקטה ל-production.
