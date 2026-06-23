@@ -730,6 +730,7 @@ export const appRouter = router({
         })
       )
       .mutation(async ({ ctx, input }) => {
+        const startedAt = Date.now();
         const reportId = await db.createReport({
           workspaceId: ctx.user.workspaceId,
           uploadedByUserId: ctx.user.id,
@@ -770,10 +771,45 @@ export const appRouter = router({
         // Round 128 — immediately compute multi-flag triggers so the modal
         // lists per category are never empty after an upload. Scoped to the
         // caller's workspace; other tenants are not touched.
+        let flags: Awaited<ReturnType<typeof db.computeWorkspaceFlags>> = {
+          totalFlagsWritten: 0,
+          byTrigger: {},
+          distinctClients: 0,
+        };
         try {
-          await db.computeWorkspaceFlags({ workspaceId: ctx.user.workspaceId });
+          flags = await db.computeWorkspaceFlags({ workspaceId: ctx.user.workspaceId });
         } catch (err) {
           console.warn("[reports.save] computeWorkspaceFlags failed (non-fatal)", err);
+        }
+
+        // ── Layer 6 · production monitoring ──────────────────────────────
+        // One structured line per upload — lets us see at a glance how every
+        // real report landed (clients in, policies in, triggers fired, latency)
+        // and raises a loud alarm when a report yields zero clients or zero
+        // triggers: the "report returned 0 insights" failure we must catch
+        // before the agent notices it on their dashboard.
+        const monitor = {
+          event: "report.save",
+          workspaceId: ctx.user.workspaceId,
+          reportId,
+          fileName: input.fileName,
+          clientsIn: input.clientCount ?? input.clients?.length ?? 0,
+          importedClients: importedCount,
+          policiesIn: input.policies?.length ?? 0,
+          totalAum: input.totalAum ?? 0,
+          triggersFired: flags.totalFlagsWritten,
+          flaggedClients: flags.distinctClients,
+          durationMs: Date.now() - startedAt,
+        };
+        console.info("[monitor]", JSON.stringify(monitor));
+        if (monitor.importedClients === 0 || monitor.triggersFired === 0) {
+          console.warn(
+            "[monitor][ALARM] report yielded no insights",
+            JSON.stringify({
+              ...monitor,
+              reason: monitor.importedClients === 0 ? "0 clients imported" : "0 triggers fired",
+            }),
+          );
         }
 
         return { id: reportId, importedCount };
