@@ -11,6 +11,9 @@ test.describe("דפי שיווק ומידע ציבוריים", () => {
   test("דף התמחור מציג את תוכנית SPARK Quality במחיר ₪199", async ({ page }) => {
     await page.goto("/pricing");
     await expect(page.getByText("SPARK Quality").first()).toBeVisible();
+    // The page defaults to the annual cycle (₪169) — switch to the monthly tab
+    // to surface the ₪199 headline price.
+    await page.getByRole("tab", { name: "חודשי" }).click();
     await expect(page.getByText(/₪\s*199|199/).first()).toBeVisible();
   });
 
