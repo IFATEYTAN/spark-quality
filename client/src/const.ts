@@ -7,6 +7,14 @@ export const getLoginUrl = () => buildAuthUrl("signIn");
 // (Manus portal accepts type=signUp and pre-selects the registration form).
 export const getSignupUrl = () => buildAuthUrl("signUp");
 
+// True when the OAuth portal is configured and produces a real auth URL.
+// `buildAuthUrl` degrades to the inert "#" link when VITE_OAUTH_PORTAL_URL is
+// missing/invalid (preview / CI / misconfigured build); in that state the
+// public marketing & demo pages should hide their login/signup CTAs rather than
+// render a button that navigates nowhere. In production (env set) this is true,
+// so behaviour is unchanged.
+export const isAuthConfigured = () => getLoginUrl() !== "#";
+
 function buildAuthUrl(type: "signIn" | "signUp") {
   try {
     const oauthPortalUrl = import.meta.env.VITE_OAUTH_PORTAL_URL;

@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { ArrowLeft, RotateCcw, Sparkles, X, QrCode } from "lucide-react";
 import { Link } from "wouter";
 import { QRCodeSVG } from "qrcode.react";
-import { getSignupUrl } from "@/const";
+import { getSignupUrl, isAuthConfigured } from "@/const";
 import type { ParsedReport } from "@/lib/parseReport";
 
 interface SummaryStageProps {
@@ -119,14 +119,18 @@ export function SummaryStage({ onReset, parsed, analysis, category: _category }:
                 className="mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 animate-fade-up"
                 style={{ animationDelay: "0.5s" }}
               >
-                <a
-                  href={getSignupUrl()}
-                  className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-gold/90 hover:shadow-2xl hover:shadow-gold/20"
-                >
-                  <Sparkles className="h-4 w-4" />
-                  הרשמה למערכת
-                  <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                </a>
+                {/* Hide the signup CTA when OAuth isn't configured — it would
+                    otherwise navigate to the inert "#". Pricing + restart remain. */}
+                {isAuthConfigured() && (
+                  <a
+                    href={getSignupUrl()}
+                    className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md bg-gold px-5 py-2.5 text-sm font-bold text-white transition-all hover:bg-gold/90 hover:shadow-2xl hover:shadow-gold/20"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    הרשמה למערכת
+                    <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                  </a>
+                )}
                 <Link
                   href="/pricing"
                   className="group flex-1 sm:flex-initial flex items-center justify-center gap-2 rounded-md border border-gold/40 bg-white px-5 py-2.5 text-sm font-bold text-gold transition-all hover:bg-gold/5 hover:border-gold"

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { LOGO, ASSETS } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl, getSignupUrl } from "@/const";
+import { getLoginUrl, getSignupUrl, isAuthConfigured } from "@/const";
 import { PRICING_COPY, SPARK_QUALITY_PRICING } from "@shared/copy";
 
 export default function Home() {
@@ -56,6 +56,10 @@ export default function Home() {
 
   const loginHref = getLoginUrl();
   const signupHref = getSignupUrl();
+  // When OAuth isn't configured (preview / CI / misconfigured build) the auth
+  // URLs degrade to the inert "#" — hide the login/signup CTAs in that state
+  // rather than render dead buttons. In production this is always true.
+  const authConfigured = isAuthConfigured();
   // Open ContactModal automatically when ?contact=1 is present (used by demo QR code)
   const [contactOpen, setContactOpen] = useState(false);
   useEffect(() => {
@@ -155,13 +159,15 @@ export default function Home() {
               >
                 תמחור
               </Link>
-              <a
-                href={loginHref}
-                className="flex items-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-4 py-2 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30 transition-all hover:scale-105"
-              >
-                לאזור האישי
-                <ChevronLeft className="h-4 w-4" />
-              </a>
+              {(isAuthenticated || authConfigured) && (
+                <a
+                  href={loginHref}
+                  className="flex items-center gap-2 rounded-md bg-gradient-to-br from-gold to-[#B89346] px-4 py-2 text-sm font-bold text-[#06101F] shadow-lg shadow-gold/30 transition-all hover:scale-105"
+                >
+                  לאזור האישי
+                  <ChevronLeft className="h-4 w-4" />
+                </a>
+              )}
             </nav>
           </div>
         </div>
@@ -191,7 +197,7 @@ export default function Home() {
               >
                 לאזור האישי
               </a>
-            ) : (
+            ) : authConfigured ? (
               <>
                 <a
                   href={loginHref}
@@ -214,7 +220,7 @@ export default function Home() {
                   </span>
                 </div>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </header>

@@ -6,7 +6,7 @@ import { Link } from "wouter";
 import { Menu, X, Play, LogIn, Sparkles } from "lucide-react";
 import { LOGO } from "@/lib/demoData";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
+import { getLoginUrl, isAuthConfigured } from "@/const";
 import { TopZoneNav } from "@/components/CinematicShell";
 
 interface NavSection {
@@ -77,6 +77,10 @@ export function SiteNav({ available }: SiteNavProps) {
   const loginHref = getLoginUrl();
   const accountHref = isAuthenticated && user ? "/dashboard" : loginHref;
   const accountLabel = isAuthenticated && user ? "לאזור האישי" : "כניסה למערכת";
+  // Authenticated users always get a working link (/dashboard). Anonymous
+  // visitors only get one when OAuth is configured — otherwise hide the CTA
+  // instead of rendering a dead "#" login button.
+  const showAccountCta = (isAuthenticated && !!user) || isAuthConfigured();
 
   return (
     <header
@@ -140,13 +144,15 @@ export function SiteNav({ available }: SiteNavProps) {
             <Play className="h-3.5 w-3.5" />
             לדמו האינטראקטיבי
           </Link>
-          <a
-            href={accountHref}
-            className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow"
-          >
-            {isAuthenticated ? <Sparkles className="h-3.5 w-3.5" /> : <LogIn className="h-3.5 w-3.5" />}
-            {accountLabel}
-          </a>
+          {showAccountCta && (
+            <a
+              href={accountHref}
+              className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-1.5 text-xs font-bold text-[#06101F] shadow-md shadow-gold/30 hover:shadow-gold/50 transition-shadow"
+            >
+              {isAuthenticated ? <Sparkles className="h-3.5 w-3.5" /> : <LogIn className="h-3.5 w-3.5" />}
+              {accountLabel}
+            </a>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -194,14 +200,16 @@ export function SiteNav({ available }: SiteNavProps) {
                 <Play className="h-4 w-4" />
                 לדמו האינטראקטיבי
               </Link>
-              <a
-                href={accountHref}
-                onClick={() => setOpen(false)}
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-2 text-sm font-bold text-[#06101F]"
-              >
-                {isAuthenticated ? <Sparkles className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-                {accountLabel}
-              </a>
+              {showAccountCta && (
+                <a
+                  href={accountHref}
+                  onClick={() => setOpen(false)}
+                  className="inline-flex items-center justify-center gap-2 rounded-md bg-gradient-to-l from-gold to-[#F4D87C] px-3 py-2 text-sm font-bold text-[#06101F]"
+                >
+                  {isAuthenticated ? <Sparkles className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+                  {accountLabel}
+                </a>
+              )}
             </li>
           </ul>
         </div>
