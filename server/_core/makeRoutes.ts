@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { workspaces, users } from "../../drizzle/schema";
 import {
   getDb,
+  getPaymentAttemptByRequestId,
   markPaymentAttemptFailed,
   markPaymentAttemptSucceeded,
   promoteCreatorToOwnerIfActive,
@@ -106,6 +107,15 @@ export function registerMakeRoutes(app: Express): void {
       const db = await getDb();
       if (!db) {
         return res.status(500).json({ ok: false, error: "db_unavailable" });
+      }
+
+      // Idempotency guard: Make/iCount can retry the same callback (network
+      // timeout, at-least-once delivery). Once this requestId already
+      // resolved to "succeeded" we must not re-send activation emails or
+      // re-write subscriptionEndsAt on every replay.
+      const existingAttempt = await getPaymentAttemptByRequestId(requestId);
+      if (existingAttempt?.status === "succeeded") {
+        return res.json({ ok: true, alreadyProcessed: true });
       }
 
       if (status !== "ok") {

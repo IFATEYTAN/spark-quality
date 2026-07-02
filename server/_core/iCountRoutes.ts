@@ -82,6 +82,28 @@ export function registerICountRoutes(app: Express): void {
       if (!db) {
         return res.status(500).json({ ok: false, error: "db_unavailable" });
       }
+
+      // Idempotency guard: this handler is registered for both GET (ok_url,
+      // the user's browser redirect) and POST (notify_url, iCount's
+      // server-to-server call), so the SAME activation can legitimately hit
+      // us twice — plus iCount/edge proxies may retry the notify_url. Once
+      // this subscriptionId is already active on the workspace, skip the
+      // update and the member email instead of re-sending it on every hit.
+      const [existingWs] = await db
+        .select()
+        .from(workspaces)
+        .where(eq(workspaces.id, parsed.workspaceId))
+        .limit(1);
+      if (
+        existingWs?.subscriptionStatus === "active" &&
+        existingWs.iCountSubscriptionId === subscriptionId
+      ) {
+        if (req.method === "GET") {
+          return res.redirect(302, "/billing/success?confirmed=1");
+        }
+        return res.json({ ok: true, alreadyProcessed: true });
+      }
+
       const now = new Date();
       await db
         .update(workspaces)
